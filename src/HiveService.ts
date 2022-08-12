@@ -1,11 +1,8 @@
-import { connectivity, DID as ConDID } from "@elastosfoundation/elastos-connectivity-sdk-js";
 import { Executable, InsertOptions, File as HiveFile, ScriptRunner, Vault, AppContext, Logger as HiveLogger, UpdateResult, UpdateOptions, Condition, InsertResult } from "@elastosfoundation/hive-js-sdk";
 import { Claims, DIDDocument, JWTHeader, JWTParserBuilder, DID, DIDBackend, DefaultDIDAdapter, JSONObject, VerifiablePresentation } from '@elastosfoundation/did-js-sdk'
-import { ApplicationDID } from '../config'
 
 let TAG: string = 'Feeds-web-dapp-HiveService'
-let didResolverUrl = "https://api.trinity-tech.io/eid"
-
+const ApplicationDID = ""
 let scriptRunners = {}
 
 const feedsDid = sessionStorage.getItem('FEEDS_DID')
@@ -421,12 +418,13 @@ async function issueDiplomaFor() {
   }
 }
 
-async function createPresentation(vc, hiveDid, nonce) {
-  const access = new ConDID.DIDAccess()
-  const info = await access.getOrCreateAppInstanceDID()
-  const info2 = await access.getExistingAppInstanceDIDInfo()
-  const vpb = await VerifiablePresentation.createFor(info.did, null, info.didStore)
-  const vp = await vpb.credentials(vc).realm(hiveDid).nonce(nonce).seal(info2.storePassword)
+// todo: instanceDid instanceStorePassword
+async function createPresentation(vc, instanceDid, instanceDidStore, instanceStorePassword, hiveDid, nonce) {
+  // const access = new ConDID.DIDAccess()
+  // const info = await access.getOrCreateAppInstanceDID()
+  // const info2 = await access.getExistingAppInstanceDIDInfo()
+  const vpb = await VerifiablePresentation.createFor(instanceDid, null, instanceDidStore)
+  const vp = await vpb.credentials(vc).realm(hiveDid).nonce(nonce).seal(instanceStorePassword)
   return vp
 }
 

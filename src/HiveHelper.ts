@@ -1,8 +1,8 @@
-import { HiveService } from 'src/HiveService'
+import { HiveService } from './HiveService'
 import { QueryHasResultCondition, FindExecutable, AndCondition, NetworkException, InsertExecutable, UpdateExecutable, DeleteExecutable, UpdateResult, UpdateOptions, InsertResult, FileDownloadExecutable, HiveException, InsufficientStorageException } from "@elastosfoundation/hive-js-sdk"
-import { utils } from 'src/utils'
+import { utils } from './utils'
 import SparkMD5 from 'spark-md5'
-import { HiveData } from 'src/HiveData'
+import { HiveData } from './HiveData'
 const TAG = 'HiveHelper'
 
 const ApplicationDID = "TODO"

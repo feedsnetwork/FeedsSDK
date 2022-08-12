@@ -1,5 +1,5 @@
-import { HiveHelper } from 'src/HiveHelper'
-import { HiveData } from 'src/HiveData'
+import { HiveHelper } from './HiveHelper'
+import { HiveData } from './HiveData'
 
 const TAG = 'HiveApi'
 
