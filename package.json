@@ -4,7 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublishOnly": "npm run build",
+    "build": "npm run build:release",
+    "build:debug": "npm run clean && npm run types && rollup -c",
+    "build:release": "npm run clean && npm run types && rollup -c --environment prodbuild",
+    "dev": "rollup -c -w",
+    "clean": "rm -rf dist/ typings/ generated/",
+    "types": "npm run clean && tsc --emitDeclarationOnly --outDir typings/ --project tsconfig.types.json",
+    "tsc:build": "rollup -c",
+    "tsc:w": "tsc -w",
+    "docs": "npx typedoc src/index.ts --excludePrivate --excludeProtected --excludeInternal",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
