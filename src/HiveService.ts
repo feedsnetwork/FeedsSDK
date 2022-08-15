@@ -1,18 +1,21 @@
 import { Executable, InsertOptions, File as HiveFile, ScriptRunner, Vault, AppContext, Logger as HiveLogger, UpdateResult, UpdateOptions, Condition, InsertResult } from "@elastosfoundation/hive-js-sdk"
 import { Claims, DIDDocument, JWTHeader, JWTParserBuilder, DID, DIDBackend, DefaultDIDAdapter, JSONObject, VerifiablePresentation } from '@elastosfoundation/did-js-sdk'
-import { connectivity, DID as ConDID } from "@elastosfoundation/elastos-connectivity-sdk-js"
+import { connectivity, DID as ConDID, Hive } from "@elastosfoundation/elastos-connectivity-sdk-js"
+import { Logger } from './utils/logger'
 import { config } from './config'
 
-let TAG: string = 'Feeds-web-dapp-HiveService'
+const TAG: string = 'Feeds-web-dapp-HiveService'
 let scriptRunners = {}
 
 const cfig = new config()
 const userDid = cfig.userDid
+const currentNet = cfig.currentNet
 const applicationDID = cfig.applicationDID
+const resolverCache = cfig.resolverCache
 
 export class HiveService {
-  private static readonly RESOLVE_CACHE = '/data/userDir/data/store/catch'
-
+  private static LOG = new Logger("HiveService")
+  
   public image = null
   public appinstanceDid: string
   private vault: Vault
@@ -24,19 +27,15 @@ export class HiveService {
   public async creatAppContext(appInstanceDocument, userDidString: string): Promise<AppContext> {
     return new Promise(async (resolve, reject) => {
       try {
-        const currentNet = "mainnet".toLowerCase();
+        // const currentNet = "mainnet".toLowerCase();
         HiveLogger.setDefaultLevel(HiveLogger.TRACE)
-
-        console.log("setupResolver userDidString ========================= 0-1", userDidString)
-        console.log("setupResolver currentNet ========================= 0-2", currentNet)
 
         DIDBackend.initialize(new DefaultDIDAdapter(currentNet))
         try {
-          console.log("setupResolver ======================== 1")
-          AppContext.setupResolver(currentNet, HiveService.RESOLVE_CACHE)
-          console.log("setupResolver ======================== 2")
+          AppContext.setupResolver(currentNet, resolverCache)
         } catch (error) {
-          console.log("setupResolver error: ", error)
+          // TODO:
+          HiveService.LOG.error("error on creatAppContext: " + error)
         }
         const path = "/data/userDir/data/store/develop"
 
