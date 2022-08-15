@@ -1,12 +1,14 @@
-import { Executable, InsertOptions, File as HiveFile, ScriptRunner, Vault, AppContext, Logger as HiveLogger, UpdateResult, UpdateOptions, Condition, InsertResult } from "@elastosfoundation/hive-js-sdk";
+import { Executable, InsertOptions, File as HiveFile, ScriptRunner, Vault, AppContext, Logger as HiveLogger, UpdateResult, UpdateOptions, Condition, InsertResult } from "@elastosfoundation/hive-js-sdk"
 import { Claims, DIDDocument, JWTHeader, JWTParserBuilder, DID, DIDBackend, DefaultDIDAdapter, JSONObject, VerifiablePresentation } from '@elastosfoundation/did-js-sdk'
+import { connectivity, DID as ConDID } from "@elastosfoundation/elastos-connectivity-sdk-js"
+import { config } from './config'
 
 let TAG: string = 'Feeds-web-dapp-HiveService'
-const ApplicationDID = ""
 let scriptRunners = {}
 
-const feedsDid = sessionStorage.getItem('FEEDS_DID')
-const userDid = `did:elastos:${feedsDid}`
+const cfig = new config()
+const userDid = cfig.userDid
+const applicationDID = cfig.applicationDID
 
 export class HiveService {
   private static readonly RESOLVE_CACHE = '/data/userDir/data/store/catch'
@@ -64,7 +66,7 @@ export class HiveService {
               }
             })
           }
-        }, userDidString, ApplicationDID);
+        }, userDidString, applicationDID);
         resolve(context)
       } catch (error) {
         // Logger.error(TAG, "creat Error: ", error)
@@ -404,7 +406,7 @@ async function getAppInstanceDIDDoc() {
 }
 
 async function issueDiplomaFor() {
-  connectivity.setApplicationDID(ApplicationDID)
+  connectivity.setApplicationDID(applicationDID)
   const didAccess = new ConDID.DIDAccess()
   let credential = await didAccess.getExistingAppIdentityCredential()
   if (credential) {
@@ -419,12 +421,12 @@ async function issueDiplomaFor() {
 }
 
 // todo: instanceDid instanceStorePassword
-async function createPresentation(vc, instanceDid, instanceDidStore, instanceStorePassword, hiveDid, nonce) {
-  // const access = new ConDID.DIDAccess()
-  // const info = await access.getOrCreateAppInstanceDID()
-  // const info2 = await access.getExistingAppInstanceDIDInfo()
-  const vpb = await VerifiablePresentation.createFor(instanceDid, null, instanceDidStore)
-  const vp = await vpb.credentials(vc).realm(hiveDid).nonce(nonce).seal(instanceStorePassword)
+async function createPresentation(vc, hiveDid, nonce) {
+  const access = new ConDID.DIDAccess()
+  const info = await access.getOrCreateAppInstanceDID()
+  const info2 = await access.getExistingAppInstanceDIDInfo()
+  const vpb = await VerifiablePresentation.createFor(info.did, null, info.didStore)
+  const vp = await vpb.credentials(vc).realm(hiveDid).nonce(nonce).seal(info2.storePassword)
   return vp
 }
 
