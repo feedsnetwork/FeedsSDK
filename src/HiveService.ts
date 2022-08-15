@@ -3,8 +3,6 @@ import { Claims, DIDDocument, JWTHeader, JWTParserBuilder, DID, DIDBackend, Defa
 import { connectivity, DID as ConDID, Hive } from "@elastosfoundation/elastos-connectivity-sdk-js"
 import { Logger } from './utils/logger'
 import { config } from './config'
-
-const TAG: string = 'Feeds-web-dapp-HiveService'
 let scriptRunners = {}
 
 const cfig = new config()
@@ -12,9 +10,9 @@ const userDid = cfig.userDid
 const currentNet = cfig.currentNet
 const applicationDID = cfig.applicationDID
 const resolverCache = cfig.resolverCache
+const logger = new Logger("Feeds-web-dapp-HiveService")
 
 export class HiveService {
-  private static LOG = new Logger("HiveService")
   
   public image = null
   public appinstanceDid: string
@@ -26,51 +24,45 @@ export class HiveService {
 
   public async creatAppContext(appInstanceDocument, userDidString: string): Promise<AppContext> {
     return new Promise(async (resolve, reject) => {
+      HiveLogger.setDefaultLevel(HiveLogger.TRACE)
+
+      DIDBackend.initialize(new DefaultDIDAdapter(currentNet))
       try {
-        // const currentNet = "mainnet".toLowerCase();
-        HiveLogger.setDefaultLevel(HiveLogger.TRACE)
-
-        DIDBackend.initialize(new DefaultDIDAdapter(currentNet))
-        try {
-          AppContext.setupResolver(currentNet, resolverCache)
-        } catch (error) {
-          // TODO:
-          HiveService.LOG.error("error on creatAppContext: " + error)
-        }
-        const path = "/data/userDir/data/store/develop"
-
-        // auth
-        const context = await AppContext.build({
-          getLocalDataDir(): string {
-            return path
-          },
-          getAppInstanceDocument(): Promise<DIDDocument> {
-            return new Promise(async (resolve, reject) => {
-              try {
-                resolve(appInstanceDocument)
-              } catch (error) {
-                reject(error)
-              }
-            })
-          },
-          getAuthorization(jwtToken: string): Promise<string> {
-            return new Promise(async (resolve, reject) => {
-              try {
-                // const authToken = await self.standardAuthService.generateHiveAuthPresentationJWT(jwtToken)
-                const authToken = generateHiveAuthPresentationJWT(jwtToken)
-                resolve(authToken)
-              } catch (error) {
-                // Logger.error(TAG, "get Authorization Error: ", error)
-                reject(error)
-              }
-            })
-          }
-        }, userDidString, applicationDID);
-        resolve(context)
+        AppContext.setupResolver(currentNet, resolverCache)
       } catch (error) {
-        // Logger.error(TAG, "creat Error: ", error)
+        logger.error("error on creatAppContext: " + error)
         reject(error)
       }
+      const path = "/data/userDir/data/store/develop"
+
+      // auth
+      const context = await AppContext.build({
+        getLocalDataDir(): string {
+          return path
+        },
+        getAppInstanceDocument(): Promise<DIDDocument> {
+          return new Promise(async (resolve, reject) => {
+            try {
+              resolve(appInstanceDocument)
+            } catch (error) {
+              logger.error("error on getAppInstanceDocument: " + error)
+              reject(error)
+            }
+          })
+        },
+        getAuthorization(jwtToken: string): Promise<string> {
+          return new Promise(async (resolve, reject) => {
+            try {
+              const authToken = generateHiveAuthPresentationJWT(jwtToken)
+              resolve(authToken)
+            } catch (error) {
+              logger.error("error on getAuthorization: " + error)
+              reject(error)
+            }
+          })
+        }
+      }, userDidString, applicationDID);
+      resolve(context)
     })
   }
 
@@ -88,10 +80,8 @@ export class HiveService {
 
   async createVault() {
     try {
-      // TODO: 更改为feeds_did 
       const appinstanceDocument = await getAppInstanceDIDDoc()
       const context = await this.creatAppContext(appinstanceDocument, userDid)
-      // const context = await getAppContext(userDid)
       const hiveVault = new Vault(context)
 
       const scriptRunner = await this.creatScriptRunner(userDid)
@@ -104,8 +94,7 @@ export class HiveService {
       return hiveVault
     }
     catch (error) {
-      // Logger.error(TAG, 'Create vault error:', error);
-      // this.events.publish(FeedsEvent.PublishType.authEssentialFail, { type: 1 });
+      logger.error("error on createVault: " + error)
       throw error
     }
   }
@@ -124,8 +113,8 @@ export class HiveService {
         const avatarDid = userDid + "#avatar"
         const avatarVC = userDIDDocument.getCredential(avatarDid)
         if (!avatarVC) {// 没有有头像
-          // Logger.warn(TAG, 'Not found avatar from did document');
-          return null;
+          logger.warn("Not found avatar from did document")
+          return null
         }
 
         const sub = avatarVC.getSubject()
@@ -161,9 +150,9 @@ export class HiveService {
           tarDID: tarDID,
           tarAppDID: tarAppDID
         }
-        resolve(res);
+        resolve(res)
       } catch (error) {
-        reject(error);
+        reject(error)
       }
     });
   }
@@ -177,6 +166,7 @@ export class HiveService {
       }
       return this.scriptRunner
     } catch (error) {
+      logger.error("error on getScriptRunner: " + error)
       throw error
     }
 
@@ -208,7 +198,8 @@ export class HiveService {
         const result = await databaseService.createCollection(channelName);
         resolve(result)
       } catch (error) {
-        reject(error);
+        logger.error("error on createCollection: " + error)
+        reject(error)
       }
     })
   }
@@ -220,7 +211,8 @@ export class HiveService {
         const result = await databaseService.deleteCollection(collectionName);
         resolve(result)
       } catch (error) {
-        reject(error);
+        logger.error("error on deleteCollection: " + error)
+        reject(error)
       }
     })
   }
@@ -233,7 +225,7 @@ export class HiveService {
           condition, allowAnonymousUser, allowAnonymousApp)
         resolve()
       } catch (error) {
-        // this.events.publish(FeedsEvent.PublishType.authEssentialFail, { type: 0 })
+        logger.error("error on registerScript: " + error)
         reject(error)
       }
     })
@@ -243,10 +235,6 @@ export class HiveService {
     let scriptRunner = await this.getScriptRunner(targetDid)
     let result = await scriptRunner.callScript<any>(scriptName, document, targetDid, appid)
     return result
-  }
-
-  async getMyChannelList(userDid: string) {
-    // this.dataHelper.getMyChannelListWithHive(userDid)
   }
 
   async uploadScriting(transactionId: string, data: string) {
@@ -262,6 +250,7 @@ export class HiveService {
       const scriptRunner = await this.getScriptRunner(userDid)
       return await scriptRunner.callScript<any>(avatarScriptName, avatarParam, tarDID, tarAppDID)
     } catch (error) {
+      logger.error("error on downloadEssAvatarTransactionId: " + error)
       throw error
     }
   }
@@ -271,6 +260,7 @@ export class HiveService {
       const scriptRunner = await this.getScriptRunner(targetDid)
       return await scriptRunner.downloadFile(transaction_id)
     } catch (error) {
+      logger.error("error on downloadScripting: " + error)
       throw error
     }
   }
@@ -286,6 +276,7 @@ export class HiveService {
       return scriptRunner.uploadFile(transactionId, img)
     }
     catch (error) {
+      logger.error("error on getUploadDataFromScript: " + error)
       throw error
     }
   }
@@ -296,6 +287,7 @@ export class HiveService {
       return scriptRunner.uploadFile(transactionId, img)
     }
     catch (error) {
+      logger.error("error on uploadDataFromScript: " + error)
       throw error
     }
   }
@@ -306,6 +298,7 @@ export class HiveService {
       return await fileService.upload(remotePath, img)
     }
     catch (error) {
+      logger.error("error on uploadScriptWithBuffer: " + error)
       throw error
     }
   }
@@ -316,6 +309,7 @@ export class HiveService {
       return await fileService.upload(remotePath, Buffer.from(img, 'utf8'))
     }
     catch (error) {
+      logger.error("error on uploadScriptWithString: " + error)
       throw error
     }
   }
@@ -327,6 +321,7 @@ export class HiveService {
         const insertResult = await dbService.insertOne(collectName, doc, new InsertOptions(false, true));
         resolve(insertResult)
       } catch (error) {
+        logger.error("error on insertDBData: " + error)
         reject(error)
       }
     })
@@ -339,6 +334,7 @@ export class HiveService {
         const result = await dbService.updateOne(collectName, filter, update, option)
         resolve(result)
       } catch (error) {
+        logger.error("error on updateOneDBData: " + error)
         reject(error)
       }
     })
@@ -351,6 +347,7 @@ export class HiveService {
         await dbService.deleteOne(collectName, fillter)
         resolve()
       } catch (error) {
+        logger.error("error on deleateOneDBData: " + error)
         reject(error)
       }
     })
@@ -363,20 +360,22 @@ export class HiveService {
         const result = dbService.findMany(collectionName, filter)
         resolve(result)
       } catch (error) {
+        logger.error("error on queryDBData: " + error)
         reject(error)
       }
     })
   }
 
   newInsertOptions() {
-    return new InsertOptions(false, true);
+    return new InsertOptions(false, true)
   }
 }
 
 const storePassword = "storepass"
 const generateHiveAuthPresentationJWT = async (challeng) => {
   if (challeng === null || challeng === undefined || challeng === '') {
-    console.log('Params error')
+    logger.error("error on challeng = " + challeng)
+    //  TODO :
   }
 
   // Parse, but verify on chain that this JWT is valid first 
@@ -384,6 +383,7 @@ const generateHiveAuthPresentationJWT = async (challeng) => {
   const parseResult = await JWTParser.parse(challeng)
   const claims = parseResult.getBody()
   if (claims === undefined) {
+    logger.error("error on generateHiveAuthPresentationJWT: claims = " + claims)
     return // 抛出error
   }
   const payload = claims.getJWTPayload()
