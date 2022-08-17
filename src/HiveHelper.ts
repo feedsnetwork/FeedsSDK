@@ -1,3 +1,4 @@
+import { Hive } from '@elastosfoundation/elastos-connectivity-sdk-js'
 import { HiveService } from './HiveService'
 import { QueryHasResultCondition, FindExecutable, AndCondition, NetworkException, InsertExecutable, UpdateExecutable, DeleteExecutable, UpdateResult, UpdateOptions, InsertResult, FileDownloadExecutable, HiveException, InsufficientStorageException } from "@elastosfoundation/hive-js-sdk"
 import { utils } from './utils/utils'
@@ -6,20 +7,12 @@ import { HiveData } from './HiveData'
 import { AppContext } from './AppContext'
 import { Logger } from './utils/logger'
 import { Channel } from './Channel'
-import { InsertResult as FeedsInsertResult } from './InsertResult'
-import { DeleteResult } from './DeleteResult'
-
-
-// const ApplicationDID = "TODO"
-// const feedsDid = sessionStorage.getItem('FEEDS_DID')
-// const userDid = `did:elastos:${feedsDid}`
-// const hiveService = new HiveService()
+import { ParseHiveResult } from './ParseHiveResult'
 
 const hiveService = new HiveService()
 const logger = new Logger("HiveService")
 
 export class HiveHelper {
-    private appContext: AppContext
     private userDid = ''
     private ApplicationDID = ''
 
@@ -77,13 +70,12 @@ export class HiveHelper {
     public static readonly QUERY_PUBLIC_POST_BY_CHANNEL = "query_public_post_by_channel"
     private buyStorageSpaceDialog: any = null
     constructor(appContext: AppContext) {
-        this.appContext = appContext
         this.userDid = appContext.userDid
         this.ApplicationDID = appContext.applicationDID
     }
 
     /** getMyChannels end */
-    private queryChannelsFromDB(channelId: string = null): Promise<[Channel]> {
+    private queryChannelsFromDB(channelId: string = null): Promise<Channel[]> {
         return new Promise(async (resolve, reject) => {
             try {
                 var filter = {}
@@ -91,8 +83,8 @@ export class HiveHelper {
                     filter = { "channel_id": channelId }
                 }
                 const result = await hiveService.queryDBData(HiveHelper.TABLE_CHANNELS, filter)
-                // TODO: hanndel(result)
-                resolve(result)
+                const channels = ParseHiveResult.parseChannelResult(this.userDid, result)
+                resolve(channels)
             } catch (error) {
                 logger.error('Query channels from DB', error)
                 reject(error)
@@ -100,7 +92,7 @@ export class HiveHelper {
         })
     }
 
-    queryMyChannels(): Promise<[Channel]> {
+    queryMyChannels(): Promise<Channel[]> {
         return this.queryChannelsFromDB()
     }
 
@@ -111,7 +103,7 @@ export class HiveHelper {
 
     /** create channel start */
     private insertDataToChannelDB(channelId: string, name: string, intro: string, avatar: string, memo: string,
-        createdAt: number, updatedAt: number, type: string, tippingAddress: string, nft: string, category: string, proof: string): Promise<FeedsInsertResult> {
+        createdAt: number, updatedAt: number, type: string, tippingAddress: string, nft: string, category: string, proof: string): Promise<HiveData.InsertResult> {
         return new Promise(async (resolve, reject) => {
             const doc = {
                 "channel_id": channelId,
@@ -131,7 +123,13 @@ export class HiveHelper {
             try {
                 const insertResult = await hiveService.insertDBData(HiveHelper.TABLE_CHANNELS, doc)
                 logger.trace("Insert channel db success: ", insertResult)
-                resolve(doc)
+                const result: HiveData.InsertResult = {
+                    destDid: this.userDid,
+                    channelId: channelId,
+                    createdAt: createdAt,
+                    updatedAt: updatedAt
+                }
+                resolve(result)
             } catch (error) {
                 logger.error("Insert channel db error: ", error)
                 // 507 存储空间不足
@@ -140,32 +138,14 @@ export class HiveHelper {
         })
     }
 
-    private insertChannelData(channelName: string, intro: string, avatarAddress: string, tippingAddress: string, type: string, nft: string, memo: string, category: string, proof: string): Promise<FeedsInsertResult> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const signinDid = this.userDid
-                const createdAt = new Date().getTime()
-                const updatedAt = new Date().getTime()
-                const channelId = utils.generateChannelId(signinDid, channelName)
+    private async insertChannelData(channelName: string, intro: string, avatarAddress: string, tippingAddress: string, type: string, nft: string, memo: string, category: string, proof: string): Promise<HiveData.InsertResult> {
+        const signinDid = this.userDid
+        const createdAt = new Date().getTime()
+        const updatedAt = new Date().getTime()
+        const channelId = utils.generateChannelId(signinDid, channelName)
 
-                // TODO : signinDid / createdAt / updatedAt / channelId
-                let result = await this.insertDataToChannelDB(channelId.toString(), channelName, intro, avatarAddress, memo, createdAt, updatedAt, type, tippingAddress, nft, category, proof)
-                if (result) {
-                    const insertResult: FeedsInsertResult = {
-                        destDid: signinDid,
-                        channelId: channelId,
-                        createdAt: createdAt,
-                        updatedAt: updatedAt
-                    }
-                    resolve(insertResult)
-                }
-                else
-                    reject('Insert channel data error')
-            } catch (error) {
-                // // Logger.error(TAG, "insertChannelData error", error) 
-                reject(error)
-            }
-        })
+        // TODO : signinDid / createdAt / updatedAt / channelId
+        return await this.insertDataToChannelDB(channelId.toString(), channelName, intro, avatarAddress, memo, createdAt, updatedAt, type, tippingAddress, nft, category, proof)
     }
 
     createChannel(channelName: string, intro: string, avatarAddress: string, tippingAddress: string = '', type: string = 'public', nft: string = '', memo: string = '', category: string = '', proof: string = '') {
@@ -196,7 +176,7 @@ export class HiveHelper {
             try {
                 const result = await hiveService.updateOneDBData(HiveHelper.TABLE_CHANNELS, filter, update, option)
                 logger.log('Delete channel success: ', result)
-                const deleteResult: DeleteResult = {
+                const deleteResult: HiveData.DeleteResult = {
                     updatedAt: updatedAt,
                     status: 1
                 }

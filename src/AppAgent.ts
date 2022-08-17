@@ -1,9 +1,9 @@
+import { Hive } from '@elastosfoundation/elastos-connectivity-sdk-js'
 import { Logger } from './utils/logger'
 import { HiveHelper } from './HiveHelper'
 import { AppContext } from './AppContext'
 import { Channel } from './Channel'
-import { InsertResult } from './InsertResult'
-import { DeleteResult } from './DeleteResult'
+import { HiveData } from './HiveData'
 
 const logger = new Logger("AppAgent")
 export class AppAgent {
@@ -14,7 +14,7 @@ export class AppAgent {
     // TODO: register/create/feedsInfo
   }
 
-  getMyChannels(): Promise<Array<Channel>> {
+  getMyChannels(): Promise<Channel[]> {
     return this.hiveHelper.queryMyChannels()
   }
 
@@ -32,7 +32,7 @@ export class AppAgent {
     memo: string,
     category: string = '',
     proof: string = ''
-  ): Promise<InsertResult> {
+  ): Promise<HiveData.InsertResult> {
     return this.hiveHelper.createChannel(channelName, intro, avatar, paymentAddress, type, nft, memo, category, proof)
   }
 
@@ -43,7 +43,7 @@ export class AppAgent {
    * @return success or failure
    * @throws HiveError
    */
-  deleteChannel(channelId: string): Promise<DeleteResult> {
+  deleteChannel(channelId: string): Promise<HiveData.DeleteResult> {
     return this.hiveHelper.deleteChannel(channelId)
   }
 
