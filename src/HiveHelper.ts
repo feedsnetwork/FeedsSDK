@@ -6,7 +6,9 @@ import SparkMD5 from 'spark-md5'
 import { HiveData } from './HiveData'
 import { AppContext } from './AppContext'
 import { Logger } from './utils/logger'
-import { Channel } from './Channel'
+// import { Channel } from './Channel'
+import { MyChannel } from './MyChannel'
+import { SubscriptionChannel } from './SubscriptionChannel'
 import { ParseHiveResult } from './ParseHiveResult'
 
 const hiveService = new HiveService()
@@ -92,12 +94,12 @@ export class HiveHelper {
         })
     }
 
-    queryMyChannels(): Promise<Channel[]> {
+    queryMyChannels(): Promise<MyChannel[]> {
         return this.queryChannelsFromDB()
     }
 
-    queryMyChannelById(channelId: string): Promise<Channel> {
-        return this.queryChannelsFromDB(channelId)[0]
+    queryMyChannelById(channelId: string): Promise<MyChannel[]> {
+        return this.queryChannelsFromDB(channelId)
     }
     /** getMyChannels end */
 
@@ -234,11 +236,11 @@ export class HiveHelper {
     }
 
     /** unsubscribe channel end */
-    querySubscriptionByUserDID(targetDid: string, userDid: string): Promise<HiveData.SubscriptionInfo[]> {
+    querySubscriptionByUserDID(targetDid: string, userDid: string): Promise<SubscriptionChannel[]> {
         return this.callQuerySubscriptionByUserDID(targetDid, userDid)
     }
 
-    private callQuerySubscriptionByUserDID(targetDid: string, userDid: string): Promise<HiveData.SubscriptionInfo[]> {
+    private callQuerySubscriptionByUserDID(targetDid: string, userDid: string): Promise<SubscriptionChannel[]> {
         return new Promise(async (resolve, reject) => {
             try {
                 const params = {
@@ -256,11 +258,11 @@ export class HiveHelper {
     }
 
     /** query subscription info by userDid end */
-    querySubscriptionInfoByChannelId(targetDid: string, channelId: string): Promise<HiveData.SubscriptionInfo[]> {
+    querySubscriptionInfoByChannelId(targetDid: string, channelId: string): Promise<SubscriptionChannel[]> {
         return this.callQuerySubscriptionInfoByChannelId(targetDid, channelId)
     }
 
-    private callQuerySubscriptionInfoByChannelId(targetDid: string, channelId: string, status: number = HiveData.CommonStatus.available): Promise<HiveData.SubscriptionInfo[]> {
+    private callQuerySubscriptionInfoByChannelId(targetDid: string, channelId: string, status: number = HiveData.CommonStatus.available): Promise<SubscriptionChannel[]> {
         return new Promise(async (resolve, reject) => {
             try {
                 const params = {

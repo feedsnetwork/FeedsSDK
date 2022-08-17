@@ -5,28 +5,24 @@ import { HiveHelper } from './HiveHelper'
 import { AppContext } from './AppContext'
 
 const logger = new Logger("MyChannel")
-export class MyChannel extends Channel {
+export class SubscriptionChannel extends Channel {
     private hiveHelper: HiveHelper
 
-    constructor(myChnnelInfo: HiveData.ChannelInfo) {
-        super(myChnnelInfo, null)
+    constructor(subscriptionChannelInfo: HiveData.SubscriptionInfo) {
+        super(null, subscriptionChannelInfo)
         // TODO: AppContext.isInitialized()
         this.hiveHelper = new HiveHelper(AppContext.getInstance())
     }
 
-    updateInfo() {
+    getPosts() {
 
     }
 
-    post() {
+    getPostsRangeOfTime() {
 
     }
 
-    updatePost() {
-
-    }
-
-    deletePost() {
+    getPostById() {
 
     }
 }

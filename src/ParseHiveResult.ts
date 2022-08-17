@@ -1,6 +1,8 @@
-import { HiveData } from './HiveData';
+import { HiveData } from './HiveData'
 import { Logger } from './utils/logger'
 import { Channel } from './Channel'
+import { MyChannel } from './MyChannel'
+import { SubscriptionChannel } from './SubscriptionChannel'
 
 const logger = new Logger("Channel")
 
@@ -46,8 +48,8 @@ export class ParseHiveResult {
                             proof: item.proof,
                             memo: item.memo,
                         }
-                        const channel = new Channel(channelInfo)
-                        parseResult.push(channel)
+                        const myChannel = new MyChannel(channelInfo)
+                        parseResult.push(myChannel)
                     }
                 })
             }
@@ -60,7 +62,7 @@ export class ParseHiveResult {
     /** parse channel result end */
 
     /** parse subscription result start */
-    public static parseSubscriptionResult(destDid: string, result: any): HiveData.SubscriptionInfo[] {
+    public static parseSubscriptionResult(destDid: string, result: any): SubscriptionChannel[] {
         try {
             /**
              * channel_id: "xxx"
@@ -84,7 +86,8 @@ export class ParseHiveResult {
                         updatedAt: item.updated_at,
                         status: item.status
                     }
-                    parseResult.push(subscriptionInfo)
+                    const subscriptionChannel = new SubscriptionChannel(subscriptionInfo)
+                    parseResult.push(subscriptionChannel)
                 })
             }
             return parseResult

@@ -5,15 +5,20 @@ import { Logger } from './utils/logger'
 const logger = new Logger("Channel")
 
 export class Channel {
-    private channelInfo: HiveData.ChannelInfo
+    myChannelInfo: HiveData.ChannelInfo
+    subscriptionChannelInfo: HiveData.SubscriptionInfo
 
-    constructor(channelInfo: HiveData.ChannelInfo) {
-        this.channelInfo = channelInfo
+    constructor(channelInfo: HiveData.ChannelInfo, subscriptionChannelInfo: HiveData.SubscriptionInfo) {
+        this.myChannelInfo = channelInfo
+        this.subscriptionChannelInfo = subscriptionChannelInfo
     }
 
-    public getChannelInfo(): HiveData.ChannelInfo {
-        return this.channelInfo
+    public getMyChannelInfo(): HiveData.ChannelInfo {
+        return this.myChannelInfo
     }
 
+    public getSubscriptionChannelInfo(): HiveData.SubscriptionInfo {
+        return this.subscriptionChannelInfo
+    }
 }
 

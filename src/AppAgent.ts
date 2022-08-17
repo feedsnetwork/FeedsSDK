@@ -3,7 +3,9 @@ import { Logger } from './utils/logger'
 import { HiveHelper } from './HiveHelper'
 import { AppContext } from './AppContext'
 import { Channel } from './Channel'
+import { MyChannel } from './MyChannel'
 import { HiveData } from './HiveData'
+import { SubscriptionChannel } from './SubscriptionChannel'
 
 const logger = new Logger("AppAgent")
 export class AppAgent {
@@ -14,11 +16,11 @@ export class AppAgent {
     // TODO: register/create/feedsInfo
   }
 
-  getMyChannels(): Promise<Channel[]> {
+  getMyChannels(): Promise<MyChannel[]> {
     return this.hiveHelper.queryMyChannels()
   }
 
-  getMyChannelById(channelId: string): Promise<Channel> {
+  getMyChannelById(channelId: string): Promise<MyChannel[]> {
     return this.hiveHelper.queryMyChannelById(channelId)
   }
 
@@ -63,11 +65,11 @@ export class AppAgent {
     return this.hiveHelper.unsubscribeChannel(targetDid, channelId)
   }
 
-  getSubscribedChannels(targetDid: string, userDid: string): Promise<HiveData.SubscriptionInfo[]> {
+  getSubscribedChannels(targetDid: string, userDid: string): Promise<SubscriptionChannel[]> {
     return this.hiveHelper.querySubscriptionByUserDID(targetDid, userDid)
   }
 
-  getSubscribedChannelById(targetDid: string, channelId: string): Promise<HiveData.SubscriptionInfo[]> {
+  getSubscribedChannelById(targetDid: string, channelId: string): Promise<SubscriptionChannel[]> {
     return this.hiveHelper.querySubscriptionInfoByChannelId(targetDid, channelId)
   }
 
