@@ -10,7 +10,7 @@ const userDid = cfig.userDid
 const currentNet = cfig.currentNet
 const applicationDID = cfig.applicationDID
 const resolverCache = cfig.resolverCache
-const logger = new Logger("Feeds-web-dapp-HiveService")
+const logger = new Logger("HiveService")
 
 export class HiveService {
   
@@ -371,7 +371,6 @@ export class HiveService {
   }
 }
 
-const storePassword = "storepass"
 const generateHiveAuthPresentationJWT = async (challeng) => {
   if (challeng === null || challeng === undefined || challeng === '') {
     logger.error("error on challeng = " + challeng)
@@ -391,7 +390,7 @@ const generateHiveAuthPresentationJWT = async (challeng) => {
   const hiveDid = claims.getIssuer()
   const appIdCredential = await issueDiplomaFor()
   const presentation = await createPresentation(appIdCredential, hiveDid, nonce)
-  const token = await createChallengeResponse(presentation, hiveDid, storePassword)
+  const token = await createChallengeResponse(presentation, hiveDid)
   return token
 }
 
@@ -419,7 +418,6 @@ async function issueDiplomaFor() {
   }
 }
 
-// todo: instanceDid instanceStorePassword
 async function createPresentation(vc, hiveDid, nonce) {
   const access = new ConDID.DIDAccess()
   const info = await access.getOrCreateAppInstanceDID()
@@ -429,7 +427,7 @@ async function createPresentation(vc, hiveDid, nonce) {
   return vp
 }
 
-const createChallengeResponse = async (vp, hiveDid, storepass) => {
+const createChallengeResponse = async (vp, hiveDid) => {
   const exp = new Date()
   const iat = new Date().getTime()
   exp.setFullYear(exp.getFullYear() + 2)

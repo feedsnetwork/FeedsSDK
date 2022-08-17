@@ -1,16 +1,28 @@
 import { HiveService } from './HiveService'
 import { QueryHasResultCondition, FindExecutable, AndCondition, NetworkException, InsertExecutable, UpdateExecutable, DeleteExecutable, UpdateResult, UpdateOptions, InsertResult, FileDownloadExecutable, HiveException, InsufficientStorageException } from "@elastosfoundation/hive-js-sdk"
-import { utils } from './utils'
+import { utils } from './utils/utils'
 import SparkMD5 from 'spark-md5'
 import { HiveData } from './HiveData'
-const TAG = 'HiveHelper'
+import { AppContext } from './AppContext'
+import { Logger } from './utils/logger'
+import { Channel } from './Channel'
+import { InsertResult as FeedsInsertResult } from './InsertResult'
+import { DeleteResult } from './DeleteResult'
 
-const ApplicationDID = "TODO"
-const feedsDid = sessionStorage.getItem('FEEDS_DID')
-const userDid_local = `did:elastos:${feedsDid}`
+
+// const ApplicationDID = "TODO"
+// const feedsDid = sessionStorage.getItem('FEEDS_DID')
+// const userDid = `did:elastos:${feedsDid}`
+// const hiveService = new HiveService()
+
 const hiveService = new HiveService()
+const logger = new Logger("HiveService")
 
 export class HiveHelper {
+    private appContext: AppContext
+    private userDid = ''
+    private ApplicationDID = ''
+
     public static readonly TABLE_FEEDS_SCRIPTING = "feeds_scripting" // 存储feeds信息：版本号等
 
     public static readonly TABLE_CHANNELS = "channels" // 存储所有的channle 信息，已订阅者可以访问，仅自己写入
@@ -64,7 +76,141 @@ export class HiveHelper {
     public static readonly QUERY_PUBLIC_SOMETIME_POST = "query_public_sometime_post"
     public static readonly QUERY_PUBLIC_POST_BY_CHANNEL = "query_public_post_by_channel"
     private buyStorageSpaceDialog: any = null
-    constructor() { }
+    constructor(appContext: AppContext) {
+        this.appContext = appContext
+        this.userDid = appContext.userDid
+        this.ApplicationDID = appContext.applicationDID
+    }
+
+    /** getMyChannels end */
+    private queryChannelsFromDB(channelId: string = null): Promise<[Channel]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                var filter = {}
+                if (channelId != null) {
+                    filter = { "channel_id": channelId }
+                }
+                const result = await hiveService.queryDBData(HiveHelper.TABLE_CHANNELS, filter)
+                // TODO: hanndel(result)
+                resolve(result)
+            } catch (error) {
+                logger.error('Query channels from DB', error)
+                reject(error)
+            }
+        })
+    }
+
+    queryMyChannels(): Promise<[Channel]> {
+        return this.queryChannelsFromDB()
+    }
+
+    queryMyChannelById(channelId: string): Promise<Channel> {
+        return this.queryChannelsFromDB(channelId)[0]
+    }
+    /** getMyChannels end */
+
+    /** create channel start */
+    private insertDataToChannelDB(channelId: string, name: string, intro: string, avatar: string, memo: string,
+        createdAt: number, updatedAt: number, type: string, tippingAddress: string, nft: string, category: string, proof: string): Promise<FeedsInsertResult> {
+        return new Promise(async (resolve, reject) => {
+            const doc = {
+                "channel_id": channelId,
+                "name": name,
+                "intro": intro,
+                "avatar": avatar,
+                "created_at": createdAt,
+                "updated_at": updatedAt,
+                "type": type,
+                "tipping_address": tippingAddress,
+                "nft": nft,
+                "memo": memo,
+                "category": category,
+                "proof": proof
+            }
+
+            try {
+                const insertResult = await hiveService.insertDBData(HiveHelper.TABLE_CHANNELS, doc)
+                logger.trace("Insert channel db success: ", insertResult)
+                resolve(doc)
+            } catch (error) {
+                logger.error("Insert channel db error: ", error)
+                // 507 存储空间不足
+                reject(error)
+            }
+        })
+    }
+
+    private insertChannelData(channelName: string, intro: string, avatarAddress: string, tippingAddress: string, type: string, nft: string, memo: string, category: string, proof: string): Promise<FeedsInsertResult> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const signinDid = this.userDid
+                const createdAt = new Date().getTime()
+                const updatedAt = new Date().getTime()
+                const channelId = utils.generateChannelId(signinDid, channelName)
+
+                // TODO : signinDid / createdAt / updatedAt / channelId
+                let result = await this.insertDataToChannelDB(channelId.toString(), channelName, intro, avatarAddress, memo, createdAt, updatedAt, type, tippingAddress, nft, category, proof)
+                if (result) {
+                    const insertResult: FeedsInsertResult = {
+                        destDid: signinDid,
+                        channelId: channelId,
+                        createdAt: createdAt,
+                        updatedAt: updatedAt
+                    }
+                    resolve(insertResult)
+                }
+                else
+                    reject('Insert channel data error')
+            } catch (error) {
+                // // Logger.error(TAG, "insertChannelData error", error) 
+                reject(error)
+            }
+        })
+    }
+
+    createChannel(channelName: string, intro: string, avatarAddress: string, tippingAddress: string = '', type: string = 'public', nft: string = '', memo: string = '', category: string = '', proof: string = '') {
+        return this.insertChannelData(channelName, intro, avatarAddress, tippingAddress, type, nft, memo, category, proof)
+    }
+    /** create channel end */
+
+    /** delete channel star */
+    deleteChannel(channelId: string) {
+        return this.deleteChannelData(channelId)
+    }
+
+    private deleteChannelData(channelId: string) {
+        const updatedAt = utils.getCurrentTimeNum()
+        return this.deleteDataToChannelDB(channelId, updatedAt)
+    }
+
+    private deleteDataToChannelDB(channelId: string, updatedAt: number): Promise<DeleteResult> {
+        return new Promise(async (resolve, reject) => {
+            const doc =
+            {
+                "updated_at": updatedAt,
+                "status": 1,
+            }
+            const option = new UpdateOptions(false, true)
+            let filter = { "channel_id": channelId }
+            let update = { "$set": doc }
+            try {
+                const result = await hiveService.updateOneDBData(HiveHelper.TABLE_CHANNELS, filter, update, option)
+                logger.log('Delete channel success: ', result)
+                const deleteResult: DeleteResult = {
+                    updatedAt: updatedAt,
+                    status: 1
+                }
+                resolve(deleteResult)
+            } catch (error) {
+                logger.error('Delete channel error', error)
+                reject(error)
+            }
+        })
+    }
+    /** delete channel end */
+
+
+
 
     // 注册所有使用到的脚本：通过注册脚本可以设置是否允许其他did访问
     public registeScripting(): Promise<string> {
@@ -143,35 +289,6 @@ export class HiveHelper {
                 reject(this.handleError(error))
             }
         })
-    }
-
-    private async handleError(error: any) {
-        let errorCode = error["code"]
-        let errorDes = "ErrorInfo.HIVE_ERROR_" + errorCode
-        if (errorCode === 507) {
-            if (this.buyStorageSpaceDialog === null) {
-                // await this.showBuyStorageSpaceDialog(errorDes)
-            }
-        } else if (errorCode === undefined) {
-            // this.native.toastWarn(errorDes)
-        }
-        throw error
-    }
-
-    private async handleLikeError(error: any) {
-        let errorCode = error["code"]
-        let errorDes = "ErrorInfo.HIVE_ERROR_" + errorCode
-        if (errorCode === 507) {
-            if (this.buyStorageSpaceDialog === null) {
-                // await this.showBuyStorageSpaceDialog(errorDes)
-            }
-        } else if (errorCode === undefined) {
-            // this.native.toastWarn("common.likeError") 
-        } else {
-            // this.native.toastWarn("common.likeError1") 
-        }
-
-        return error
     }
 
     createFeedsScripting(lasterVersion: string, preVersion: string, registScripting: boolean = false) {
@@ -275,68 +392,68 @@ export class HiveHelper {
             }
         })
     }
-    /** create channel start */
-    private insertDataToChannelDB(channelId: string, name: string, intro: string, avatar: string, memo: string,
-        createdAt: number, updatedAt: number, type: string, tippingAddress: string, nft: string, category: string, proof: string): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            const doc = {
-                "channel_id": channelId,
-                "name": name,
-                "intro": intro,
-                "avatar": avatar,
-                "created_at": createdAt,
-                "updated_at": updatedAt,
-                "type": type,
-                "tipping_address": tippingAddress,
-                "nft": nft,
-                "memo": memo,
-                "category": category,
-                "proof": proof
-            }
+    // /** create channel start */
+    // private insertDataToChannelDB(channelId: string, name: string, intro: string, avatar: string, memo: string,
+    //     createdAt: number, updatedAt: number, type: string, tippingAddress: string, nft: string, category: string, proof: string): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         const doc = {
+    //             "channel_id": channelId,
+    //             "name": name,
+    //             "intro": intro,
+    //             "avatar": avatar,
+    //             "created_at": createdAt,
+    //             "updated_at": updatedAt,
+    //             "type": type,
+    //             "tipping_address": tippingAddress,
+    //             "nft": nft,
+    //             "memo": memo,
+    //             "category": category,
+    //             "proof": proof
+    //         }
 
-            try {
-                const insertResult = hiveService.insertDBData(HiveHelper.TABLE_CHANNELS, doc)
-                // // Logger.log(TAG, 'Insert channel db result', insertResult)
-                resolve(doc)
-            } catch (error) {
-                // // Logger.error(TAG, 'Insert channel db error', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    //         try {
+    //             const insertResult = hiveService.insertDBData(HiveHelper.TABLE_CHANNELS, doc)
+    //             // // Logger.log(TAG, 'Insert channel db result', insertResult)
+    //             resolve(doc)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'Insert channel db error', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    private insertChannelData(channelName: string, intro: string, avatarAddress: string, tippingAddress: string, type: string, nft: string, memo: string, category: string, proof: string): Promise<{ [x: string]: string | number | boolean }> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const signinDid = userDid_local
-                const createdAt = new Date().getTime()
-                const updatedAt = new Date().getTime()
-                const channelId = utils.generateChannelId(signinDid, channelName)
+    // private insertChannelData(channelName: string, intro: string, avatarAddress: string, tippingAddress: string, type: string, nft: string, memo: string, category: string, proof: string): Promise<{ [x: string]: string | number | boolean }> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const signinDid = userDid
+    //             const createdAt = new Date().getTime()
+    //             const updatedAt = new Date().getTime()
+    //             const channelId = utils.generateChannelId(signinDid, channelName)
 
-                // TODO : signinDid / createdAt / updatedAt / channelId
-                let result = await this.insertDataToChannelDB(channelId.toString(), channelName, intro, avatarAddress, memo, createdAt, updatedAt, type, tippingAddress, nft, category, proof)
-                if (result) {
-                    const insertResult = {
-                        destDid: signinDid,
-                        channelId: channelId,
-                        createdAt: createdAt,
-                        updatedAt: updatedAt
-                    }
-                    resolve(insertResult)
-                }
-                else
-                    reject('Insert channel data error')
-            } catch (error) {
-                // // Logger.error(TAG, "insertChannelData error", error) 
-                reject(error)
-            }
-        })
-    }
+    //             // TODO : signinDid / createdAt / updatedAt / channelId
+    //             let result = await this.insertDataToChannelDB(channelId.toString(), channelName, intro, avatarAddress, memo, createdAt, updatedAt, type, tippingAddress, nft, category, proof)
+    //             if (result) {
+    //                 const insertResult = {
+    //                     destDid: signinDid,
+    //                     channelId: channelId,
+    //                     createdAt: createdAt,
+    //                     updatedAt: updatedAt
+    //                 }
+    //                 resolve(insertResult)
+    //             }
+    //             else
+    //                 reject('Insert channel data error')
+    //         } catch (error) {
+    //             // // Logger.error(TAG, "insertChannelData error", error) 
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    createChannel(channelName: string, intro: string, avatarAddress: string, tippingAddress: string = '', type: string = 'public', nft: string = '', memo: string = '', category: string = '', proof: string = '') {
-        return this.insertChannelData(channelName, intro, avatarAddress, tippingAddress, type, nft, memo, category, proof)
-    }
-    /** create channel end */
+    // createChannel(channelName: string, intro: string, avatarAddress: string, tippingAddress: string = '', type: string = 'public', nft: string = '', memo: string = '', category: string = '', proof: string = '') {
+    //     return this.insertChannelData(channelName, intro, avatarAddress, tippingAddress, type, nft, memo, category, proof)
+    // }
+    // /** create channel end */
 
     /** update channel start */
     private updateDataToChannelDB(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
@@ -381,37 +498,37 @@ export class HiveHelper {
     }
     /** update channel end */
 
-    /** delete channel star */
-    deleteChannel(channelId: string) {
-        return this.deleteChannelData(channelId)
-    }
+    // /** delete channel star */
+    // deleteChannel(channelId: string) {
+    //     return this.deleteChannelData(channelId)
+    // }
 
-    private deleteChannelData(channelId: string) {
-        const updatedAt = utils.getCurrentTimeNum()
-        return this.deleteDataToChannelDB(channelId, updatedAt)
-    }
+    // private deleteChannelData(channelId: string) {
+    //     const updatedAt = utils.getCurrentTimeNum()
+    //     return this.deleteDataToChannelDB(channelId, updatedAt)
+    // }
 
-    private deleteDataToChannelDB(channelId: string, updatedAt: number): Promise<{ updatedAt: number, status: number }> {
-        return new Promise(async (resolve, reject) => {
-            const doc =
-            {
-                "updated_at": updatedAt,
-                "status": 1,
-            }
-            const option = new UpdateOptions(false, true)
-            let filter = { "channel_id": channelId }
-            let update = { "$set": doc }
-            try {
-                const result = await hiveService.updateOneDBData(HiveHelper.TABLE_CHANNELS, filter, update, option)
-                // // Logger.log(TAG, 'Delete post result', result)
-                resolve({ updatedAt: updatedAt, status: 1 })
-            } catch (error) {
-                // // Logger.error(TAG, 'Delete data from postDB error', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
-    /** delete channel end */
+    // private deleteDataToChannelDB(channelId: string, updatedAt: number): Promise<{ updatedAt: number, status: number }> {
+    //     return new Promise(async (resolve, reject) => {
+    //         const doc =
+    //         {
+    //             "updated_at": updatedAt,
+    //             "status": 1,
+    //         }
+    //         const option = new UpdateOptions(false, true)
+    //         let filter = { "channel_id": channelId }
+    //         let update = { "$set": doc }
+    //         try {
+    //             const result = await hiveService.updateOneDBData(HiveHelper.TABLE_CHANNELS, filter, update, option)
+    //             // // Logger.log(TAG, 'Delete post result', result)
+    //             resolve({ updatedAt: updatedAt, status: 1 })
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'Delete data from postDB error', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
+    // /** delete channel end */
 
     /** query channel info start*/
     private registerQueryChannelInfoScripting(): Promise<string> {
@@ -486,7 +603,7 @@ export class HiveHelper {
     private insertPostData(channelId: string, tag: string, content: string, type: string, status: number, memo: string, proof: string): Promise<{ targetDid: string, postId: string, createdAt: number, updatedAt: number }> {
         return new Promise(async (resolve, reject) => {
             try {
-                const signinDid = userDid_local
+                const signinDid = this.userDid
 
                 const createdAt = new Date().getTime()
                 const updatedAt = new Date().getTime()
@@ -1221,7 +1338,7 @@ export class HiveHelper {
     createComment(targetDid: string, channelId: string, postId: string, refcommentId: string, content: string): Promise<{ commentId: string, createrDid: string, createdAt: number }> {
         return new Promise(async (resolve, reject) => {
             try {
-                const signinDid = userDid_local
+                const signinDid = this.userDid
                 const commentId = utils.generateCommentId(signinDid, postId, refcommentId, content)
                 const createdAt = new Date().getTime()
                 const result = await this.callCreateComment(targetDid, commentId, channelId, postId, refcommentId, content, createdAt)
@@ -1765,7 +1882,7 @@ export class HiveHelper {
     private downloadEssAvatarData(avatarParam: string, avatarScriptName: string, tarDID: string, tarAppDID: string): Promise<Buffer> {
         return new Promise(async (resolve, reject) => {
             try {
-                let userDid = userDid_local
+                let userDid = this.userDid
                 const result = await hiveService.downloadEssAvatarTransactionId(avatarParam, avatarScriptName, tarDID, tarAppDID)
                 if (!result) {
                     resolve(null)
@@ -1914,7 +2031,7 @@ export class HiveHelper {
             try {
                 // TODO: Config appid
                 // const appid = Config.APPLICATION_DID
-                const appid = ApplicationDID
+                const appid = this.ApplicationDID
                 // Logger.log(TAG, 'Call script params is targetDid:', targetDid, 'scriptName:', scriptName, 'params:', params)
                 let result = await hiveService.callScript(scriptName, params, targetDid, appid)
                 // Logger.log('Call script result is', result)
@@ -1928,22 +2045,22 @@ export class HiveHelper {
     }
 
     /** query self channels start */
-    private queryChannelsFromDB(): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const filter = {}
-                const result = await hiveService.queryDBData(HiveHelper.TABLE_CHANNELS, filter)
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'Query channels from DB', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // private queryChannelsFromDB(): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const filter = {}
+    //             const result = await hiveService.queryDBData(HiveHelper.TABLE_CHANNELS, filter)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // Logger.error(TAG, 'Query channels from DB', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    querySelfChannels(): Promise<any> {
-        return this.queryChannelsFromDB()
-    }
+    // querySelfChannels(): Promise<any> {
+    //     return this.queryChannelsFromDB()
+    // }
     /** query self channels end */
 
     /** query slef post start */

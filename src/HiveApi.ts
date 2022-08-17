@@ -638,7 +638,7 @@ export class HiveApi {
     * @throws HiveError
   */
   querySelfChannels(): Promise<any> {
-    return hiveHelper.querySelfChannels()
+    return hiveHelper.queryMyChannels()
   }
 
   /** selfData
