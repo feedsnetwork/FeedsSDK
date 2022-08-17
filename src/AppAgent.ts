@@ -47,4 +47,28 @@ export class AppAgent {
     return this.hiveHelper.deleteChannel(channelId)
   }
 
+  mintChannel() {
+    //TODO: future
+  }
+
+  burnChannel() {
+    //TODO: future
+  }
+
+  subscribeChannel(targetDid: string, channelId: string, displayName: string, updatedAt: number, status: number = HiveData.CommonStatus.available): Promise<boolean> {
+    return this.hiveHelper.subscribeChannel(targetDid, channelId, displayName, updatedAt, status)
+  }
+
+  unSubscribeChannel(targetDid: string, channelId: string): Promise<boolean> {
+    return this.hiveHelper.unsubscribeChannel(targetDid, channelId)
+  }
+
+  getSubscribedChannels(targetDid: string, userDid: string): Promise<HiveData.SubscriptionInfo[]> {
+    return this.hiveHelper.querySubscriptionByUserDID(targetDid, userDid)
+  }
+
+  getSubscribedChannelById(targetDid: string, channelId: string): Promise<HiveData.SubscriptionInfo[]> {
+    return this.hiveHelper.querySubscriptionInfoByChannelId(targetDid, channelId)
+  }
+
 }

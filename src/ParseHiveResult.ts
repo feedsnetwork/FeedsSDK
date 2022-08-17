@@ -1,4 +1,3 @@
-import { Hive } from '@elastosfoundation/elastos-connectivity-sdk-js';
 import { HiveData } from './HiveData';
 import { Logger } from './utils/logger'
 import { Channel } from './Channel'
@@ -8,7 +7,7 @@ const logger = new Logger("Channel")
 export class ParseHiveResult {
 
     /** parse channel result start */
-    // const channels = result.find_message.items;
+    // const channels = result.find_message.items
     // const channels = result
     public static parseChannelResult(targetDid: string, result: any): Channel[] {
         try {
@@ -50,7 +49,7 @@ export class ParseHiveResult {
                         const channel = new Channel(channelInfo)
                         parseResult.push(channel)
                     }
-                });
+                })
             }
             return parseResult
         } catch (error) {
@@ -59,6 +58,41 @@ export class ParseHiveResult {
         }
     }
     /** parse channel result end */
+
+    /** parse subscription result start */
+    public static parseSubscriptionResult(destDid: string, result: any): HiveData.SubscriptionInfo[] {
+        try {
+            /**
+             * channel_id: "xxx"
+             * created: 1647394426.255574
+             * created_at: 1647394427804
+             * display_name: "xxxx"
+             * modified: 1647394426.255574
+             * user_did: "did:elastos:xxxx"
+             */
+            const subscriptions = result.find_message.items
+            let parseResult = [];
+            console.log('result', subscriptions);
+            if (subscriptions) {
+                subscriptions.forEach(item => {
+                    const subscriptionInfo: HiveData.SubscriptionInfo = {
+                        destDid: destDid,
+                        channelId: item.channel_id,
+                        userDid: item.user_did,
+                        createdAt: item.created_at,
+                        displayName: item.display_name,
+                        updatedAt: item.updated_at,
+                        status: item.status
+                    }
+                    parseResult.push(subscriptionInfo)
+                })
+            }
+            return parseResult
+        } catch (error) {
+            logger.error('Parse subscription result error', error)
+        }
+    }
+  /** parse subscription result end */
 
 }
 

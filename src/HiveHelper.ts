@@ -143,8 +143,6 @@ export class HiveHelper {
         const createdAt = new Date().getTime()
         const updatedAt = new Date().getTime()
         const channelId = utils.generateChannelId(signinDid, channelName)
-
-        // TODO : signinDid / createdAt / updatedAt / channelId
         return await this.insertDataToChannelDB(channelId.toString(), channelName, intro, avatarAddress, memo, createdAt, updatedAt, type, tippingAddress, nft, category, proof)
     }
 
@@ -188,6 +186,102 @@ export class HiveHelper {
         })
     }
     /** delete channel end */
+
+    /** subscribeChannel end */
+    subscribeChannel(targetDid: string, channelId: string, displayName: string, updatedAt: number, status: number): Promise<boolean> {
+        return this.callSubscribeScripting(targetDid, channelId, displayName, updatedAt, status)
+    }
+
+    private callSubscribeScripting(targetDid: string, channelId: string, userDisplayName: string, updatedAt: number, status: number): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "channel_id": channelId,
+                    "created_at": utils.getCurrentTimeNum(),
+                    "display_name": userDisplayName,
+                    "updated_at": updatedAt,
+                    "status": status
+                }
+                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_SUBSCRIBE_CHANNEL, params)
+                logger.trace('subscribe ' + channelId + 'success: ', result)
+                resolve(true)
+            } catch (error) {
+                logger.error('subscribe error:', error)
+                reject(error)
+            }
+        })
+    }
+
+    /** subscribeChannel end */
+    unsubscribeChannel(targetDid: string, channelId: string): Promise<boolean> {
+        return this.callUnsubscribeScripting(targetDid, channelId)
+    }
+
+    private callUnsubscribeScripting(targetDid: string, channelId: string): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "channel_id": channelId,
+                }
+                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_UNSUBSCRIBE_CHANNEL, params)
+                logger.trace('unsubscribe ' + channelId + 'success: ', result)
+                resolve(true)
+            } catch (error) {
+                logger.error('unsubscribe error:', error)
+                reject(error)
+            }
+        })
+    }
+
+    /** unsubscribe channel end */
+    querySubscriptionByUserDID(targetDid: string, userDid: string): Promise<HiveData.SubscriptionInfo[]> {
+        return this.callQuerySubscriptionByUserDID(targetDid, userDid)
+    }
+
+    private callQuerySubscriptionByUserDID(targetDid: string, userDid: string): Promise<HiveData.SubscriptionInfo[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "user_did": userDid
+                }
+                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID, params)
+                const subscriptionInfo = ParseHiveResult.parseSubscriptionResult(targetDid, result)
+                logger.trace("Find subscription from scripting success, result is", result)
+                resolve(subscriptionInfo)
+            } catch (error) {
+                logger.error('Find subscription from scripting error:', error)
+                reject(error)
+            }
+        })
+    }
+
+    /** query subscription info by userDid end */
+    querySubscriptionInfoByChannelId(targetDid: string, channelId: string): Promise<HiveData.SubscriptionInfo[]> {
+        return this.callQuerySubscriptionInfoByChannelId(targetDid, channelId)
+    }
+
+    private callQuerySubscriptionInfoByChannelId(targetDid: string, channelId: string, status: number = HiveData.CommonStatus.available): Promise<HiveData.SubscriptionInfo[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "channel_id": channelId,
+                    "status": status
+                }
+                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, params)
+                const subscriptionInfo = ParseHiveResult.parseSubscriptionResult(targetDid, result)
+                logger.trace("Query subscription from scripting success, result is", result)
+                resolve(subscriptionInfo)
+            } catch (error) {
+                logger.error('Query subscription from scripting error:', error)
+                reject(error)
+            }
+        })
+    }
+    /** query subscription info by channelId end */
+
+
+
+
 
 
 
@@ -834,28 +928,28 @@ export class HiveHelper {
         })
     }
 
-    private callSubscribeScripting(targetDid: string, channelId: string, userDisplayName: string, updatedAt: number, status: number): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = {
-                    "channel_id": channelId,
-                    "created_at": utils.getCurrentTimeNum(),
-                    "display_name": userDisplayName,
-                    "updated_at": updatedAt,
-                    "status": status
-                }
-                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_SUBSCRIBE_CHANNEL, params)
-                resolve(result)
-            } catch (error) {
-                // // Logger.error(TAG, 'callSubscription error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callSubscribeScripting(targetDid: string, channelId: string, userDisplayName: string, updatedAt: number, status: number): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const params = {
+    //                 "channel_id": channelId,
+    //                 "created_at": utils.getCurrentTimeNum(),
+    //                 "display_name": userDisplayName,
+    //                 "updated_at": updatedAt,
+    //                 "status": status
+    //             }
+    //             const result = await this.callScript(targetDid, HiveHelper.SCRIPT_SUBSCRIBE_CHANNEL, params)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'callSubscription error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    subscribeChannel(targetDid: string, channelId: string, displayName: string, updatedAt: number, status: number): Promise<any> {
-        return this.callSubscribeScripting(targetDid, channelId, displayName, updatedAt, status)
-    }
+    // subscribeChannel(targetDid: string, channelId: string, displayName: string, updatedAt: number, status: number): Promise<any> {
+    //     return this.callSubscribeScripting(targetDid, channelId, displayName, updatedAt, status)
+    // }
 
     registerUpdateSubscription(): Promise<string> {
         return new Promise(async (resolve, reject) => {
@@ -929,26 +1023,26 @@ export class HiveHelper {
         })
     }
 
-    private callUnsubscribeScripting(targetDid: string, channelId: string): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = {
-                    "channel_id": channelId,
-                }
-                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_UNSUBSCRIBE_CHANNEL, params)
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'callSubscription error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callUnsubscribeScripting(targetDid: string, channelId: string): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const params = {
+    //                 "channel_id": channelId,
+    //             }
+    //             const result = await this.callScript(targetDid, HiveHelper.SCRIPT_UNSUBSCRIBE_CHANNEL, params)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // Logger.error(TAG, 'callSubscription error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    unsubscribeChannel(targetDid: string, channelId: string): Promise<any> {
-        return this.callUnsubscribeScripting(targetDid, channelId)
-    }
+    // unsubscribeChannel(targetDid: string, channelId: string): Promise<any> {
+    //     return this.callUnsubscribeScripting(targetDid, channelId)
+    // }
 
-    /** unsubscribe channel end */
+    // /** unsubscribe channel end */
 
     /** query subscription info by channelId start */
     private registerQuerySubscriptionInfoByChannelIdScripting(): Promise<string> {
@@ -970,27 +1064,27 @@ export class HiveHelper {
         })
     }
 
-    private callQuerySubscriptionInfoByChannelId(targetDid: string, channelId: string, status: number = HiveData.CommonStatus.available): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = {
-                    "channel_id": channelId,
-                    "status": status
-                }
-                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, params)
-                console.log("Query subscription from scripting , result is", result)
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'Query subscription from scripting , error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callQuerySubscriptionInfoByChannelId(targetDid: string, channelId: string, status: number = HiveData.CommonStatus.available): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const params = {
+    //                 "channel_id": channelId,
+    //                 "status": status
+    //             }
+    //             const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, params)
+    //             console.log("Query subscription from scripting , result is", result)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // Logger.error(TAG, 'Query subscription from scripting , error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    querySubscriptionInfoByChannelId(targetDid: string, channelId: string): Promise<any> {
-        return this.callQuerySubscriptionInfoByChannelId(targetDid, channelId)
-    }
-    /** query subscription info by channelId end */
+    // querySubscriptionInfoByChannelId(targetDid: string, channelId: string): Promise<any> {
+    //     return this.callQuerySubscriptionInfoByChannelId(targetDid, channelId)
+    // }
+    // /** query subscription info by channelId end */
 
     /** query subscription info by userDid start */
     private registerQuerySubscriptionInfoByUserDIDScripting(): Promise<string> {
@@ -1011,26 +1105,26 @@ export class HiveHelper {
         })
     }
 
-    private callQuerySubscriptionByUserDID(targetDid: string, userDid: string): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = {
-                    "user_did": userDid
-                }
-                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID, params)
-                console.log("Find subscription from scripting , result is", result)
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'Find subscription from scripting , error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callQuerySubscriptionByUserDID(targetDid: string, userDid: string): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const params = {
+    //                 "user_did": userDid
+    //             }
+    //             const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID, params)
+    //             console.log("Find subscription from scripting , result is", result)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // Logger.error(TAG, 'Find subscription from scripting , error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    querySubscriptionByUserDID(targetDid: string, userDid: string): Promise<any> {
-        return this.callQuerySubscriptionByUserDID(targetDid, userDid)
-    }
-    /** query subscription info by userDid end */
+    // querySubscriptionByUserDID(targetDid: string, userDid: string): Promise<any> {
+    //     return this.callQuerySubscriptionByUserDID(targetDid, userDid)
+    // }
+    // /** query subscription info by userDid end */
 
     /** query subscription info by userDid and channelId start */
     private registerQuerySubscriptionInfoByUserDIDAndChannelIdScripting(): Promise<string> {

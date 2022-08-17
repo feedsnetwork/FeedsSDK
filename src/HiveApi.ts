@@ -325,7 +325,7 @@ export class HiveApi {
     * 查询指定userDid的Subscrption信息
     *
     * @param targetDid: channel的持有者
-    * @param channelId: channel的id
+    * @param userDid: 用户did
     * @return 指定userdid下所有的订阅信息
     * @throws HiveError
   */

@@ -3,12 +3,12 @@ import BigNumber from 'bignumber.js'
 const TAG: string = 'HiveData'
 
 export declare namespace HiveData {
-  export type CommonStatus = {
-    available: 0,
-    deleted: 1,
-    edited: 2,
-    sending: 11,
-    error: 12,
+  export enum CommonStatus {
+    available = 0,
+    deleted = 1,
+    edited = 2,
+    sending = 11,
+    error = 12,
   }
 
   export type InsertResult = {
@@ -32,11 +32,22 @@ export declare namespace HiveData {
     createdAt: number,
     updatedAt: number,
     type: string,
-    paymentAddress: string, // replease tipping_address
+    paymentAddress: string, // replace tipping_address
     nft: string,
     category: string,
     proof: string
     memo: string,
   }
+
+  type SubscriptionInfo = {
+    destDid: string,
+    channelId: string,
+    userDid: string,
+    createdAt: number,
+    displayName: string,
+    updatedAt: number,
+    status: HiveData.CommonStatus.available | HiveData.CommonStatus.deleted
+  }
+
 }
 
