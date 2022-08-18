@@ -4,6 +4,7 @@ import { HiveData } from './HiveData'
 import { HiveHelper } from './HiveHelper'
 import { AppContext } from './AppContext'
 import { Post } from './Post'
+import { Hive } from '@elastosfoundation/elastos-connectivity-sdk-js'
 
 const logger = new Logger("MyChannel")
 export class MyChannel extends Channel {
@@ -37,20 +38,21 @@ export class MyChannel extends Channel {
         return this.hiveHelper.queryPostById(this.userDid, channelId, postId)
     }
 
-    updateInfo() {
-
+    updateInfo(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
+        newTippingAddress: string, newNft: string): Promise<boolean> {
+        return this.hiveHelper.updateChannel(channelId, newName, newIntro, newAvatar, newType, newMemo, newTippingAddress, newNft)
     }
 
-    post() {
-
+    post(channelId: string, tag: string, content: string, type: string = 'public', status: number = HiveData.CommonStatus.available, memo: string, proof: string): Promise<Post[]> {
+        return this.hiveHelper.publishPost(channelId, tag, content, type, status, memo, proof)
     }
 
-    updatePost() {
-
+    updatePost(postId: string, channelId: string, newType: string, newTag: string, newContent: string, newStatus: number, newUpdateAt: number, newMemo: string, newProof: string): Promise<boolean> {
+        return this.hiveHelper.updatePost(postId, channelId, newType, newTag, newContent, newStatus, newUpdateAt, newMemo, newProof)
     }
 
-    deletePost() {
-
+    deletePost(postId: string, channelId: string): Promise<HiveData.DeleteResult> {
+        return this.hiveHelper.deletePost(postId, channelId)
     }
 }
 

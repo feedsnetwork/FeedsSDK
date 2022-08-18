@@ -456,6 +456,182 @@ export class HiveHelper {
     }
     /** query slef post by channel end */
 
+    /** update channel start */
+    updateChannel(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
+        newTippingAddress: string, newNft: string): Promise<boolean> {
+        return this.updateChannelData(channelId, newName, newIntro, newAvatar, newType, newMemo, newTippingAddress, newNft)
+    }
+
+    private updateChannelData(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
+        newTippingAddress: string, newNft: string): Promise<boolean> {
+        const updatedAt = utils.getCurrentTimeNum()
+        return this.updateDataToChannelDB(channelId, newName, newIntro, newAvatar, newType, newMemo, newTippingAddress, newNft, updatedAt)
+    }
+
+    private updateDataToChannelDB(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
+        newTippingAddress: string, newNft: string, updatedAt: number): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc =
+                {
+                    "name": newName,
+                    "intro": newIntro,
+                    "avatar": newAvatar,
+                    "updated_at": updatedAt,
+                    "type": newType,
+                    "tipping_address": newTippingAddress,
+                    "nft": newNft,
+                    "memo": newMemo,
+                }
+                const option = new UpdateOptions(false, true)
+                let filter = { "channel_id": channelId }
+                let update = { "$set": doc }
+
+                const updateResult = hiveService.updateOneDBData(HiveHelper.TABLE_CHANNELS, filter, update, option)
+                logger.trace('update channel success: ', updateResult)
+                resolve(true)
+            } catch (error) {
+                logger.error('update channel error', error)
+                reject(error)
+            }
+        })
+    }
+    /** update channel end */
+
+    /** publish post start */
+    publishPost(channelId: string, tag: string, content: string, type: string = 'public', status: number = HiveData.CommonStatus.available, memo: string, proof: string): Promise<Post[]> {
+        return this.insertPostData(channelId, tag, content, type, status, memo, proof)
+    }
+
+    private insertPostData(channelId: string, tag: string, content: string, type: string, status: number, memo: string, proof: string): Promise<Post[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const signinDid = this.userDid
+
+                const createdAt = new Date().getTime()
+                const updatedAt = new Date().getTime()
+                const postId = utils.generatePostId(signinDid, channelId, content)
+                const result = await this.insertDataToPostDB(postId, channelId, type, tag, content, memo, createdAt, updatedAt, status, proof)
+                logger.trace('publish post success: ', result)
+                resolve(result)
+            } catch (error) {
+                logger.error("publish post error: ", error)
+                reject(error)
+            }
+        })
+    }
+
+    private insertDataToPostDB(postId: string, channelId: string, type: string, tag: string, content: string, memo: string, createdAt: number, updateAt: number, status: number, proof: string = ''): Promise<Post[]> {
+        return new Promise(async (resolve, reject) => {
+            const doc =
+            {
+                "channel_id": channelId,
+                "post_id": postId,
+                "created_at": createdAt,
+                "updated_at": updateAt,
+                "content": content,
+                "status": status,
+                "memo": memo,
+                "type": type,
+                "tag": tag,
+                "proof": proof
+            }
+            try {
+                const insertResult = await hiveService.insertDBData(HiveHelper.TABLE_POSTS, doc)
+                const returnResult = ParseHiveResult.parsePostResult(this.userDid, [doc])
+                logger.trace('insert post data success: ', insertResult)
+                resolve(returnResult)
+            } catch (error) {
+                logger.error('insert post data error: ', error)
+                reject(error)
+            }
+        })
+    }
+    /** publish post end */
+
+    /** update post start */
+    updatePost(postId: string, channelId: string, newType: string, newTag: string, newContent: string, newStatus: number, newUpdateAt: number, newMemo: string, newProof: string): Promise<boolean> {
+        return this.updatePostData(postId, channelId, newType, newTag, newContent, newStatus, newUpdateAt, newMemo, newProof)
+    }
+
+    private updatePostData(postId: string, channelId: string, newType: string, newTag: string, newContent: string, newStatus: number, newUpdateAt: number, newMemo: string, newProof: string): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const result = this.updateDataToPostDB(postId, channelId, newUpdateAt, newType, newTag, newContent, newStatus, newMemo, newProof)
+                logger.trace('update post success: ', result)
+                resolve(result)
+            } catch (error) {
+                logger.error('update post error: ', error)
+                reject(error)
+            }
+        })
+    }
+
+    private updateDataToPostDB(postId: string, channelId: string, updatedAt: number, newType: string, newTag: string, newContent: string, newStatus: number = HiveData.CommonStatus.edited, newMemo: string, newProof: string,): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            const doc =
+            {
+                "updated_at": updatedAt,
+                "content": newContent,
+                "status": newStatus,
+                "memo": newMemo,
+                "type": newType,
+                "tag": newTag,
+                "proof": newProof
+            }
+            // created_at // 
+            const option = new UpdateOptions(false, true)
+            let filter = { "channel_id": channelId, "post_id": postId }
+            let update = { "$set": doc }
+            try {
+                const updateResult = hiveService.updateOneDBData(HiveHelper.TABLE_POSTS, filter, update, option)
+                logger.trace('update data to post DB success: ', updateResult)
+                resolve(true)
+            } catch (error) {
+                logger.error('update data to post DB error', error)
+                reject(error)
+            }
+        })
+    }
+    /** update post end */
+
+    /** delete post , Not use now*/
+    deletePost(postId: string, channelId: string): Promise<HiveData.DeleteResult> {
+        return this.deletePostData(postId, channelId)
+    }
+
+    private deletePostData(postId: string, channelId: string): Promise<HiveData.DeleteResult> {
+        const updatedAt = new Date().getTime()
+        return this.deleteDataFromPostDB(postId, channelId, updatedAt)
+
+    }
+
+    private deleteDataFromPostDB(postId: string, channelId: string, updatedAt: number): Promise<HiveData.DeleteResult> {
+        return new Promise(async (resolve, reject) => {
+            const doc =
+            {
+                "updated_at": updatedAt,
+                "status": 1,
+            }
+            const option = new UpdateOptions(false, true)
+            let filter = { "channel_id": channelId, "post_id": postId }
+            let update = { "$set": doc }
+            try {
+                const result = await hiveService.updateOneDBData(HiveHelper.TABLE_POSTS, filter, update, option)
+                logger.log('Delete post success: ', result)
+                const deleteResult: HiveData.DeleteResult = {
+                    updatedAt: updatedAt,
+                    status: 1
+                }
+                resolve(deleteResult)
+            } catch (error) {
+                logger.error('Delete data from postDB error: ', error)
+                reject(error)
+            }
+        })
+    }
+
+/** delete post end */
 
 // 整理线 ----------------------------- end
 
@@ -713,48 +889,48 @@ export class HiveHelper {
     // }
     // /** create channel end */
 
-    /** update channel start */
-    private updateDataToChannelDB(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
-        newTippingAddress: string, newNft: string, updatedAt: number): Promise<UpdateResult> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const doc =
-                {
-                    "name": newName,
-                    "intro": newIntro,
-                    "avatar": newAvatar,
-                    "updated_at": updatedAt,
-                    "type": newType,
-                    "tipping_address": newTippingAddress,
-                    "nft": newNft,
-                    "memo": newMemo,
-                }
-                const option = new UpdateOptions(false, true)
-                let filter = { "channel_id": channelId }
-                let update = { "$set": doc }
+    // /** update channel start */
+    // private updateDataToChannelDB(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
+    //     newTippingAddress: string, newNft: string, updatedAt: number): Promise<UpdateResult> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const doc =
+    //             {
+    //                 "name": newName,
+    //                 "intro": newIntro,
+    //                 "avatar": newAvatar,
+    //                 "updated_at": updatedAt,
+    //                 "type": newType,
+    //                 "tipping_address": newTippingAddress,
+    //                 "nft": newNft,
+    //                 "memo": newMemo,
+    //             }
+    //             const option = new UpdateOptions(false, true)
+    //             let filter = { "channel_id": channelId }
+    //             let update = { "$set": doc }
 
-                const updateResult = hiveService.updateOneDBData(HiveHelper.TABLE_CHANNELS, filter, update, option)
-                // // Logger.log(TAG, 'update channel result', updateResult)
-                resolve(updateResult)
-            } catch (error) {
-                // // Logger.error(TAG, 'updateDataToChannelDB error', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    //             const updateResult = hiveService.updateOneDBData(HiveHelper.TABLE_CHANNELS, filter, update, option)
+    //             // // Logger.log(TAG, 'update channel result', updateResult)
+    //             resolve(updateResult)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'updateDataToChannelDB error', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    private updateChannelData(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
-        newTippingAddress: string, newNft: string) {
-        const updatedAt = utils.getCurrentTimeNum()
-        // TODO: updatedAt
-        return this.updateDataToChannelDB(channelId, newName, newIntro, newAvatar, newType, newMemo, newTippingAddress, newNft, updatedAt)
-    }
+    // private updateChannelData(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
+    //     newTippingAddress: string, newNft: string) {
+    //     const updatedAt = utils.getCurrentTimeNum()
+    //     // TODO: updatedAt
+    //     return this.updateDataToChannelDB(channelId, newName, newIntro, newAvatar, newType, newMemo, newTippingAddress, newNft, updatedAt)
+    // }
 
-    updateChannel(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
-        newTippingAddress: string, newNft: string) {
-        return this.updateChannelData(channelId, newName, newIntro, newAvatar, newType, newMemo, newTippingAddress, newNft)
-    }
-    /** update channel end */
+    // updateChannel(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
+    //     newTippingAddress: string, newNft: string) {
+    //     return this.updateChannelData(channelId, newName, newIntro, newAvatar, newType, newMemo, newTippingAddress, newNft)
+    // }
+    // /** update channel end */
 
     // /** delete channel star */
     // deleteChannel(channelId: string) {
@@ -830,146 +1006,146 @@ export class HiveHelper {
     }
     /** query channel info end*/
 
-    /** publish post start */
-    private insertDataToPostDB(postId: string, channelId: string, type: string, tag: string, content: string, memo: string, createdAt: number, updateAt: number, status: number, proof: string = ''): Promise<InsertResult> {
-        return new Promise(async (resolve, reject) => {
-            const doc =
-            {
-                "channel_id": channelId,
-                "post_id": postId,
-                "created_at": createdAt,
-                "updated_at": updateAt,
-                "content": content,
-                "status": status,
-                "memo": memo,
-                "type": type,
-                "tag": tag,
-                "proof": proof
-            }
+    // /** publish post start */
+    // private insertDataToPostDB(postId: string, channelId: string, type: string, tag: string, content: string, memo: string, createdAt: number, updateAt: number, status: number, proof: string = ''): Promise<InsertResult> {
+    //     return new Promise(async (resolve, reject) => {
+    //         const doc =
+    //         {
+    //             "channel_id": channelId,
+    //             "post_id": postId,
+    //             "created_at": createdAt,
+    //             "updated_at": updateAt,
+    //             "content": content,
+    //             "status": status,
+    //             "memo": memo,
+    //             "type": type,
+    //             "tag": tag,
+    //             "proof": proof
+    //         }
 
-            try {
-                const insertResult = await hiveService.insertDBData(HiveHelper.TABLE_POSTS, doc)
-                // // Logger.log(TAG, 'insert postData result', insertResult)
-                resolve(insertResult)
-            } catch (error) {
-                // // Logger.error(TAG, 'insertDataToPostDB error', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    //         try {
+    //             const insertResult = await hiveService.insertDBData(HiveHelper.TABLE_POSTS, doc)
+    //             // // Logger.log(TAG, 'insert postData result', insertResult)
+    //             resolve(insertResult)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'insertDataToPostDB error', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    private insertPostData(channelId: string, tag: string, content: string, type: string, status: number, memo: string, proof: string): Promise<{ targetDid: string, postId: string, createdAt: number, updatedAt: number }> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const signinDid = this.userDid
+    // private insertPostData(channelId: string, tag: string, content: string, type: string, status: number, memo: string, proof: string): Promise<{ targetDid: string, postId: string, createdAt: number, updatedAt: number }> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const signinDid = this.userDid
 
-                const createdAt = new Date().getTime()
-                const updatedAt = new Date().getTime()
-                const postId = utils.generatePostId(signinDid, channelId, content)
+    //             const createdAt = new Date().getTime()
+    //             const updatedAt = new Date().getTime()
+    //             const postId = utils.generatePostId(signinDid, channelId, content)
 
-                // TODO: signinDid / createdAt / updatedAt / postId
-                await this.insertDataToPostDB(postId, channelId, type, tag, content, memo, createdAt, updatedAt, status, proof)
+    //             // TODO: signinDid / createdAt / updatedAt / postId
+    //             await this.insertDataToPostDB(postId, channelId, type, tag, content, memo, createdAt, updatedAt, status, proof)
 
-                resolve({ targetDid: signinDid, postId: postId, createdAt: createdAt, updatedAt: updatedAt })
-            } catch (error) {
-                // // Logger.error(TAG, "insertPostData error", error) 
-                reject(error)
-            }
-        })
-    }
+    //             resolve({ targetDid: signinDid, postId: postId, createdAt: createdAt, updatedAt: updatedAt })
+    //         } catch (error) {
+    //             // // Logger.error(TAG, "insertPostData error", error) 
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    publishPost(channelId: string, tag: string, content: string, type: string = 'public', status: number = HiveData.CommonStatus.available, memo: string, proof: string): Promise<{ targetDid: string, postId: string, createdAt: number, updatedAt: number }> {
-        return this.insertPostData(channelId, tag, content, type, status, memo, proof)
-    }
-    /** publish post end */
+    // publishPost(channelId: string, tag: string, content: string, type: string = 'public', status: number = HiveData.CommonStatus.available, memo: string, proof: string): Promise<{ targetDid: string, postId: string, createdAt: number, updatedAt: number }> {
+    //     return this.insertPostData(channelId, tag, content, type, status, memo, proof)
+    // }
+    // /** publish post end */
 
-    /** update post start */
-    private updateDataToPostDB(postId: string, channelId: string, updatedAt: number, newType: string, newTag: string, newContent: string, newStatus: number = HiveData.CommonStatus.edited, newMemo: string, newProof: string,): Promise<UpdateResult> {
-        return new Promise(async (resolve, reject) => {
-            const doc =
-            {
-                "updated_at": updatedAt,
-                "content": newContent,
-                "status": newStatus,
-                "memo": newMemo,
-                "type": newType,
-                "tag": newTag,
-                "proof": newProof
-            }
-            const option = new UpdateOptions(false, true)
-            let filter = { "channel_id": channelId, "post_id": postId }
-            let update = { "$set": doc }
-            try {
-                const updateResult = hiveService.updateOneDBData(HiveHelper.TABLE_POSTS, filter, update, option)
-                // // Logger.log(TAG, 'update post result', updateResult) 
-                resolve(updateResult)
-            } catch (error) {
-                // // Logger.error(TAG, 'updateDataToPostDB error', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // /** update post start */
+    // private updateDataToPostDB(postId: string, channelId: string, updatedAt: number, newType: string, newTag: string, newContent: string, newStatus: number = HiveData.CommonStatus.edited, newMemo: string, newProof: string,): Promise<UpdateResult> {
+    //     return new Promise(async (resolve, reject) => {
+    //         const doc =
+    //         {
+    //             "updated_at": updatedAt,
+    //             "content": newContent,
+    //             "status": newStatus,
+    //             "memo": newMemo,
+    //             "type": newType,
+    //             "tag": newTag,
+    //             "proof": newProof
+    //         }
+    //         const option = new UpdateOptions(false, true)
+    //         let filter = { "channel_id": channelId, "post_id": postId }
+    //         let update = { "$set": doc }
+    //         try {
+    //             const updateResult = hiveService.updateOneDBData(HiveHelper.TABLE_POSTS, filter, update, option)
+    //             // // Logger.log(TAG, 'update post result', updateResult) 
+    //             resolve(updateResult)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'updateDataToPostDB error', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    private updatePostData(postId: string, channelId: string, newType: string, newTag: string, newContent: string, newStatus: number, newUpdateAt: number, newMemo: string, newProof: string): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const result = this.updateDataToPostDB(postId, channelId, newUpdateAt, newType, newTag, newContent, newStatus, newMemo, newProof)
-                // // Logger.log(TAG, 'update post result', result)
-                resolve(result)
-            } catch (error) {
-                // // Logger.error(TAG, 'updatePostData error', error)
-                reject(error)
-            }
-        })
-    }
+    // private updatePostData(postId: string, channelId: string, newType: string, newTag: string, newContent: string, newStatus: number, newUpdateAt: number, newMemo: string, newProof: string): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const result = this.updateDataToPostDB(postId, channelId, newUpdateAt, newType, newTag, newContent, newStatus, newMemo, newProof)
+    //             // // Logger.log(TAG, 'update post result', result)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'updatePostData error', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    updatePost(postId: string, channelId: string, newType: string, newTag: string, newContent: string, newStatus: number, newUpdateAt: number, newMemo: string, newProof: string): Promise<any> {
-        return this.updatePostData(postId, channelId, newType, newTag, newContent, newStatus, newUpdateAt, newMemo, newProof)
-    }
-    /** update post end */
+    // updatePost(postId: string, channelId: string, newType: string, newTag: string, newContent: string, newStatus: number, newUpdateAt: number, newMemo: string, newProof: string): Promise<any> {
+    //     return this.updatePostData(postId, channelId, newType, newTag, newContent, newStatus, newUpdateAt, newMemo, newProof)
+    // }
+    // /** update post end */
 
-    /** delete post , Not use now */
-    private deleteDataFromPostDB(postId: string, channelId: string, updatedAt: number): Promise<{ updatedAt: number, status: number }> {
-        return new Promise(async (resolve, reject) => {
-            const doc =
-            {
-                "updated_at": updatedAt,
-                "status": 1,
-            }
-            const option = new UpdateOptions(false, true)
-            let filter = { "channel_id": channelId, "post_id": postId }
-            let update = { "$set": doc }
-            try {
-                const result = await hiveService.updateOneDBData(HiveHelper.TABLE_POSTS, filter, update, option)
-                // // Logger.log(TAG, 'Delete post result', result)
-                resolve({ updatedAt: updatedAt, status: 1 })
-            } catch (error) {
-                // // Logger.error(TAG, 'Delete data from postDB error', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // /** delete post , Not use now */
+    // private deleteDataFromPostDB(postId: string, channelId: string, updatedAt: number): Promise<{ updatedAt: number, status: number }> {
+    //     return new Promise(async (resolve, reject) => {
+    //         const doc =
+    //         {
+    //             "updated_at": updatedAt,
+    //             "status": 1,
+    //         }
+    //         const option = new UpdateOptions(false, true)
+    //         let filter = { "channel_id": channelId, "post_id": postId }
+    //         let update = { "$set": doc }
+    //         try {
+    //             const result = await hiveService.updateOneDBData(HiveHelper.TABLE_POSTS, filter, update, option)
+    //             // // Logger.log(TAG, 'Delete post result', result)
+    //             resolve({ updatedAt: updatedAt, status: 1 })
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'Delete data from postDB error', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    /** delete post start */
-    private deletePostData(postId: string, channelId: string): Promise<{ updatedAt: number, status: number }> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const updatedAt = new Date().getTime()
-                const result = await this.deleteDataFromPostDB(postId, channelId, updatedAt)
-                // // Logger.log(TAG, 'delete post result success')
-                resolve(result)
-            }
-            catch (error) {
-                // // Logger.error(TAG, 'deletePostData error', error)
-                reject(error)
-            }
-        })
-    }
+    // /** delete post start */
+    // private deletePostData(postId: string, channelId: string): Promise<{ updatedAt: number, status: number }> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const updatedAt = new Date().getTime()
+    //             const result = await this.deleteDataFromPostDB(postId, channelId, updatedAt)
+    //             // // Logger.log(TAG, 'delete post result success')
+    //             resolve(result)
+    //         }
+    //         catch (error) {
+    //             // // Logger.error(TAG, 'deletePostData error', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    deletePost(postId: string, channelId: string): Promise<{ updatedAt: number, status: number }> {
-        return this.deletePostData(postId, channelId)
-    }
-    /** delete post end */
+    // deletePost(postId: string, channelId: string): Promise<{ updatedAt: number, status: number }> {
+    //     return this.deletePostData(postId, channelId)
+    // }
+    // /** delete post end */
 
     // /** query post data by id start*/
     // private registerQueryPostByIdScripting(): Promise<string> {

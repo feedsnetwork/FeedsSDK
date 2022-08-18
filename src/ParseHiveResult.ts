@@ -209,6 +209,11 @@ export class ParseHiveResult {
     }
   /** parse post result end */
 
+    public static handlePublishPostResult(doc: any): Post[] {
+
+
+    }
+
 }
 
 

@@ -5,7 +5,7 @@ import { HiveHelper } from './HiveHelper'
 import { AppContext } from './AppContext'
 import { Post } from './Post'
 
-const logger = new Logger("MyChannel")
+const logger = new Logger("SubscriptionChannel")
 export class SubscriptionChannel extends Channel {
     private hiveHelper: HiveHelper
 
