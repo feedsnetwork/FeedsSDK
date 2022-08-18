@@ -3,6 +3,7 @@ import { Channel } from './Channel'
 import { HiveData } from './HiveData'
 import { HiveHelper } from './HiveHelper'
 import { AppContext } from './AppContext'
+import { Post } from './Post'
 
 const logger = new Logger("MyChannel")
 export class SubscriptionChannel extends Channel {
@@ -18,16 +19,16 @@ export class SubscriptionChannel extends Channel {
         return this.subscriptionChannelInfo
     }
 
-    getPosts() {
-
+    getPosts(targetDid: string, channelId: string): Promise<Post[]> {
+        return this.hiveHelper.queryPostByChannelId(targetDid, channelId)
     }
 
-    getPostsRangeOfTime() {
-
+    getPostsRangeOfTime(targetDid: string, channelId: string, star: number, end: number): Promise<Post[]> {
+        return this.hiveHelper.queryPostRangeOfTimeScripting(targetDid, channelId, star, end)
     }
 
-    getPostById() {
-
+    getPostById(targetDid: string, channelId: string, postId: string): Promise<Post[]> {
+        return this.hiveHelper.queryPostById(targetDid, channelId, postId)
     }
 }
 

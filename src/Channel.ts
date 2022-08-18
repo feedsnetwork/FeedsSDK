@@ -1,6 +1,6 @@
-import { Hive } from '@elastosfoundation/elastos-connectivity-sdk-js';
-import { HiveData } from './HiveData';
+import { HiveData } from './HiveData'
 import { Logger } from './utils/logger'
+import { Post } from './Post'
 
 const logger = new Logger("Channel")
 
@@ -13,16 +13,16 @@ export class Channel {
         this.subscriptionChannelInfo = subscriptionChannelInfo
     }
 
-    getPosts() {
-
+    getPosts(targetDid: string, channelId: string): Promise<Post[]> {
+        return new Promise<Post[]>((resolve, reject) => { })
     }
 
-    getPostsRangeOfTime() {
-
+    getPostsRangeOfTime(targetDid: string, channelId: string, star: number, end: number): Promise<Post[]> {
+        return new Promise<Post[]>((resolve, reject) => { })
     }
 
-    getPostById() {
-
+    getPostById(targetDid: string, channelId: string, postId: string): Promise<Post[]> {
+        return new Promise<Post[]>((resolve, reject) => { })
     }
 }
 

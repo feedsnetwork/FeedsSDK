@@ -1,4 +1,3 @@
-import { Hive } from '@elastosfoundation/elastos-connectivity-sdk-js'
 import { HiveService } from './HiveService'
 import { QueryHasResultCondition, FindExecutable, AndCondition, NetworkException, InsertExecutable, UpdateExecutable, DeleteExecutable, UpdateResult, UpdateOptions, InsertResult, FileDownloadExecutable, HiveException, InsufficientStorageException } from "@elastosfoundation/hive-js-sdk"
 import { utils } from './utils/utils'
@@ -6,10 +5,11 @@ import SparkMD5 from 'spark-md5'
 import { HiveData } from './HiveData'
 import { AppContext } from './AppContext'
 import { Logger } from './utils/logger'
-// import { Channel } from './Channel'
+import { Channel } from './Channel'
 import { MyChannel } from './MyChannel'
 import { SubscriptionChannel } from './SubscriptionChannel'
 import { ParseHiveResult } from './ParseHiveResult'
+import { Post } from './Post'
 
 const hiveService = new HiveService()
 const logger = new Logger("HiveService")
@@ -77,7 +77,7 @@ export class HiveHelper {
     }
 
     /** getMyChannels end */
-    private queryChannelsFromDB(channelId: string = null): Promise<Channel[]> {
+    private queryChannelsFromDB(channelId: string = null): Promise<MyChannel[]> {
         return new Promise(async (resolve, reject) => {
             try {
                 var filter = {}
@@ -280,6 +280,142 @@ export class HiveHelper {
         })
     }
     /** query subscription info by channelId end */
+
+    /** query post data by id start*/
+    queryPostById(targetDid: string, channelId: string, postId: string) {
+        return this.callQueryPostById(targetDid, channelId, postId)
+    }
+    
+    private callQueryPostById(targetDid: string, channelId: string, postId: string): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc = { "channel_id": channelId, "post_id": postId }
+                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_SPECIFIED_POST, doc)
+                logger.trace('query post by id success:', result)
+                resolve(result)
+            } catch (error) {
+                logger.error('query post by id error:', error)
+                reject(error)
+            }
+        })
+    }
+
+    private registerQueryPostByIdScripting(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let executablefilter = { "channel_id": "$params.channel_id", "post_id": "$params.post_id" }
+                let options = { "projection": { "_id": false }, "limit": 100 }
+                let conditionfilter1 = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+                let conditionfilter2 = { "channel_id": "$params.channel_id", "post_id": "$params.post_id", "type": "public" }
+                let queryCondition1 = new QueryHasResultCondition("subscription_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter1, null)
+                let queryCondition2 = new QueryHasResultCondition("post_permission", HiveHelper.TABLE_POSTS, conditionfilter2, null)
+                let andCondition = new AndCondition("verify_user_permission", [queryCondition1, queryCondition2])
+                let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
+                await hiveService.registerScript(HiveHelper.SCRIPT_SPECIFIED_POST, findExe, andCondition, false, false)
+                resolve("SUCCESS")
+            } catch (error) {
+                logger.error("register query post by id error", error)
+                reject(error)
+            }
+        })
+    }
+    /** query post data by id end*/
+
+    /** query post data by channel id start */
+    queryPostByChannelId(targetDid: string, channelId: string): Promise<Post[]> {
+        return this.callQueryPostByChannelId(targetDid, channelId)
+    }
+
+    private callQueryPostByChannelId(targetDid: string, channelId: string): Promise<Post[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_POST_BY_CHANNEL, { "channel_id": channelId })
+                const parseResult = ParseHiveResult.parsePostResult(targetDid, result.find_message.items)
+                logger.trace('query post by channelId success:', result)
+                resolve(parseResult)
+            } catch (error) {
+                logger.error('query post by channelId error:', error)
+                reject(error)
+            }
+        })
+    }
+
+    private registerQueryPostByChannelIdScripting(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let executablefilter = { "channel_id": "$params.channel_id" }
+                let options = { "projection": { "_id": false }, "limit": 100 }
+                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+                let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
+                let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
+                await hiveService.registerScript(HiveHelper.SCRIPT_QUERY_POST_BY_CHANNEL, findExe, queryCondition, false, false)
+                logger.trace('Register script query post by channelId success')
+                resolve("SUCCESS")
+            } catch (error) {
+                logger.error("Register script query post by channelId error: ", error)
+                reject(error)
+            }
+        })
+    }
+    /** query post data by channel id end */
+
+    /** query post data range of time start */
+    queryPostRangeOfTimeScripting(targetDid: string, channelId: string, start: number, end: number): Promise<any> {
+        return this.callQueryPostRangeOfTimeScripting(targetDid, channelId, start, end)
+    }
+
+    private callQueryPostRangeOfTimeScripting(targetDid: string, channelId: string, start: number, end: number) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let result = await this.callScript(targetDid, HiveHelper.SCRIPT_SOMETIME_POST, { "channel_id": channelId, "start": start, "end": end })
+                logger.trace('query post range of time success:', result)
+                resolve(result)
+            } catch (error) {
+                logger.error('query post range of time error:', error)
+                reject(error)
+            }
+        })
+    }
+
+    private registerQueryPostRangeOfTimeScripting(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let executablefilter =
+                    { "channel_id": "$params.channel_id", "updated_at": { $gt: "$params.start", $lt: "$params.end" } }
+                let options = { "projection": { "_id": false }, "limit": 30, "sort": { "updated_at": -1 } }
+                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+                let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
+                let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
+                await hiveService.registerScript(HiveHelper.SCRIPT_SOMETIME_POST, findExe, queryCondition, false, false)
+                logger.trace('Register script query post range of time success')
+                resolve("SUCCESS")
+            } catch (error) {
+                logger.error('Register script query post range of time error:', error)
+                reject(error)
+            }
+        })
+    }
+    /** query post data range of time end */
+
+    // core
+    private callScript(targetDid: string, scriptName: string, params: any): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const appid = this.ApplicationDID
+                logger.log('Call script params is targetDid:', targetDid, 'scriptName:', scriptName, 'params:', params)
+                let result = await hiveService.callScript(scriptName, params, targetDid, appid)
+                logger.log('Call script success: ', result)
+                resolve(result)
+            } catch (error) {
+                logger.error('Call script error:', error)
+                reject(error)
+            }
+        })
+    }
+
+
+
+
 
 
 
@@ -789,115 +925,115 @@ export class HiveHelper {
     }
     /** delete post end */
 
-    /** query post data by id start*/
-    private registerQueryPostByIdScripting(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let executablefilter = { "channel_id": "$params.channel_id", "post_id": "$params.post_id" }
-                let options = { "projection": { "_id": false }, "limit": 100 }
-                let conditionfilter1 = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
-                let conditionfilter2 = { "channel_id": "$params.channel_id", "post_id": "$params.post_id", "type": "public" }
-                let queryCondition1 = new QueryHasResultCondition("subscription_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter1, null)
-                let queryCondition2 = new QueryHasResultCondition("post_permission", HiveHelper.TABLE_POSTS, conditionfilter2, null)
-                let andCondition = new AndCondition("verify_user_permission", [queryCondition1, queryCondition2])
-                let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
-                await hiveService.registerScript(HiveHelper.SCRIPT_SPECIFIED_POST, findExe, andCondition, false, false)
-                resolve("SUCCESS")
-            } catch (error) {
-                // // Logger.error(TAG, "registerQueryPostById error", error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // /** query post data by id start*/
+    // private registerQueryPostByIdScripting(): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let executablefilter = { "channel_id": "$params.channel_id", "post_id": "$params.post_id" }
+    //             let options = { "projection": { "_id": false }, "limit": 100 }
+    //             let conditionfilter1 = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+    //             let conditionfilter2 = { "channel_id": "$params.channel_id", "post_id": "$params.post_id", "type": "public" }
+    //             let queryCondition1 = new QueryHasResultCondition("subscription_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter1, null)
+    //             let queryCondition2 = new QueryHasResultCondition("post_permission", HiveHelper.TABLE_POSTS, conditionfilter2, null)
+    //             let andCondition = new AndCondition("verify_user_permission", [queryCondition1, queryCondition2])
+    //             let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
+    //             await hiveService.registerScript(HiveHelper.SCRIPT_SPECIFIED_POST, findExe, andCondition, false, false)
+    //             resolve("SUCCESS")
+    //         } catch (error) {
+    //             // // Logger.error(TAG, "registerQueryPostById error", error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    private callQueryPostById(targetDid: string, channelId: string, postId: string): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const doc = { "channel_id": channelId, "post_id": postId }
-                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_SPECIFIED_POST, doc)
-                resolve(result)
-            } catch (error) {
-                // // Logger.error(TAG, 'callQueryPostById error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callQueryPostById(targetDid: string, channelId: string, postId: string): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const doc = { "channel_id": channelId, "post_id": postId }
+    //             const result = await this.callScript(targetDid, HiveHelper.SCRIPT_SPECIFIED_POST, doc)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'callQueryPostById error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    queryPostById(targetDid: string, channelId: string, postId: string) {
-        return this.callQueryPostById(targetDid, channelId, postId)
-    }
-    /** query post data by id end*/
+    // queryPostById(targetDid: string, channelId: string, postId: string) {
+    //     return this.callQueryPostById(targetDid, channelId, postId)
+    // }
+    // /** query post data by id end*/
 
-    /** query post data by channel id start */
-    private registerQueryPostByChannelIdScripting(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let executablefilter = { "channel_id": "$params.channel_id" }
-                let options = { "projection": { "_id": false }, "limit": 100 }
-                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
-                let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
-                let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
-                await hiveService.registerScript(HiveHelper.SCRIPT_QUERY_POST_BY_CHANNEL, findExe, queryCondition, false, false)
-                resolve("SUCCESS")
-            } catch (error) {
-                // // Logger.error(TAG, "registerQueryPostByChannelId error", error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // /** query post data by channel id start */
+    // private registerQueryPostByChannelIdScripting(): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let executablefilter = { "channel_id": "$params.channel_id" }
+    //             let options = { "projection": { "_id": false }, "limit": 100 }
+    //             let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+    //             let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
+    //             let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
+    //             await hiveService.registerScript(HiveHelper.SCRIPT_QUERY_POST_BY_CHANNEL, findExe, queryCondition, false, false)
+    //             resolve("SUCCESS")
+    //         } catch (error) {
+    //             // // Logger.error(TAG, "registerQueryPostByChannelId error", error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    private callQueryPostByChannelId(targetDid: string, channelId: string) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_POST_BY_CHANNEL, { "channel_id": channelId })
-                resolve(result)
-            } catch (error) {
-                // // Logger.error(TAG, 'callQueryPostByChannelId error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callQueryPostByChannelId(targetDid: string, channelId: string) {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_POST_BY_CHANNEL, { "channel_id": channelId })
+    //             resolve(result)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'callQueryPostByChannelId error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    queryPostByChannelId(targetDid: string, channelId: string): Promise<any> {
-        return this.callQueryPostByChannelId(targetDid, channelId)
-    }
-    /** query post data by channel id end */
+    // queryPostByChannelId(targetDid: string, channelId: string): Promise<any> {
+    //     return this.callQueryPostByChannelId(targetDid, channelId)
+    // }
+    // /** query post data by channel id end */
 
-    /** query post data range of time start */
-    private registerQueryPostRangeOfTimeScripting(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let executablefilter =
-                    { "channel_id": "$params.channel_id", "updated_at": { $gt: "$params.start", $lt: "$params.end" } }
-                let options = { "projection": { "_id": false }, "limit": 30, "sort": { "updated_at": -1 } }
-                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
-                let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
-                let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
-                await hiveService.registerScript(HiveHelper.SCRIPT_SOMETIME_POST, findExe, queryCondition, false, false)
-                resolve("SUCCESS")
-            } catch (error) {
-                // // Logger.error(TAG, "registerQueryPostRangeOfTime error", error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // /** query post data range of time start */
+    // private registerQueryPostRangeOfTimeScripting(): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let executablefilter =
+    //                 { "channel_id": "$params.channel_id", "updated_at": { $gt: "$params.start", $lt: "$params.end" } }
+    //             let options = { "projection": { "_id": false }, "limit": 30, "sort": { "updated_at": -1 } }
+    //             let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+    //             let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
+    //             let findExe = new FindExecutable("find_message", HiveHelper.TABLE_POSTS, executablefilter, options).setOutput(true)
+    //             await hiveService.registerScript(HiveHelper.SCRIPT_SOMETIME_POST, findExe, queryCondition, false, false)
+    //             resolve("SUCCESS")
+    //         } catch (error) {
+    //             // // Logger.error(TAG, "registerQueryPostRangeOfTime error", error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    private callQueryPostRangeOfTimeScripting(targetDid: string, channelId: string, start: number, end: number) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let result = await this.callScript(targetDid, HiveHelper.SCRIPT_SOMETIME_POST, { "channel_id": channelId, "start": start, "end": end })
-                resolve(result)
-            } catch (error) {
-                // // Logger.error(TAG, 'callQueryPostByChannelId error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callQueryPostRangeOfTimeScripting(targetDid: string, channelId: string, start: number, end: number) {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let result = await this.callScript(targetDid, HiveHelper.SCRIPT_SOMETIME_POST, { "channel_id": channelId, "start": start, "end": end })
+    //             resolve(result)
+    //         } catch (error) {
+    //             // // Logger.error(TAG, 'callQueryPostByChannelId error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    queryPostRangeOfTimeScripting(targetDid: string, channelId: string, start: number, end: number): Promise<any> {
-        return this.callQueryPostRangeOfTimeScripting(targetDid, channelId, start, end)
-    }
-    /** query post data range of time end */
+    // queryPostRangeOfTimeScripting(targetDid: string, channelId: string, start: number, end: number): Promise<any> {
+    //     return this.callQueryPostRangeOfTimeScripting(targetDid, channelId, start, end)
+    // }
+    // /** query post data range of time end */
 
     /** subscribe channel start */
     private registerSubscribeScripting(): Promise<string> {
@@ -2102,23 +2238,20 @@ export class HiveHelper {
         return dataBuffer
     }
 
-    private callScript(targetDid: string, scriptName: string, params: any): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // TODO: Config appid
-                // const appid = Config.APPLICATION_DID
-                const appid = this.ApplicationDID
-                // Logger.log(TAG, 'Call script params is targetDid:', targetDid, 'scriptName:', scriptName, 'params:', params)
-                let result = await hiveService.callScript(scriptName, params, targetDid, appid)
-                // Logger.log('Call script result is', result)
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'callScript error:', error)
-                //reject(this.handleError(error))
-                reject(error)
-            }
-        })
-    }
+    // private callScript(targetDid: string, scriptName: string, params: any): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const appid = this.ApplicationDID
+    //             logger.log('Call script params is targetDid:', targetDid, 'scriptName:', scriptName, 'params:', params)
+    //             let result = await hiveService.callScript(scriptName, params, targetDid, appid)
+    //             logger.log('Call script success: ', result)
+    //             resolve(result)
+    //         } catch (error) {
+    //             logger.error('Call script error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
     /** query self channels start */
     // private queryChannelsFromDB(): Promise<any> {

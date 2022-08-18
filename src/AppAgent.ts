@@ -1,4 +1,3 @@
-import { Hive } from '@elastosfoundation/elastos-connectivity-sdk-js'
 import { Logger } from './utils/logger'
 import { HiveHelper } from './HiveHelper'
 import { AppContext } from './AppContext'
