@@ -76,6 +76,7 @@ export class HiveHelper {
         this.ApplicationDID = appContext.applicationDID
     }
 
+    // 整理线 ----------------------------- start
     /** getMyChannels end */
     private queryChannelsFromDB(channelId: string = null): Promise<MyChannel[]> {
         return new Promise(async (resolve, reject) => {
@@ -412,6 +413,51 @@ export class HiveHelper {
             }
         })
     }
+
+    /** query slef post start */
+    queryMyPosts(): Promise<Post[]> {
+        return this.queryPostsFromDB()
+    }
+
+    private queryPostsFromDB(): Promise<Post[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const filter = {}
+                const result = await hiveService.queryDBData(HiveHelper.TABLE_POSTS, filter)
+                logger.trace('Query my post from DB success: ', result)
+                const parseResult = ParseHiveResult.parsePostResult(this.userDid, result)
+                resolve(parseResult)
+            } catch (error) {
+                logger.error('Query my post from DB error:', error)
+                reject(error)
+            }
+        })
+    }
+    /** query slef post end */
+
+    /** query slef post by channel start */
+    queryMyPostsByChannel(channelId: string): Promise<Post[]> {
+        return this.queryPostsByChannelFromDB(channelId)
+    }
+
+    private queryPostsByChannelFromDB(channelId: string): Promise<Post[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const filter = { 'channel_id': channelId }
+                const result = await hiveService.queryDBData(HiveHelper.TABLE_POSTS, filter)
+                const parseResult = ParseHiveResult.parsePostResult(this.userDid, result)
+                logger.trace('Query my post by channel from DB success: ', result)
+                resolve(parseResult)
+            } catch (error) {
+                logger.error('Query my post by channel from DB error: ', error)
+                reject(error)
+            }
+        })
+    }
+    /** query slef post by channel end */
+
+
+// 整理线 ----------------------------- end
 
 
 
@@ -2272,43 +2318,43 @@ export class HiveHelper {
     // }
     /** query self channels end */
 
-    /** query slef post start */
-    private queryPostsFromDB(): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const filter = {}
-                const result = await hiveService.queryDBData(HiveHelper.TABLE_POSTS, filter)
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'Query post from DB', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // /** query slef post start */
+    // private queryPostsFromDB(): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const filter = {}
+    //             const result = await hiveService.queryDBData(HiveHelper.TABLE_POSTS, filter)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // Logger.error(TAG, 'Query post from DB', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    querySelfPosts(): Promise<any> {
-        return this.queryPostsFromDB()
-    }
-    /** query slef post end */
+    // querySelfPosts(): Promise<any> {
+    //     return this.queryPostsFromDB()
+    // }
+    // /** query slef post end */
 
-    /** query slef post by channel start */
-    private queryPostsByChannelFromDB(channelId: string): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const filter = { 'channel_id': channelId }
-                const result = await hiveService.queryDBData(HiveHelper.TABLE_POSTS, filter)
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'Query post by channel from DB', error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // /** query slef post by channel start */
+    // private queryPostsByChannelFromDB(channelId: string): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const filter = { 'channel_id': channelId }
+    //             const result = await hiveService.queryDBData(HiveHelper.TABLE_POSTS, filter)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // Logger.error(TAG, 'Query post by channel from DB', error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    querySelfPostsByChannel(channelId: string): Promise<any> {
-        return this.queryPostsByChannelFromDB(channelId)
-    }
-    /** query slef post by channel end */
+    // querySelfPostsByChannel(channelId: string): Promise<any> {
+    //     return this.queryPostsByChannelFromDB(channelId)
+    // }
+    // /** query slef post by channel end */
 
 
     /** query user displayName start */

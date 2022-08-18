@@ -8,27 +8,33 @@ import { Post } from './Post'
 const logger = new Logger("MyChannel")
 export class MyChannel extends Channel {
     private hiveHelper: HiveHelper
+    private userDid = ''
 
     constructor(myChnnelInfo: HiveData.ChannelInfo) {
         super(myChnnelInfo, null)
         // TODO: AppContext.isInitialized()
         this.hiveHelper = new HiveHelper(AppContext.getInstance())
+        this.userDid = AppContext.getInstance().userDid
     }
 
     public getMyChannelInfo(): HiveData.ChannelInfo {
         return this.myChannelInfo
     }
 
-    getPosts(targetDid: string, channelId: string): Promise<Post[]> {
-        return this.hiveHelper.queryPostByChannelId(targetDid, channelId)
+    public getMyPosts(): Promise<Post[]> {
+        return this.hiveHelper.queryMyPosts()
     }
 
-    getPostsRangeOfTime(targetDid: string, channelId: string, star: number, end: number): Promise<Post[]> {
-        return this.hiveHelper.queryPostRangeOfTimeScripting(targetDid, channelId, star, end)
+    getMyPostsByChannelId(channelId: string): Promise<Post[]> {
+        return this.hiveHelper.queryMyPostsByChannel(channelId)
     }
 
-    getPostById(targetDid: string, channelId: string, postId: string): Promise<Post[]> {
-        return this.hiveHelper.queryPostById(targetDid, channelId, postId)
+    getMyPostsRangeOfTime(channelId: string, star: number, end: number): Promise<Post[]> {
+        return this.hiveHelper.queryPostRangeOfTimeScripting(this.userDid, channelId, star, end)
+    }
+
+    getMyPostById(channelId: string, postId: string): Promise<Post[]> {
+        return this.hiveHelper.queryPostById(this.userDid, channelId, postId)
     }
 
     updateInfo() {

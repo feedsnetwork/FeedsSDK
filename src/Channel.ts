@@ -13,16 +13,16 @@ export class Channel {
         this.subscriptionChannelInfo = subscriptionChannelInfo
     }
 
-    getPosts(targetDid: string, channelId: string): Promise<Post[]> {
-        return new Promise<Post[]>((resolve, reject) => { })
-    }
+    // getPosts(targetDid: string, channelId: string): Promise<Post[]> {
+    //     return new Promise<Post[]>((resolve, reject) => { })
+    // }
 
-    getPostsRangeOfTime(targetDid: string, channelId: string, star: number, end: number): Promise<Post[]> {
-        return new Promise<Post[]>((resolve, reject) => { })
-    }
+    // getPostsRangeOfTime(targetDid: string, channelId: string, star: number, end: number): Promise<Post[]> {
+    //     return new Promise<Post[]>((resolve, reject) => { })
+    // }
 
-    getPostById(targetDid: string, channelId: string, postId: string): Promise<Post[]> {
-        return new Promise<Post[]>((resolve, reject) => { })
-    }
+    // getPostById(targetDid: string, channelId: string, postId: string): Promise<Post[]> {
+    //     return new Promise<Post[]>((resolve, reject) => { })
+    // }
 }
 

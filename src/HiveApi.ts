@@ -648,7 +648,7 @@ export class HiveApi {
     * @throws HiveError
   */
   querySelfPosts(): Promise<any> {
-    return hiveHelper.querySelfPosts()
+    return hiveHelper.queryMyPosts()
   }
 
   /** selfData
@@ -658,7 +658,7 @@ export class HiveApi {
     * @throws HiveError
   */
   querySelfPostsByChannel(channelId: string): Promise<any> {
-    return hiveHelper.querySelfPostsByChannel(channelId)
+    return hiveHelper.queryMyPostsByChannel(channelId)
   }
 
   /** DisplayName
