@@ -14,6 +14,10 @@ export class SubscriptionChannel extends Channel {
         this.hiveHelper = new HiveHelper(AppContext.getInstance())
     }
 
+    public getSubscriptionChannelInfo(): HiveData.SubscriptionInfo {
+        return this.subscriptionChannelInfo
+    }
+
     getPosts() {
 
     }

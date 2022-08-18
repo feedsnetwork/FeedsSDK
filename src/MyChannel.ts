@@ -14,6 +14,10 @@ export class MyChannel extends Channel {
         this.hiveHelper = new HiveHelper(AppContext.getInstance())
     }
 
+    public getMyChannelInfo(): HiveData.ChannelInfo {
+        return this.myChannelInfo
+    }
+
     updateInfo() {
 
     }

@@ -13,12 +13,16 @@ export class Channel {
         this.subscriptionChannelInfo = subscriptionChannelInfo
     }
 
-    public getMyChannelInfo(): HiveData.ChannelInfo {
-        return this.myChannelInfo
+    getPosts() {
+
     }
 
-    public getSubscriptionChannelInfo(): HiveData.SubscriptionInfo {
-        return this.subscriptionChannelInfo
+    getPostsRangeOfTime() {
+
+    }
+
+    getPostById() {
+
     }
 }
 
