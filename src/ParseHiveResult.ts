@@ -4,6 +4,7 @@ import { Channel } from './Channel'
 import { MyChannel } from './MyChannel'
 import { SubscriptionChannel } from './SubscriptionChannel'
 import { Post } from './Post'
+import { Comment } from './Comment'
 
 const logger = new Logger("Channel")
 
@@ -15,20 +16,23 @@ export class ParseHiveResult {
     public static parseChannelResult(targetDid: string, result: any): MyChannel[] {
         try {
             /**
-             * avatar: "address"
-             * channel_id: "ee74ab5fdbc62b42f45c2af1803ba95b684adbab740c88cf30f9b11c61bc1318"
-             * created: {$date: 1647859734867}
-             * created_at: 1647859737317
-             * intro: "channel01 desc"
-             * memo: ""
-             * modified: {$date: 1647859734867}
-             * name: "channelId01"
-             * nft: ""
-             * tipping_address: ""
-             * type: "public"
-             * updated_at: 1647859737317
-             * proof: ""
-             */
+            [{
+                "channel_id": "50f0854a02059abb941849c5a66d7513091d1bbabec8b9fa582b17bbe3689b1d",
+                "name": "\u8fce\u98ce\u4e00\u68d2\u69cc\u4e00\u4e00",
+                "intro": "\u68d2\u69cc",
+                "avatar": "d30054aa1d08abfb41c7225eb61f18e4@feeds/data/d30054aa1d08abfb41c7225eb61f18e4",
+                "created_at": 1660790457510,
+                "updated_at": 1660790457510,
+                "type": "public",
+                "tipping_address": "[{\"type\":\"ELA\",\"address\":\"\"}]",
+                "nft": "",
+                "memo": "",
+                "category": "",
+                "proof": "",
+                "created": 1660790458,
+                "modified": 1660790458
+            }]
+            */
             const channels = result
             let parseResult = []
             if (channels) {
@@ -209,11 +213,69 @@ export class ParseHiveResult {
     }
   /** parse post result end */
 
-    public static handlePublishPostResult(doc: any): Post[] {
-
-
+    // result.find_message.items
+    public static parseCommentResult(destDid: string, result: any): Comment[] {
+        try {
+            /**
+            [
+                {
+                  "comment_id": "6322716190123240ea27db9f758caee9722d4dbc628e30e2030d389cea52b9a6",
+                  "channel_id": "ee74ab5fdbc62b42f45c2af1803ba95b684adbab740c88cf30f9b11c61bc1318",
+                  "post_id": "9e273cd351ab9369b74e9d4ff94582243389eaad97f2640c1122e5aa78e0ffac",
+                  "refcomment_id": "0",
+                  "content": "\u5f00\u5f00\u5fc3\u5fc3",
+                  "status": 0,
+                  "created_at": 1660875281028,
+                  "updated_at": 1660875281028,
+                  "creater_did": "did:elastos:im3J2p3cCYLpesar34bzkL7gm37exb8sA7"
+                }]
+            */
+            const comments = result.find_message.items
+            let parseResult = []
+            logger.trace('parse comment result: ', comments)
+            if (comments) {
+                comments.forEach(item => {
+                    if (item) {
+                        const commentInfo: HiveData.CommentInfo = {
+                            destDid: destDid,
+                            commentId: item.comment_id,
+                            channelId: item.channel_id,
+                            postId: item.post_id,
+                            refcommentId: item.refcomment_id,
+                            content: item.content,
+                            status: item.status,
+                            updatedAt: item.updated_at,
+                            createdAt: item.created_at,
+                            createrDid: item.creater_did
+                        }
+                        const comment = new Comment(commentInfo)
+                        parseResult.push(comment)
+                    }
+                })
+            }
+            return parseResult
+        } catch (error) {
+            logger.error('Parse comment result error', error)
+        }
     }
 
+    public static handleCreateCommentResult(destDid: string, userDid: string, params: any): Comment {
+        const commentInfo: HiveData.CommentInfo = {
+            destDid: destDid,
+            createrDid: userDid,
+            commentId: params.commentId,
+            channelId: params.channelId,
+            postId: params.postId,
+            refcommentId: params.refcommentId,
+            content: params.content,
+            status: HiveData.CommonStatus.available,
+            updatedAt: params.createdAt,
+            createdAt: params.createdAt,
+        }
+        const comment = new Comment(commentInfo)
+
+        return comment
+    }
 }
 
 

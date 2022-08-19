@@ -26,7 +26,7 @@ export declare namespace HiveData {
 
   export type DeleteResult = {
     updatedAt: number,
-    status: number
+    status: CommonStatus
   }
 
   export type ChannelInfo = {
@@ -86,6 +86,19 @@ export declare namespace HiveData {
     tag: string,
     proof: string,
     memo: string
+  }
+
+  type CommentInfo = {
+    destDid: string,
+    createrDid: string,
+    commentId: string,
+    channelId: string,
+    postId: string,
+    refcommentId: string,
+    content: string,
+    status: CommonStatus,
+    updatedAt: number,
+    createdAt: number,
   }
 }
 

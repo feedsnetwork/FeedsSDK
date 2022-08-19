@@ -4,7 +4,6 @@ import { HiveData } from './HiveData'
 import { HiveHelper } from './HiveHelper'
 import { AppContext } from './AppContext'
 import { Post } from './Post'
-import { Hive } from '@elastosfoundation/elastos-connectivity-sdk-js'
 
 const logger = new Logger("MyChannel")
 export class MyChannel extends Channel {
