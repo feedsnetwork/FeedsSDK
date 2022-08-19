@@ -1,6 +1,5 @@
 import { HiveData } from './HiveData'
 import { Logger } from './utils/logger'
-import { Channel } from './Channel'
 import { MyChannel } from './MyChannel'
 import { SubscriptionChannel } from './SubscriptionChannel'
 import { Post } from './Post'

@@ -29,7 +29,12 @@ export class Post {
         return this.hiveHelper.deleteComment(targetDid, channelId, postId, commentId)
     }
 
-    // getComments
-    // getCommentRangeOfTime
+    getCommentsByPostId(targetDid: string, channelId: string, postId: string): Promise<Comment[]> {
+        return this.hiveHelper.queryCommentByPostId(targetDid, channelId, postId)
+    }
+
+    getCommentRangeOfTime(targetDid: string, channelId: string, postId: string, star: number, end: number): Promise<Comment[]> {
+        return this.hiveHelper.queryCommentRangeOfTimeScripting(targetDid, channelId, postId, star, end)
+    }
 
 }

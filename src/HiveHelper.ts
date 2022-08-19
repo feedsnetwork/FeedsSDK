@@ -823,7 +823,98 @@ export class HiveHelper {
             }
         })
     }
-        /** delte comment end */
+    /** delte comment end */
+
+    /** query comment by postId start */
+    private registerQueryCommentByPostIdScripting(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let conditionFilter = {
+                    "channel_id": "$params.channel_id",
+                    "user_did": "$caller_did"
+                }
+                const condition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionFilter, null)
+
+                const executableFilter = {
+                    "channel_id": "$params.channel_id",
+                    "post_id": "$params.post_id",
+                }
+
+                let options = { "projection": { "_id": false }, "limit": 100 }
+                const executable = new FindExecutable("find_message", HiveHelper.TABLE_COMMENTS, executableFilter, options).setOutput(true)
+
+                const result = await hiveService.registerScript(HiveHelper.SCRIPT_QUERY_COMMENT_BY_POSTID, executable, condition, false)
+                logger.log("register query comment by postId success: ", result)
+                resolve("SUCCESS")
+            } catch (error) {
+                logger.error("register query comment by postId error: ", error)
+                reject(error)
+            }
+        })
+    }
+
+    queryCommentByPostId(targetDid: string, channelId: string, postId: string): Promise<Comment[]> {
+        return this.callQueryCommentByPostIdScripting(targetDid, channelId, postId)
+    }
+
+    private callQueryCommentByPostIdScripting(targetDid: string, channelId: string, postId: string): Promise<Comment[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "channel_id": channelId,
+                    "post_id": postId
+                }
+                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_COMMENT_BY_POSTID, params)
+                logger.log("Get comment from scripting by post id success, result is ", result)
+                const comments = ParseHiveResult.parseCommentResult(targetDid, result)
+                resolve(comments)
+            } catch (error) {
+                logger.error('Get comment from scripting by post id error: ', error)
+                reject(error)
+            }
+        })
+    }
+    /** query comment by postId end */
+
+    /** query comment by RangeOfTime start */
+    private registerQueryCommentRangeOfTimeScripting(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let executablefilter =
+                    { "channel_id": "$params.channel_id", "post_id": "$params.post_id", "updated_at": { $gt: "$params.start", $lt: "$params.end" } }
+                let options = { "projection": { "_id": false }, "limit": 30, "sort": { "updated_at": -1 } }
+                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+                let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
+                let findExe = new FindExecutable("find_message", HiveHelper.TABLE_COMMENTS, executablefilter, options).setOutput(true)
+                const result = await hiveService.registerScript(HiveHelper.SCRIPT_SOMETIME_COMMENT, findExe, queryCondition, false, false)
+                logger.error("register query comment range of time success: ", result)
+                resolve("SUCCESS")
+            } catch (error) {
+                logger.error("register query comment range of time error: ", error)
+                reject(error)
+            }
+        })
+    }
+
+    queryCommentRangeOfTimeScripting(targetDid: string, channelId: string, postId: string, start: number, end: number): Promise<any> {
+        return this.callQueryCommentRangeOfTimeScripting(targetDid, channelId, postId, start, end)
+    }
+
+    private callQueryCommentRangeOfTimeScripting(targetDid: string, channelId: string, postId: string, start: number, end: number) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let result = await this.callScript(targetDid, HiveHelper.SCRIPT_SOMETIME_COMMENT, { "channel_id": channelId, "post_id": postId, "start": start, "end": end })
+                logger.error('call query comment range of time scripting success:', result)
+                const comments = ParseHiveResult.parseCommentResult(targetDid, result)
+                resolve(comments)
+            } catch (error) {
+                logger.error('call query comment range of time scripting error:', error)
+                reject(error)
+            }
+        })
+    }
+    /** query comment by RangeOfTime end */
+
 // 整理线 ----------------------------- end
 
 
@@ -1719,54 +1810,54 @@ export class HiveHelper {
     }
     /** query subscription info by userDid and channelId end */
 
-    /** query comment by postId start */
-    private registerQueryCommentByPostIdScripting(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let conditionFilter = {
-                    "channel_id": "$params.channel_id",
-                    "user_did": "$caller_did"
-                }
-                const condition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionFilter, null)
+    // /** query comment by postId start */
+    // private registerQueryCommentByPostIdScripting(): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let conditionFilter = {
+    //                 "channel_id": "$params.channel_id",
+    //                 "user_did": "$caller_did"
+    //             }
+    //             const condition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionFilter, null)
 
-                const executableFilter = {
-                    "channel_id": "$params.channel_id",
-                    "post_id": "$params.post_id",
-                }
+    //             const executableFilter = {
+    //                 "channel_id": "$params.channel_id",
+    //                 "post_id": "$params.post_id",
+    //             }
 
-                let options = { "projection": { "_id": false }, "limit": 100 }
-                const executable = new FindExecutable("find_message", HiveHelper.TABLE_COMMENTS, executableFilter, options).setOutput(true)
+    //             let options = { "projection": { "_id": false }, "limit": 100 }
+    //             const executable = new FindExecutable("find_message", HiveHelper.TABLE_COMMENTS, executableFilter, options).setOutput(true)
 
-                await hiveService.registerScript(HiveHelper.SCRIPT_QUERY_COMMENT_BY_POSTID, executable, condition, false)
-                resolve("SUCCESS")
-            } catch (error) {
-                // Logger.error(TAG, "registerQueryCommentByPostId error", error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    //             await hiveService.registerScript(HiveHelper.SCRIPT_QUERY_COMMENT_BY_POSTID, executable, condition, false)
+    //             resolve("SUCCESS")
+    //         } catch (error) {
+    //             // Logger.error(TAG, "registerQueryCommentByPostId error", error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    private callQueryCommentByPostIdScripting(targetDid: string, channelId: string, postId: string): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = {
-                    "channel_id": channelId,
-                    "post_id": postId
-                }
-                const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_COMMENT_BY_POSTID, params)
-                console.log("Get comment from scripting by post id , result is ", result)
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'Get comment from scripting by post id error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callQueryCommentByPostIdScripting(targetDid: string, channelId: string, postId: string): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             const params = {
+    //                 "channel_id": channelId,
+    //                 "post_id": postId
+    //             }
+    //             const result = await this.callScript(targetDid, HiveHelper.SCRIPT_QUERY_COMMENT_BY_POSTID, params)
+    //             console.log("Get comment from scripting by post id , result is ", result)
+    //             resolve(result)
+    //         } catch (error) {
+    //             // Logger.error(TAG, 'Get comment from scripting by post id error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
-    queryCommentByPostId(targetDid: string, channelId: string, postId: string): Promise<any> {
-        return this.callQueryCommentByPostIdScripting(targetDid, channelId, postId)
-    }
-    /** query comment by postId end */
+    // queryCommentByPostId(targetDid: string, channelId: string, postId: string): Promise<any> {
+    //     return this.callQueryCommentByPostIdScripting(targetDid, channelId, postId)
+    // }
+    // /** query comment by postId end */
 
     /** query comment by id start */
     private registerFindCommentByIdScripting(): Promise<string> {
@@ -1819,39 +1910,39 @@ export class HiveHelper {
     }
     /** query comment by id end */
 
-    private registerQueryCommentRangeOfTimeScripting(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let executablefilter =
-                    { "channel_id": "$params.channel_id", "post_id": "$params.post_id", "updated_at": { $gt: "$params.start", $lt: "$params.end" } }
-                let options = { "projection": { "_id": false }, "limit": 30, "sort": { "updated_at": -1 } }
-                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
-                let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
-                let findExe = new FindExecutable("find_message", HiveHelper.TABLE_COMMENTS, executablefilter, options).setOutput(true)
-                await hiveService.registerScript(HiveHelper.SCRIPT_SOMETIME_COMMENT, findExe, queryCondition, false, false)
-                resolve("SUCCESS")
-            } catch (error) {
-                // Logger.error(TAG, "registerQueryCommentRangeOfTime error", error)
-                reject(this.handleError(error))
-            }
-        })
-    }
+    // private registerQueryCommentRangeOfTimeScripting(): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let executablefilter =
+    //                 { "channel_id": "$params.channel_id", "post_id": "$params.post_id", "updated_at": { $gt: "$params.start", $lt: "$params.end" } }
+    //             let options = { "projection": { "_id": false }, "limit": 30, "sort": { "updated_at": -1 } }
+    //             let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+    //             let queryCondition = new QueryHasResultCondition("verify_user_permission", HiveHelper.TABLE_SUBSCRIPTIONS, conditionfilter, null)
+    //             let findExe = new FindExecutable("find_message", HiveHelper.TABLE_COMMENTS, executablefilter, options).setOutput(true)
+    //             await hiveService.registerScript(HiveHelper.SCRIPT_SOMETIME_COMMENT, findExe, queryCondition, false, false)
+    //             resolve("SUCCESS")
+    //         } catch (error) {
+    //             // Logger.error(TAG, "registerQueryCommentRangeOfTime error", error)
+    //             reject(this.handleError(error))
+    //         }
+    //     })
+    // }
 
-    queryCommentRangeOfTimeScripting(targetDid: string, channelId: string, postId: string, start: number, end: number): Promise<any> {
-        return this.callQueryCommentRangeOfTimeScripting(targetDid, channelId, postId, start, end)
-    }
+    // queryCommentRangeOfTimeScripting(targetDid: string, channelId: string, postId: string, start: number, end: number): Promise<any> {
+    //     return this.callQueryCommentRangeOfTimeScripting(targetDid, channelId, postId, start, end)
+    // }
 
-    private callQueryCommentRangeOfTimeScripting(targetDid: string, channelId: string, postId: string, start: number, end: number) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let result = await this.callScript(targetDid, HiveHelper.SCRIPT_SOMETIME_COMMENT, { "channel_id": channelId, "post_id": postId, "start": start, "end": end })
-                resolve(result)
-            } catch (error) {
-                // Logger.error(TAG, 'callQueryCommentRangeOfTimeScripting error:', error)
-                reject(error)
-            }
-        })
-    }
+    // private callQueryCommentRangeOfTimeScripting(targetDid: string, channelId: string, postId: string, start: number, end: number) {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let result = await this.callScript(targetDid, HiveHelper.SCRIPT_SOMETIME_COMMENT, { "channel_id": channelId, "post_id": postId, "start": start, "end": end })
+    //             resolve(result)
+    //         } catch (error) {
+    //             // Logger.error(TAG, 'callQueryCommentRangeOfTimeScripting error:', error)
+    //             reject(error)
+    //         }
+    //     })
+    // }
 
     /** query comment by channel start */
     private registerQueryCommentByChannelScripting(): Promise<string> {
