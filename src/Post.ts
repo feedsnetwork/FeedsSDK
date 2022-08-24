@@ -1,40 +1,46 @@
 import { Logger } from './utils/logger'
-import { HiveData } from './HiveData'
-import { HiveHelper } from './HiveHelper'
-import { AppContext } from './AppContext'
+import { PostChunk } from './PostChunk'
+import { Dispatcher } from './Dispatcher';
+import { Comment } from './Comment'
 
 const logger = new Logger("Post")
+
 export class Post {
-    postInfo: HiveData.PostInfo
-    private hiveHelper: HiveHelper
+    private chunk: PostChunk;
 
-    constructor(postInfo: HiveData.PostInfo) {
-        this.postInfo = postInfo
-        this.hiveHelper = new HiveHelper(AppContext.getInstance())
+    public addComent(): Promise<boolean> {
+        throw new Error("Method not implemented");
     }
 
-    public getPostInfo(): HiveData.PostInfo {
-        return this.postInfo
-    }
-    
-    addComent(targetDid: string, channelId: string, postId: string, refcommentId: string, content: string): Promise<Comment> {
-        return this.hiveHelper.createComment(targetDid, channelId, postId, refcommentId, content)
+    public updateComment(): Promise<boolean> {
+        throw new Error("Method not implemented");
     }
 
-    updateComment(targetDid: string, channelId: string, postId: string, commentId: string, content: string): Promise<boolean> {
-        return this.hiveHelper.updateComment(targetDid, channelId, postId, commentId, content)
+    public deleteComment(commentId: string): Promise<boolean> {
+        throw new Error("Method not implemented");
     }
 
-    deleteComment(targetDid: string, channelId: string, postId: string, commentId: string): Promise<boolean> {
-        return this.hiveHelper.deleteComment(targetDid, channelId, postId, commentId)
+    public fetchComments(earlierThan: number, maximum: number): Promise<Comment[]> {
+        throw new Error("Method not implemented");
     }
 
-    getCommentsByPostId(targetDid: string, channelId: string, postId: string): Promise<Comment[]> {
-        return this.hiveHelper.queryCommentByPostId(targetDid, channelId, postId)
+    public async fetchAndDispatchComments(earlierThan: number, maximum: number, dispatcher: Dispatcher<Comment>) {
+        // TODO:
     }
 
-    getCommentRangeOfTime(targetDid: string, channelId: string, postId: string, star: number, end: number): Promise<Comment[]> {
-        return this.hiveHelper.queryCommentRangeOfTimeScripting(targetDid, channelId, postId, star, end)
+    public fetchCommentsRangeOfTime(begin: number, end: number, maximum: number): Promise<Comment[]> {
+        throw new Error("Method not implemented");
     }
 
+    public async fetchAndDispatchCommentsRangeOfTime(begin: number, end: number, maximum: number, dispatcher: Dispatcher<Comment>) {
+        //TODO;
+    }
+
+    public fetchCommentById(commentId: string): Promise<Comment> {
+        throw new Error("Method not implemented");
+    }
+
+    public async fetchAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {
+        //TODO;
+    }
 }

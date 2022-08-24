@@ -1,57 +1,156 @@
 import { Logger } from './utils/logger'
-import { Channel } from './Channel'
-import { HiveData } from './HiveData'
-import { HiveHelper } from './HiveHelper'
-import { AppContext } from './AppContext'
-import { Post } from './Post'
+import { Dispatcher } from './Dispatcher'
+import { ChannelInfo } from './ChannelInfo'
+import { ChannelHandler } from "./ChannelHandler"
+import { Post } from './Post';
+import { ChannelInfoFetcher } from './ChannelInfoFetcher';
 
-const logger = new Logger("MyChannel")
-export class MyChannel extends Channel {
-    private hiveHelper: HiveHelper
-    private userDid = ''
+//const logger = new Logger("MyChannel")
 
-    constructor(myChnnelInfo: HiveData.ChannelInfo) {
-        super(myChnnelInfo, null)
-        // TODO: AppContext.isInitialized()
-        this.hiveHelper = new HiveHelper(AppContext.getInstance())
-        this.userDid = AppContext.getInstance().userDid
+export class MyChannel implements ChannelInfoFetcher {
+    private channelInfo: ChannelInfo;
+    private published: boolean;
+
+    private constructor(channel: ChannelInfo) {
+        this.channelInfo = channel;
     }
 
-    public getMyChannelInfo(): HiveData.ChannelInfo {
-        return this.myChannelInfo
+    /**
+     * Check whether this channel is published on the registry contract or not.
+     * @returns The boolean state of being published or not.
+     */
+    public isPublic(): boolean {
+        return this.published;
     }
 
-    public getMyPosts(): Promise<Post[]> {
-        return this.hiveHelper.queryMyPosts()
+    /**
+     * Get channel information from local store.
+     * @returns channel information object.
+     */
+    public getChannelInfo(): ChannelInfo {
+        return this.channelInfo;
     }
 
-    getMyPostsByChannelId(channelId: string): Promise<Post[]> {
-        return this.hiveHelper.queryMyPostsByChannel(channelId)
+    /**
+     * Fetch channel property information from remote chanenl.
+     * @returns The promise object containing the channel information
+     */
+    public fetchChannelInfo(): Promise<ChannelInfo> {
+        throw new Error('Method not implemented.');
     }
 
-    getMyPostsRangeOfTime(channelId: string, star: number, end: number): Promise<Post[]> {
-        return this.hiveHelper.queryPostRangeOfTimeScripting(this.userDid, channelId, star, end)
+     /**
+      * Fetch channel property information and send it to dispatcher routine.
+      *
+      * @param dispatcher the dispatch routine to deal with channel infomration;
+      */
+    public fetchAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
+        // TODO;
     }
 
-    getMyPostById(channelId: string, postId: string): Promise<Post[]> {
-        return this.hiveHelper.queryPostById(this.userDid, channelId, postId)
+    /**
+     *  Update channel property information on remote vault.
+     * @param channelInfo new channel information to be updated.
+     * @returns The promise of whether updated in success or failure
+     */
+    public updateChannelInfo(channelInfo: ChannelInfo): Promise<boolean> {
+        throw new Error('Method not implemented.');
+        // TODO:
     }
 
-    updateInfo(channelId: string, newName: string, newIntro: string, newAvatar: string, newType: string, newMemo: string,
-        newTippingAddress: string, newNft: string): Promise<boolean> {
-        return this.hiveHelper.updateChannel(channelId, newName, newIntro, newAvatar, newType, newMemo, newTippingAddress, newNft)
+    /**
+     * fetch a list of Posts with timestamps that are earlier than specific timestamp
+     * and limited number of this list too.
+     *
+     * @param earilerThan The timestamp than which the posts to be fetched should be
+     *                    earlier
+     * @param upperLimit The max limit of the posts in this transaction.
+     * @returns
+     */
+    public fetchPosts(earilerThan: number, upperLimit: number): Promise<Post[]> {
+        throw new Error('Method not implemented.');
     }
 
-    post(channelId: string, tag: string, content: string, type: string = 'public', status: number = HiveData.CommonStatus.available, memo: string, proof: string): Promise<Post[]> {
-        return this.hiveHelper.publishPost(channelId, tag, content, type, status, memo, proof)
+    /**
+     *
+     * @param until
+     * @param upperLimit
+     * @param dispatcher
+     */
+    public fetchAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<Post>) {
+        throw new Error('Method not implemented.');
     }
 
-    updatePost(postId: string, channelId: string, newType: string, newTag: string, newContent: string, newStatus: number, newUpdateAt: number, newMemo: string, newProof: string): Promise<boolean> {
-        return this.hiveHelper.updatePost(postId, channelId, newType, newTag, newContent, newStatus, newUpdateAt, newMemo, newProof)
+    /**
+     *
+     * @param start
+     * @param end
+     */
+    public fetchPostsByRangeOfTime(start: number, end: number): Promise<Post[]> {
+        throw new Error('Method not implemented.');
     }
 
-    deletePost(postId: string, channelId: string): Promise<HiveData.DeleteResult> {
-        return this.hiveHelper.deletePost(postId, channelId)
+    /**
+     *
+     * @param start
+     * @param end
+     * @param upperLimit
+     * @param dispatcher
+     */
+    public fetchAndDispatchPostsRangeOfTime(start: number, end: number, upperLimit: number, dispatcher: Dispatcher<Post>) {
+        throw new Error('Method not implemented.');
+    }
+
+    /**
+     *
+     * @param postId
+     */
+    public fetchPost(postId: string): Promise<Post> {
+        throw new Error('Method not implemented.');
+    }
+
+    /**
+     *
+     * @param postId
+     * @param dispatcher
+     */
+    public fetchAndDispatchPost(postId: string, dispatcher: Dispatcher<Post>) {
+        throw new Error('Method not implemented.');
+    }
+
+    /**
+     *
+     */
+    public fetchNumberOfSubscribers(): Promise<number> {
+        throw new Error('Method not implemented.');
+    }
+
+    /**
+     *
+     * @param until
+     * @param upperLimit
+     * @param dispatcher
+     */
+    public fetchAndDispatchSubscribers(until: number, upperLimit: number, dispatcher: Dispatcher<Profile>) {
+        throw new Error('Method not implemented.');
+    }
+
+    /**
+     *
+     * @param postBody
+     */
+    public post(postBody: Post): Promise<boolean> {
+        throw new Error('Method not implemented.');
+        // TODO:
+    }
+
+    /**
+     *
+     * @param postId
+     */
+    public deletePost(postId: string): Promise<boolean> {
+        throw new Error('Method not implemented.');
+        // TODO:
     }
 }
 
