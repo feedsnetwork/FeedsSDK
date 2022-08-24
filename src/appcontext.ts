@@ -1,5 +1,5 @@
 import { Logger } from './utils/logger'
-import { IllegalArgumentException } from "./Exception"
+import { IllegalArgumentException } from "./exceptions/Exception"
 const logger = new Logger("AppContext")
 
 export class AppContext {

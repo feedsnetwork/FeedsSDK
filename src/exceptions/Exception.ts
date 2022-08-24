@@ -1,4 +1,4 @@
-import { Logger } from './utils/logger'
+import { Logger } from '../utils/logger'
 
 export class FeedsException extends Error {
     private causedBy?: Error;
