@@ -1,3 +1,4 @@
+import { utils } from "./utils/utils";
 
 export class ChannelInfo {
     private readonly ownerDid: string;
@@ -22,8 +23,7 @@ export class ChannelInfo {
     }
 
     public static generateChannelId(ownerDid: string, name: string): string {
-        // TODO:
-        return "";
+        return utils.generateChannelId(ownerDid, name)
     }
 
     public static clone(channel: ChannelInfo): ChannelInfo {

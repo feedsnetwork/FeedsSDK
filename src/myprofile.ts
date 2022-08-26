@@ -157,8 +157,33 @@ export class MyProfile implements ChannelFetcher {
      * @returns
      */
     public createChannel(channelInfo: ChannelInfo): Promise<MyChannel> {
-        throw new Error("Method not implemented");
-        // TODO:
+        return new Promise(async (resolve, reject) => {
+            const doc = {
+                "channel_id": channelInfo.getChannelId(),
+                "name": channelInfo.getName(),
+                "display_name": channelInfo.getDisplayName(),
+                "intro": channelInfo.getDescription(),
+                "avatar": channelInfo.getAvatar(),
+                "created_at": channelInfo.getCreatedAt(),
+                "updated_at": channelInfo.getUpdatedAt(),
+                "type": channelInfo.getType(),
+                "tipping_address": channelInfo.getReceivingAddress(),
+                "nft": channelInfo.getNft(),
+                "memo": channelInfo.getMmemo(),
+                "category": channelInfo.getCategory(),
+                "proof": channelInfo.getProof()
+            }
+
+            try {
+                const insertResult = await this.hiveservice.insertDBData(config.TABLE_CHANNELS, doc)
+                logger.log('Create channel success, result is: ', insertResult)
+                const handleResult = MyChannel.parse(this.userDid, [doc])
+                resolve(handleResult[0])
+            } catch (error) {
+                logger.error('Create channel error: ', error)
+                reject(error)
+            }
+        })
     }
 
     /**
