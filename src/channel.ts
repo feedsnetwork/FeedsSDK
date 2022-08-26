@@ -116,4 +116,15 @@ export class Channel implements PostFetcher {
     public fetchAndDispatchSubscribers(until: number, upperLimit: number, dispatcher: Dispatcher<Subscriber>) {
         throw new Error('Method not implemented.')
     }
+
+    static parse(targetDid: string, channels: any): Channel[] {
+        let parseResult = []
+        channels.forEach(item => {
+            const channelInfo = ChannelInfo.parse(targetDid, item)
+            const channel = new Channel(channelInfo)
+            parseResult.push(channel)
+        })
+
+        return parseResult
+    }
 }

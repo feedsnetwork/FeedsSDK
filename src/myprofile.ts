@@ -10,6 +10,11 @@ import { Logger } from './utils/logger'
 
 const logger = new Logger("Channel")
 
+type SubscribedChannel = {
+    targetDid: string,// 订阅channel的创建者的did
+    channelId: string
+}
+
 export class MyProfile implements ChannelFetcher {
     private readonly userDid: string;
     private readonly appDid: string;
@@ -71,34 +76,67 @@ export class MyProfile implements ChannelFetcher {
     public fetchSubscriptionCount(): Promise<number> {
         return new Promise(async (resolve, reject) => {
             try {
-                const params = {
-                    "user_did": this.userDid
-                }    
-                const appid = config.ApplicationDID
-                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID, params, this.userDid, appid)
-                const subscriptionChannels = MyChannel.parseSubscriptionResult(targetDid, result)
-                logger.trace("Find subscription from scripting success, result is", result)
-                resolve(subscriptionChannels.length)
+                const result = await this.subscriptions()
+                resolve(result.length)
             } catch (error) {
-                logger.error('Find subscription from scripting error:', error)
+                logger.error('fetch subscription count error: ', error)
                 reject(error)
             }
         })
     }
 
+    private subscriptions(): Promise<SubscribedChannel[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const result = await this.hiveservice.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, {})
+                logger.log('fetch subscription count success: ', result)
+                const parseResult = this.parseBackupSubscribedChannel(result)
+                resolve(parseResult)
+            } catch (error) {
+                logger.error('fetch subscription count error: ', error)
+                reject(error)
+            }
+        })
+    }
+
+    public parseBackupSubscribedChannel(result: any): SubscribedChannel[] {
+        const subscribedChannels = result
+        let parseResult: SubscribedChannel[] = []
+        if (!subscribedChannels || subscribedChannels.length == 0) {
+            return []
+        }
+        subscribedChannels.forEach(item => {
+            const subscribed: SubscribedChannel = {
+                targetDid: item.target_did,
+                channelId: item.channel_id,
+            }
+            parseResult.push(subscribed)
+        })
+        return parseResult
+    }
+
     public fetchSubscriptions(earlierThan: number, maximum: number): Promise<Channel[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const params = {
-                    "user_did": this.userDid
-                }
-                const appid = config.ApplicationDID
-                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID, params, this.userDid, appid)
-                const subscriptionChannels = MyChannel.parseSubscriptionResult(targetDid, result)
-                logger.trace("Find subscription from scripting success, result is", result)
-                resolve(subscriptionChannels.length)
+                const filter = { "limit": { "$lt": maximum }, "created": { "$gt": earlierThan } }
+                const result = this.hiveservice.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, filter)
+                logger.log('fetch subscription count success: ', result)
+                const parseResult = this.parseBackupSubscribedChannel(result)
+
+                parseResult.forEach(async item => {
+                    const params = {
+                        "channel_id": item.channelId,
+                    }
+                    const appid = config.ApplicationDID
+                    const scriptName = config.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID
+                    logger.log('Call script, targetDid:', item.targetDid, 'scriptName:', scriptName, 'params:', params)
+                    let detailResult = await this.hiveservice.callScript(scriptName, params, item.targetDid, appid, this.userDid)
+                    logger.log('Call script success, result is', detailResult)
+                    const parseResult = Channel.parse(item.targetDid, detailResult.find_message.items)
+                    resolve(parseResult)
+                })
             } catch (error) {
-                logger.error('Find subscription from scripting error:', error)
+                logger.error('fetch subscription count error: ', error)
                 reject(error)
             }
         })
