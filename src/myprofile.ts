@@ -1,31 +1,67 @@
-import { Channel } from "./Channel";
-import { ChannelEntry } from "./ChannelEntry";
-import { ChannelFetcher } from "./ChannelFetcher";
-import { ChannelInfo } from "./ChannelInfo";
-import { Dispatcher } from "./Dispatcher";
-import { MyChannel } from "./MyChannel";
+import { Channel } from "./Channel"
+import { ChannelEntry } from "./ChannelEntry"
+import { ChannelFetcher } from "./ChannelFetcher"
+import { ChannelInfo } from "./ChannelInfo"
+import { Dispatcher } from "./Dispatcher"
+import { MyChannel } from "./MyChannel"
+import { hiveService } from "./hiveService"
+import { config } from "./config"
+import { Logger } from './utils/logger'
+
+const logger = new Logger("Channel")
 
 export class MyProfile implements ChannelFetcher {
     private readonly userDid: string;
     private readonly appDid: string;
     private readonly appInstanceDid: string;
-
+    private hiveservice: hiveService
     private resolveCache: string;
 
+    // 自己创建的channel count
     public fetchOwnChannelCount(): Promise<number> {
-        throw new Error("Method not implemented.");
+        return new Promise(async (resolve, reject) => {
+            try {
+                const filter = {}
+                const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
+                const channels = MyChannel.parse(this.userDid, result)
+                resolve(channels.length)
+            } catch (error) {
+                logger.error('fetch own channel count error: ', error)
+                reject(error)
+            }
+        })
     }
 
-    public fetchOwnChannels(): Promise<Channel[]> {
-        throw new Error("Method not implemented.");
+    public fetchOwnChannels(): Promise<MyChannel[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const filter = {}
+                const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
+                const channels = MyChannel.parse(this.userDid, result)
+                resolve(channels)
+            } catch (error) {
+                logger.error('fetch own channels error: ', error)
+                reject(error)
+            }
+        })
     }
 
     public fetchAndDispatchOwnChannels(dispatcher: Dispatcher<Channel>) {
         throw new Error("Method not implemented.");
     }
 
-    public fetchOwnChannnelById(channelId: string): Promise<Channel> {
-        throw new Error("Method not implemented.");
+    public fetchOwnChannnelById(channelId: string): Promise<MyChannel> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const filter = { "channel_id": channelId }
+                const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
+                const channels = MyChannel.parse(this.userDid, result)
+                resolve(channels[0])
+            } catch (error) {
+                logger.error('fetch own channels error: ', error)
+                reject(error)
+            }
+        })
     }
 
     public fetchAndDispatchOwnChannelById(dispatcher: Dispatcher<Channel>) {
@@ -33,11 +69,39 @@ export class MyProfile implements ChannelFetcher {
     }
 
     public fetchSubscriptionCount(): Promise<number> {
-        throw new Error("Method not implemented.");
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "user_did": this.userDid
+                }    
+                const appid = config.ApplicationDID
+                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID, params, this.userDid, appid)
+                const subscriptionChannels = MyChannel.parseSubscriptionResult(targetDid, result)
+                logger.trace("Find subscription from scripting success, result is", result)
+                resolve(subscriptionChannels.length)
+            } catch (error) {
+                logger.error('Find subscription from scripting error:', error)
+                reject(error)
+            }
+        })
     }
 
     public fetchSubscriptions(earlierThan: number, maximum: number): Promise<Channel[]> {
-        throw new Error("Method not implemented.");
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "user_did": this.userDid
+                }
+                const appid = config.ApplicationDID
+                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID, params, this.userDid, appid)
+                const subscriptionChannels = MyChannel.parseSubscriptionResult(targetDid, result)
+                logger.trace("Find subscription from scripting success, result is", result)
+                resolve(subscriptionChannels.length)
+            } catch (error) {
+                logger.error('Find subscription from scripting error:', error)
+                reject(error)
+            }
+        })
     }
 
     public fetchAndDispatchSubscriptions(earlierThan: number, maximum: number, dispatcher: Dispatcher<Channel>) {

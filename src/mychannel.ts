@@ -152,5 +152,17 @@ export class MyChannel implements ChannelInfoFetcher {
         throw new Error('Method not implemented.');
         // TODO:
     }
+
+    static parse(targetDid: string, channels: any): MyChannel[] {
+        let parseResult = []
+        channels.forEach(item => {
+            const channelInfo = ChannelInfo.parse(targetDid, item)
+            const myChannel = new MyChannel(channelInfo)
+            parseResult.push(myChannel)
+        })
+
+        return parseResult
+    }
+
 }
 
