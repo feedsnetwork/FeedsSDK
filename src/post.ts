@@ -2,11 +2,16 @@ import { Logger } from './utils/logger'
 import { PostChunk } from './PostChunk'
 import { Dispatcher } from './Dispatcher';
 import { Comment } from './Comment'
+import { theme } from '@elastosfoundation/elastos-connectivity-sdk-js';
 
 const logger = new Logger("Post")
 
 export class Post {
     private chunk: PostChunk;
+    private constructor(chunk: PostChunk) {
+        this.chunk = chunk;
+    }
+
 
     public addComent(): Promise<boolean> {
         throw new Error("Method not implemented");
@@ -42,5 +47,20 @@ export class Post {
 
     public async fetchAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {
         //TODO;
+    }
+
+    public static parse(targetDid: string, result: any): Post[] {
+        try {
+            let posts = []
+            result.forEach(item => {
+                const postChun = PostChunk.parse(targetDid, item)
+                const post = new Post(postChun)
+                posts.push(post)
+            }
+            return posts
+        } catch (error) {
+            logger.error('Parse post result error: ', error)
+            throw error
+        }
     }
 }

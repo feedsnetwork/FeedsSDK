@@ -226,8 +226,25 @@ export class MyProfile implements ChannelFetcher {
      * @returns
      */
     public deleteChannel(channelId: string): Promise<boolean> {
-        throw new Error("Method not implemented");
-        // TODO:
+        return new Promise(async (resolve, reject) => {
+            const updatedAt = new Date().getTime()
+            const doc =
+            {
+                "updated_at": updatedAt,
+                "status": 1,
+            }
+            const option = new UpdateOptions(false, true)
+            let filter = { "channel_id": channelId }
+            let update = { "$set": doc }
+            try {
+                const result = await this.hiveservice.updateOneDBData(config.TABLE_CHANNELS, filter, update, option)
+                logger.log('Delete channel success: ', result)
+                resolve(true)
+            } catch (error) {
+                logger.error('Delete channel error: ', error)
+                reject(error)
+            }
+        })
     }
 
     /**
@@ -270,8 +287,25 @@ export class MyProfile implements ChannelFetcher {
      * @returns
      */
     public subscribeChannel(channelEntry: ChannelEntry): Promise<Channel> {
-        throw new Error("Method not implemented");
-        // TODO:
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "channel_id": channelEntry.getChannelId(),
+                    "created_at": channelEntry.getCreatedAt(),
+                    "display_name": channelEntry.getDisplayName(),
+                    "updated_at": channelEntry.getUpdatedAt(),
+                    "status": channelEntry.getStatus()
+                }
+                const appid = config.ApplicationDID // todo
+                logger.log('Subscribe channel targetDid: ', channelEntry.getTargetDid(), 'scriptName:', config.SCRIPT_SUBSCRIBE_CHANNEL, 'params:', params)
+                let result = await this.hiveservice.callScript(config.SCRIPT_SUBSCRIBE_CHANNEL, params, channelEntry.getTargetDid(), appid)
+                logger.log('Subscribe channel success: ', result)
+                resolve(result)// channel
+            } catch (error) {
+                logger.error('Subscribe channel error:', error)
+                reject(error)
+            }
+        })
     }
 
     /**
@@ -280,8 +314,23 @@ export class MyProfile implements ChannelFetcher {
      * @param channel
      * @returns
      */
-     public unsubscribeChannel(channelEntry: ChannelEntry): Promise<boolean> {
-        throw new Error("Method not implemented");
-        // TODO:
-    }
+    public unsubscribeChannel(channelEntry: ChannelEntry): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = {
+                    "channel_id": channelEntry.getChannelId(),
+                    "updated_at": channelEntry.getUpdatedAt(),
+                    "status": channelEntry.getStatus()
+                }
+                const appid = config.ApplicationDID // todo
+                logger.log('Unsubscribe channel targetDid: ', channelEntry.getTargetDid(), 'scriptName:', config.SCRIPT_UPDATE_SUBSCRIPTION, 'params:', params)
+                let result = await this.hiveservice.callScript(config.SCRIPT_UPDATE_SUBSCRIPTION, params, channelEntry.getTargetDid(), appid)
+                logger.log('Unsubscribe channel success: ', result)
+                resolve(true)
+            } catch (error) {
+                logger.error('Unsubscribe channel error:', error)
+                reject(error)
+            }
+        })
+   }
 }
