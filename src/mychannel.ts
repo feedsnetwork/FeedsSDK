@@ -7,17 +7,18 @@ import { ChannelInfoFetcher } from './ChannelInfoFetcher';
 import { config } from "./config"
 import { hiveService } from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
+import { Channel } from './Channel';
 
 const logger = new Logger("MyChannel")
 
-export class MyChannel implements ChannelInfoFetcher {
+export class MyChannel extends Channel implements ChannelInfoFetcher {
     private channelInfo: ChannelInfo;
     private published: boolean;
     private hiveservice: hiveService
 
-    private constructor(channel: ChannelInfo) {
+    /*private constructor(channel: ChannelInfo) {
         this.channelInfo = channel;
-    }
+    }*/
 
     /**
      * Check whether this channel is published on the registry contract or not.

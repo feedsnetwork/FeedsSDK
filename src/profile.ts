@@ -1,9 +1,11 @@
 
+import { AppContext } from "./appcontext";
 import { Channel } from "./Channel";
 import { Dispatcher } from "./Dispatcher";
-import { ChannelFetcher } from "./ChannelFetcher";
+import { ProfileHandler } from "./profilehandler";
 
-export class Profile implements ChannelFetcher {
+export class Profile implements ProfileHandler {
+    private appContext: AppContext;
 
     /**
      * Get the total number of subscribed channels from local store
@@ -13,52 +15,45 @@ export class Profile implements ChannelFetcher {
         throw new Error("Method not implemented.");
     }
 
-    /**
-     * Iterate the subscribed channels from local store.
-     *
-     * @param dispatcher the disaptcher routine
-     */
-    public iterateSubscriptions(dispatcher: Dispatcher<Channel>) {
-        throw new Error("Method not implemented.");
-    }
-
     public getOwnedChannelCount(): number {
         throw new Error("Method not implemented.");
     }
 
-    public getOwnedChannels(): Promise<Channel[]> {
+    public getOwnedChannels(): Channel[] {
         throw new Error("Method not implemented.");
     }
 
-    public fetchOwnedChannelCount(): Promise<number> {
+    public queryOwnedChannelCount(): Promise<number> {
         throw new Error("Method not implemented.");
     }
 
-    public fetchOwnedChannels(): Promise<Channel[]> {
+    public queryOwnedChannels(): Promise<Channel[]> {
         throw new Error("Method not implemented.");
     }
 
-    public fetchAndDispatchOwnChannels(dispatcher: Dispatcher<Channel>) {
+    public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<Channel>) {
         throw new Error("Method not implemented.");
     }
 
-    public fetchOwnChannnelById(channelId: string): Promise<Channel> {
+    public queryOwnedChannnelById(channelId: string): Promise<Channel> {
         throw new Error("Method not implemented.");
     }
 
-    public fetchAndDispatchOwnChannelById(dispatcher: Dispatcher<Channel>) {
+    public async queryAndDispatchOwnedChannelById(dispatcher: Dispatcher<Channel>) {
         throw new Error("Method not implemented.");
     }
 
-    public fetchSubscriptionCount(): Promise<number> {
+    public querySubscriptionCount(): Promise<number> {
         throw new Error("Method not implemented.");
     }
 
-    public fetchSubscriptions(earlierThan: number, upperLimit: number): Promise<Channel[]> {
+    public querySubscriptions(earlierThan: number, upperLimit: number): Promise<Channel[]> {
         throw new Error("Method not implemented.");
     }
 
-    public fetchAndDispatchSubscriptions(earlierThan: number, upperLimit: number, dispatcher: Dispatcher<Channel>) {
+    public async queryAndDispatchSubscriptions(earlierThan: number,
+        upperLimit: number,
+        dispatcher: Dispatcher<Channel>) {
         throw new Error("Method not implemented.");
     }
 }
