@@ -1,5 +1,5 @@
-import { Channel } from "../Channel";
-import { Dispatcher } from "../Dispatcher";
+import { Channel } from "./Channel";
+import { Dispatcher } from "./Dispatcher";
 
 export interface ChannelFetcher {
     /**
