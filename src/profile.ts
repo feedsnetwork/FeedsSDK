@@ -22,20 +22,19 @@ export class Profile implements ChannelFetcher {
         throw new Error("Method not implemented.");
     }
 
-
-    public getNumberOfOwnChannels(): number {
+    public getOwnedChannelCount(): number {
         throw new Error("Method not implemented.");
     }
 
-    public getOwnChannels(): Promise<Channel[]> {
+    public getOwnedChannels(): Promise<Channel[]> {
         throw new Error("Method not implemented.");
     }
 
-    public fetchOwnChannelCount(): Promise<number> {
+    public fetchOwnedChannelCount(): Promise<number> {
         throw new Error("Method not implemented.");
     }
 
-    public fetchOwnChannels(): Promise<Channel[]> {
+    public fetchOwnedChannels(): Promise<Channel[]> {
         throw new Error("Method not implemented.");
     }
 
