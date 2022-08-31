@@ -1,6 +1,6 @@
 import { Channel } from "./Channel"
 import { ChannelEntry } from "./ChannelEntry"
-import { ChannelFetcher } from "./ChannelFetcher"
+import { ProfileHandler } from "./profilehandler"
 import { ChannelInfo } from "./ChannelInfo"
 import { Dispatcher } from "./Dispatcher"
 import { MyChannel } from "./MyChannel"
@@ -16,7 +16,7 @@ type SubscribedChannel = {
     channelId: string
 }
 
-export class MyProfile implements ChannelFetcher {
+export class MyProfile implements ProfileHandler {
     private readonly userDid: string;
     private readonly appDid: string;
     private readonly appInstanceDid: string;
@@ -24,7 +24,7 @@ export class MyProfile implements ChannelFetcher {
     private resolveCache: string;
 
     // 自己创建的channel count
-    public fetchOwnChannelCount(): Promise<number> {
+    public queryOwnedChannelCount(): Promise<number> {
         return new Promise(async (resolve, reject) => {
             try {
                 const filter = {}
@@ -38,7 +38,7 @@ export class MyProfile implements ChannelFetcher {
         })
     }
 
-    public fetchOwnChannels(): Promise<MyChannel[]> {
+    public queryOwnedChannels(): Promise<MyChannel[]> {
         return new Promise(async (resolve, reject) => {
             try {
                 const filter = {}
@@ -52,11 +52,11 @@ export class MyProfile implements ChannelFetcher {
         })
     }
 
-    public fetchAndDispatchOwnChannels(dispatcher: Dispatcher<Channel>) {
+    public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<Channel>) {
         throw new Error("Method not implemented.");
     }
 
-    public fetchOwnChannnelById(channelId: string): Promise<MyChannel> {
+    public queryOwnedChannnelById(channelId: string): Promise<MyChannel> {
         return new Promise(async (resolve, reject) => {
             try {
                 const filter = { "channel_id": channelId }
@@ -70,11 +70,11 @@ export class MyProfile implements ChannelFetcher {
         })
     }
 
-    public fetchAndDispatchOwnChannelById(dispatcher: Dispatcher<Channel>) {
+    public queryAndDispatchOwnedChannelById(dispatcher: Dispatcher<Channel>) {
         throw new Error("Method not implemented.");
     }
 
-    public fetchSubscriptionCount(): Promise<number> {
+    public querySubscriptionCount(): Promise<number> {
         return new Promise(async (resolve, reject) => {
             try {
                 const result = await this.subscriptions()
@@ -116,7 +116,7 @@ export class MyProfile implements ChannelFetcher {
         return parseResult
     }
 
-    public fetchSubscriptions(earlierThan: number, maximum: number): Promise<Channel[]> {
+    public querySubscriptions(earlierThan: number, maximum: number): Promise<Channel[]> {
         return new Promise(async (resolve, reject) => {
             try {
                 const filter = { "limit": { "$lt": maximum }, "created": { "$gt": earlierThan } }
@@ -143,7 +143,7 @@ export class MyProfile implements ChannelFetcher {
         })
     }
 
-    public fetchAndDispatchSubscriptions(earlierThan: number, maximum: number, dispatcher: Dispatcher<Channel>) {
+    public queryAndDispatchSubscriptions(earlierThan: number, maximum: number, dispatcher: Dispatcher<Channel>) {
         throw new Error("Method not implemented.");
     }
 
