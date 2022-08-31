@@ -182,7 +182,22 @@ export class MyChannel implements ChannelInfoFetcher {
      * @param postId
      */
     public fetchPost(postId: string): Promise<Post> {
-        throw new Error('Method not implemented.');
+        return new Promise(async (resolve, reject) => {
+            try {
+                const channelId = this.channelInfo.getChannelId()
+                const filter = { "channel_id": channelId, "postId": postId }
+                const result = await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+                let posts = []
+                result.forEach(item => {
+                    const post = Post.parse(this.channelInfo.getOwnerDid(), item)
+                    posts.push(post)
+                })
+                resolve(posts[0])
+            } catch (error) {
+                logger.error('Call script error:', error)
+                reject(error)
+            }
+        })
     }
 
     /**
@@ -216,8 +231,28 @@ export class MyChannel implements ChannelInfoFetcher {
      * @param postBody
      */
     public post(postBody: Post): Promise<boolean> {
-        throw new Error('Method not implemented.');
-        // TODO:
+        return new Promise(async (resolve, reject) => {
+            const postInfo = postBody.getPostChunk()
+            const doc =
+            {
+                "channel_id": postInfo.getChannelId(),
+                "post_id": postInfo.getPostId(),
+                "created_at": postInfo.getCreatedAt(),
+                "updated_at": postInfo.getUpdatedAt(),
+                "content": postInfo.getContent().toString(),
+                "status": postInfo.getStatus(),
+                "memo": postInfo.getMemo(),
+                "type": postInfo.getType(),
+                "tag": postInfo.getTag(),
+                "proof": postInfo.getProof()
+            }
+            try {
+                resolve(true)
+            } catch (error) {
+                logger.error('insert post data error: ', error)
+                reject(error)
+            }
+        })
     }
 
     /**
@@ -225,8 +260,26 @@ export class MyChannel implements ChannelInfoFetcher {
      * @param postId
      */
     public deletePost(postId: string): Promise<boolean> {
-        throw new Error('Method not implemented.');
-        // TODO:
+        return new Promise(async (resolve, reject) => {
+            const updatedAt = new Date().getTime()
+            const channelId = this.channelInfo.getChannelId()
+            const doc =
+            {
+                "updated_at": updatedAt,
+                "status": 1,
+            }
+            const option = new UpdateOptions(false, true)
+            let filter = { "channel_id": channelId, "post_id": postId }
+            let update = { "$set": doc }
+            try {
+                const result = await this.hiveservice.updateOneDBData(config.TABLE_POSTS, filter, update, option)
+                logger.log('Delete post success: ', result)
+                resolve(true)
+            } catch (error) {
+                logger.error('Delete data from postDB error: ', error)
+                reject(error)
+            }
+        })
     }
 
     static parse(targetDid: string, channels: any): MyChannel[] {

@@ -27,14 +27,14 @@ type MediaData = {
 
 
 export class PostChunk {
-   
+
     private readonly targetDid: string;
     private readonly postId: string;
     private readonly channelId: string;
-    private createdAt: string;
-    private updatedAt: string;
+    private createdAt: number;
+    private updatedAt: number;
     private content: PostContent;
-    private status: string;
+    private status: number;
     private type: string;
     private tag: string;
     private proof: string;
@@ -46,12 +46,12 @@ export class PostChunk {
         this.channelId = channelId;
     }
 
-    public setCreatedAt(createdAt: string): PostChunk {
+    public setCreatedAt(createdAt: number): PostChunk {
         this.createdAt = createdAt;
         return this;
     }
 
-    public setUpdatedAt(updatedAt: string): PostChunk {
+    public setUpdatedAt(updatedAt: number): PostChunk {
         this.updatedAt = updatedAt;
         return this;
     }
@@ -61,7 +61,7 @@ export class PostChunk {
         return this;
     }
 
-    public setStatus(status: string): PostChunk {
+    public setStatus(status: number): PostChunk {
         this.status = status;
         return this;
     }
@@ -83,6 +83,50 @@ export class PostChunk {
     public setMemo(memo: string): PostChunk {
         this.memo = memo;
         return this;
+    }
+
+    public getTargetDid(): string {
+        return this.targetDid;
+    }
+
+    public getPostId(): string {
+        return this.postId;
+    }
+
+    public getChannelId(): string {
+        return this.channelId;
+    }
+
+    public getCreatedAt(): number {
+        return this.createdAt;
+    }
+
+    public getUpdatedAt(): number {
+        return this.updatedAt;
+    }
+
+    public getContent(): PostContent {
+        return this.content;
+    }
+
+    public getStatus(): number {
+        return this.status;
+    }
+
+    public getType(): string {
+        return this.type;
+    }
+
+    public getTag(): string {
+        return this.tag;
+    }
+
+    public getProof(): string {
+        return this.proof;
+    }
+
+    public getMemo(): string {
+        return this.memo;
     }
 
     public static parse(targetDid: string, result: any): PostChunk {

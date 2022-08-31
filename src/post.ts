@@ -12,6 +12,9 @@ export class Post {
         this.chunk = chunk;
     }
 
+    public getPostChunk(): PostChunk {
+        return this.chunk
+    }
 
     public addComent(): Promise<boolean> {
         throw new Error("Method not implemented");
@@ -51,7 +54,7 @@ export class Post {
 
     public static parse(targetDid: string, result: any): Post {
         try {
-            const postChun = PostChunk.parse(targetDid, item)
+            const postChun = PostChunk.parse(targetDid, result)
             const post = new Post(postChun)
             return post
         } catch (error) {
