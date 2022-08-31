@@ -49,15 +49,11 @@ export class Post {
         //TODO;
     }
 
-    public static parse(targetDid: string, result: any): Post[] {
+    public static parse(targetDid: string, result: any): Post {
         try {
-            let posts = []
-            result.forEach(item => {
-                const postChun = PostChunk.parse(targetDid, item)
-                const post = new Post(postChun)
-                posts.push(post)
-            }
-            return posts
+            const postChun = PostChunk.parse(targetDid, item)
+            const post = new Post(postChun)
+            return post
         } catch (error) {
             logger.error('Parse post result error: ', error)
             throw error

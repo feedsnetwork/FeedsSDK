@@ -7,6 +7,7 @@ import { MyChannel } from "./MyChannel"
 import { hiveService } from "./hiveService"
 import { config } from "./config"
 import { Logger } from './utils/logger'
+import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 
 const logger = new Logger("Channel")
 
@@ -99,7 +100,7 @@ export class MyProfile implements ChannelFetcher {
         })
     }
 
-    public parseBackupSubscribedChannel(result: any): SubscribedChannel[] {
+    parseBackupSubscribedChannel(result: any): SubscribedChannel[] {
         const subscribedChannels = result
         let parseResult: SubscribedChannel[] = []
         if (!subscribedChannels || subscribedChannels.length == 0) {

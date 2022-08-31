@@ -46,7 +46,7 @@ export class MyChannel implements ChannelInfoFetcher {
                     "channel_id": this.channelInfo.getChannelId(),
                 }
                 const appid = config.ApplicationDID // todo
-                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, this.channelInfo.getOwnerDid(), appid)
+                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, this.channelInfo.getOwnerDid(), appid, this.channelInfo.getOwnerDid())
                 logger.log('fetch channel info success: ', result)
                 const channelInfo = ChannelInfo.parse(this.channelInfo.getOwnerDid(), result)
                 resolve(channelInfo)
@@ -109,7 +109,25 @@ export class MyChannel implements ChannelInfoFetcher {
      * @returns
      */
     public fetchPosts(earilerThan: number, upperLimit: number): Promise<Post[]> {
-        throw new Error('Method not implemented.');
+        return new Promise(async (resolve, reject) => {
+            try {
+                let userDid = this.channelInfo.getOwnerDid()
+                const filter = { "limit": { "$lt": upperLimit }, "created": { "$gt": earilerThan } }
+                const result = await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+                // const params = { "channel_id": this.channelInfo.getChannelId(), "start": earilerThan, "limit": { "$lt": upperLimit } }
+                // result.find_message.items
+                let posts = []
+                result.forEach(item => {
+                    const post = Post.parse(userDid, item)
+                    posts.push(post)
+                })
+                logger.log('Fetch posts success, result is', result)
+                resolve(posts)
+            } catch (error) {
+                logger.error('Fetch posts error:', error)
+                reject(error)
+            }
+        })
     }
 
     /**
@@ -130,10 +148,17 @@ export class MyChannel implements ChannelInfoFetcher {
     public fetchPostsByRangeOfTime(start: number, end: number): Promise<Post[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const filter = { start: { "$gt": start }, end: { "$gt": end } }
-                const result = await this.hiveservice.queryDBData(config.TABLE_POSTS, filter)
-                const post = Post.parse(this.channelInfo.getOwnerDid(), result)
-                resolve(post)
+                const channelId = this.channelInfo.getChannelId()
+                const filter = { "channel_id": channelId, "created": { $gt: start, $lt: end } }
+                const result = await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+                // const filter = { created: { "$gt": start }, end: { "$gt": end } }
+                // const result = await this.hiveservice.queryDBData(config.TABLE_POSTS, filter)
+                let posts = []
+                result.forEach(item => {
+                    const post = Post.parse(this.channelInfo.getOwnerDid(), item)
+                    posts.push(post)
+                })
+                resolve(posts)
             } catch (error) {
                 logger.error('Call script error:', error)
                 reject(error)
