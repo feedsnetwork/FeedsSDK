@@ -32,8 +32,7 @@ export interface ProfileHandler {
      * Query specific owned channel by channelid and send it to dispatcher routine.
      * @param dispatcher The dispatcher routine to handle the channel
      */
-    queryAndDispatchOwnedChannelById(dispatcher: Dispatcher<Channel>);
-
+    queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<Channel>);
 
     /**
      * Query the total acount of subscribed channels.

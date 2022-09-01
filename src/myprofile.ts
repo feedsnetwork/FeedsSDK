@@ -8,6 +8,7 @@ import { hiveService } from "./hiveService"
 import { config } from "./config"
 import { Logger } from './utils/logger'
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
+import { AppContext } from "./appcontext"
 
 const logger = new Logger("Channel")
 
@@ -17,85 +18,114 @@ type SubscribedChannel = {
 }
 
 export class MyProfile implements ProfileHandler {
+    private appContext: AppContext;
+
     private readonly userDid: string;
     private readonly appDid: string;
     private readonly appInstanceDid: string;
+
     private hiveservice: hiveService
     private resolveCache: string;
 
-    // 自己创建的channel count
-    public queryOwnedChannelCount(): Promise<number> {
-        return new Promise(async (resolve, reject) => {
+    /**
+     * Query the total number of channels created by this profile.
+     *
+     * @returns A promise object that contains the number of owned channels.
+     */
+    public async queryOwnedChannelCount(): Promise<number> {
+        return new Promise<number>(async () => {
             try {
                 const filter = {}
                 const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
                 const channels = MyChannel.parse(this.userDid, result)
-                resolve(channels.length)
+                return channels.length
             } catch (error) {
                 logger.error('fetch own channel count error: ', error)
-                reject(error)
+                throw new Error(error);
             }
         })
     }
 
-    public queryOwnedChannels(): Promise<MyChannel[]> {
-        return new Promise(async (resolve, reject) => {
+     /**
+      * Query a list of all channels (less than 5 channels) created by this profile.
+      *
+      * @returns A promise object that contains an array of channels.
+      */
+    public queryOwnedChannels(): Promise<Channel[]> {
+        return new Promise<Channel[]>(async () => {
             try {
                 const filter = {}
                 const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
                 const channels = MyChannel.parse(this.userDid, result)
-                resolve(channels)
+                //resolve(channels)
             } catch (error) {
                 logger.error('fetch own channels error: ', error)
-                reject(error)
+                throw new Error(error);
             }
         })
     }
 
-    public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<Channel>) {
-        throw new Error("Method not implemented.");
+    /**
+     * Query a list of channels created by this profile and dispatch them to a customized
+     * routine to handle one by one.
+     *
+     * @param dispatcher The disptach routine to handle a channel.
+     */
+    public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<Channel>) {
+        return this.queryOwnedChannels().then(channels => {
+            channels.forEach(async (channel) => {
+                await dispatcher.dispatch(channel);
+                // TODO:
+            })
+        })
     }
 
-    public queryOwnedChannnelById(channelId: string): Promise<MyChannel> {
-        return new Promise(async (resolve, reject) => {
+    /**
+     * Query a specific channel by channelid created by this profile.
+     *
+     * @param channelId The channelId of channel to query
+     * @returns A promise object that contains the channel information.
+     */
+    public queryOwnedChannnelById(channelId: string): Promise<Channel> {
+        return new Promise(async () => {
             try {
                 const filter = { "channel_id": channelId }
                 const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
                 const channels = MyChannel.parse(this.userDid, result)
-                resolve(channels[0])
+                //resolve(channels[0])
             } catch (error) {
                 logger.error('fetch own channels error: ', error)
-                reject(error)
+                throw new Error(error);
             }
         })
     }
 
-    public queryAndDispatchOwnedChannelById(dispatcher: Dispatcher<Channel>) {
-        throw new Error("Method not implemented.");
+    /**
+     * Query a specific channel owned by this profile by channelid.
+     *
+     * @param channelId The channelid to query
+     * @param dispatcher The disaptch routine to handle channel information
+     */
+    public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<Channel>) {
+        return this.queryOwnedChannnelById(channelId).then(async(channel) => {
+            await dispatcher.dispatch(channel);
+        })
     }
 
+    /**
+     * Query the total number of channels subscribed by this profile.
+     *
+     * @returns A promise object that contains the number of subscribed channels.
+     */
     public querySubscriptionCount(): Promise<number> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const result = await this.subscriptions()
-                resolve(result.length)
-            } catch (error) {
-                logger.error('fetch subscription count error: ', error)
-                reject(error)
-            }
-        })
-    }
-
-    private subscriptions(): Promise<SubscribedChannel[]> {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async () => {
             try {
                 const result = await this.hiveservice.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, {})
-                logger.log('fetch subscription count success: ', result)
                 const parseResult = this.parseBackupSubscribedChannel(result)
-                resolve(parseResult)
+                return parseResult.length;
             } catch (error) {
                 logger.error('fetch subscription count error: ', error)
-                reject(error)
+                throw new Error(error);
             }
         })
     }
@@ -116,10 +146,20 @@ export class MyProfile implements ProfileHandler {
         return parseResult
     }
 
+    /**
+      * Query a list of channels subscribed by this profile.
+      *
+      * @param earlierThan
+      * @param maximum
+      * @param upperLimit
+      */
     public querySubscriptions(earlierThan: number, maximum: number): Promise<Channel[]> {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async () => {
             try {
-                const filter = { "limit": { "$lt": maximum }, "created": { "$gt": earlierThan } }
+                const filter = {
+                    "limit" : { "$lt": maximum },
+                    "created": { "$gt": earlierThan }
+                }
                 const result = this.hiveservice.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, filter)
                 logger.log('fetch subscription count success: ', result)
                 const parseResult = this.parseBackupSubscribedChannel(result)
@@ -133,18 +173,32 @@ export class MyProfile implements ProfileHandler {
                     logger.log('Call script, targetDid:', item.targetDid, 'scriptName:', scriptName, 'params:', params)
                     let detailResult = await this.hiveservice.callScript(scriptName, params, item.targetDid, appid, this.userDid)
                     logger.log('Call script success, result is', detailResult)
-                    const parseResult = Channel.parse(item.targetDid, detailResult.find_message.items)
-                    resolve(parseResult)
+                    return Channel.parse(item.targetDid, detailResult.find_message.items)
                 })
             } catch (error) {
                 logger.error('fetch subscription count error: ', error)
-                reject(error)
+                throw new Error(error);
             }
         })
     }
 
-    public queryAndDispatchSubscriptions(earlierThan: number, maximum: number, dispatcher: Dispatcher<Channel>) {
-        throw new Error("Method not implemented.");
+    /**
+      * Query a list of channels subscribed by this profile and dispatch them to customized routine
+      * to handle.
+      *
+      * @param earlierThan
+      * @param maximum
+      * @param upperLimit
+      */
+    public queryAndDispatchSubscriptions(earlierThan: number,
+        maximum: number,
+        dispatcher: Dispatcher<Channel>) {
+
+        return this.querySubscriptions(earlierThan, maximum).then(channels => {
+            channels.forEach((channel) => {
+                dispatcher.dispatch(channel);
+            })
+        })
     }
 
     /**
@@ -195,11 +249,11 @@ export class MyProfile implements ProfileHandler {
      * subscribers are also allowed to fetch posts but can not make comments on the posts.
      * This is the solf way to stop maintaining channel.
      *
-     * @param channelId the channel to be freezed
+     * @param _channelId the channel to be freezed
      * @returns
      */
 
-    public freezeChannel(channelId: string): Promise<boolean> {
+    public freezeChannel(_channelId: string): Promise<boolean> {
         throw new Error("Method not implemented");
         // TODO:
     }
@@ -207,10 +261,10 @@ export class MyProfile implements ProfileHandler {
     /**
      * TODO:
      *
-     * @param channelId
+     * @param _channelId
      * @returns
      */
-    public unfreezeChannel(channelId: string): Promise<boolean> {
+    public unfreezeChannel(_channelId: string): Promise<boolean> {
         throw new Error("Method not implemented");
         // TODO:
     }
@@ -254,7 +308,7 @@ export class MyProfile implements ProfileHandler {
      * @param myChannel
      * @returns
      */
-    public purgeChannel(channelId: string): Promise<boolean> {
+    public purgeChannel(_channelId: string): Promise<boolean> {
         throw new Error("Method not implemented");
         // TODO:
     }
@@ -266,17 +320,17 @@ export class MyProfile implements ProfileHandler {
      * @param channelId the channel Identifier to be published on registry contract.
      * @returns
      */
-    public publishChannel(myChannel: MyChannel): Promise<boolean> {
+    public publishChannel(_myChannel: MyChannel): Promise<boolean> {
         throw new Error("Method not implemented");
         // TODO:
     }
 
     /**
      *
-     * @param channelId
+     * @param _channelId
      * @returns
      */
-    public unpublishChannel(channelId: string): Promise<boolean> {
+    public unpublishChannel(_channelId: string): Promise<boolean> {
         throw new Error("Method not implemented");
         // TODO:
     }
