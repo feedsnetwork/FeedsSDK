@@ -214,8 +214,18 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      *
      */
     public fetchNumberOfSubscribers(): Promise<number> {
-        throw new Error('Method not implemented.');
-    }
+        return new Promise(async (resolve, reject) => {
+            try {
+                const channelId = this.channelInfo.getChannelId()
+                const filter = { "channel_id": channelId }
+                const result = await this.hiveservice.queryDBData(config.TABLE_SUBSCRIPTIONS, filter)
+                resolve(result.length)
+            } catch (error) {
+                logger.error('Call script error:', error)
+                reject(error)
+            }
+        })
+    }    
 
     /**
      *
@@ -248,6 +258,7 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
                 "proof": postInfo.getProof()
             }
             try {
+                await this.hiveservice.insertDBData(config.TABLE_POSTS, doc)
                 resolve(true)
             } catch (error) {
                 logger.error('insert post data error: ', error)
