@@ -276,26 +276,22 @@ export class MyProfile implements ProfileHandler {
      * @param channelId channel id of the channel to be deleted.
      * @returns
      */
-    public deleteChannel(channelId: string): Promise<boolean> {
-        return new Promise(async (resolve, reject) => {
-            const updatedAt = new Date().getTime()
-            const doc =
-            {
-                "updated_at": updatedAt,
-                "status": 1,
+    public deleteChannel(channelId: string): Promise<void> {
+        const doc = {
+            "updated_at": new Date().getTime(),
+            "status": 1,
+        }
+        const filter = { "channel_id": channelId }
+        const update = { "$set": doc}
+
+        return this.hiveservice.updateOneDBData(config.TABLE_CHANNELS, filter, update,
+                new UpdateOptions(false, true))
+            .then (() => {
+                // TODO: reserved
+            }).catch (error => {
+                logger.error("Delete channel error: ", error)
+                throw new Error(error)
             }
-            const option = new UpdateOptions(false, true)
-            let filter = { "channel_id": channelId }
-            let update = { "$set": doc }
-            try {
-                const result = await this.hiveservice.updateOneDBData(config.TABLE_CHANNELS, filter, update, option)
-                logger.log('Delete channel success: ', result)
-                resolve(true)
-            } catch (error) {
-                logger.error('Delete channel error: ', error)
-                reject(error)
-            }
-        })
     }
 
     /**
@@ -338,25 +334,21 @@ export class MyProfile implements ProfileHandler {
      * @returns
      */
     public subscribeChannel(channelEntry: ChannelEntry): Promise<Channel> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = {
-                    "channel_id": channelEntry.getChannelId(),
-                    "created_at": channelEntry.getCreatedAt(),
-                    "display_name": channelEntry.getDisplayName(),
-                    "updated_at": channelEntry.getUpdatedAt(),
-                    "status": channelEntry.getStatus()
-                }
-                const appid = config.ApplicationDID // todo
-                logger.log('Subscribe channel targetDid: ', channelEntry.getTargetDid(), 'scriptName:', config.SCRIPT_SUBSCRIBE_CHANNEL, 'params:', params)
-                let result = await this.hiveservice.callScript(config.SCRIPT_SUBSCRIBE_CHANNEL, params, channelEntry.getTargetDid(), appid)
-                logger.log('Subscribe channel success: ', result)
-                resolve(result)// channel
-            } catch (error) {
+        const params = {
+            "channel_id": channelEntry.getChannelId(),
+            "created_at": channelEntry.getCreatedAt(),
+            "display_name": channelEntry.getDisplayName(),
+            "updated_at": channelEntry.getUpdatedAt(),
+            "status": channelEntry.getStatus()
+        }
+
+        return this.hiveservice.callScript(config.SCRIPT_SUBSCRIBE_CHANNEL, params, channelEntry.getTargetDid(), config.ApplicationDID, "TODO: userDid")
+            .then (result => {
+                return Channel.parseChannel(result)
+            }).catch (error => {
                 logger.error('Subscribe channel error:', error)
-                reject(error)
-            }
-        })
+                throw new Error(error)
+            })
     }
 
     /**
@@ -365,23 +357,19 @@ export class MyProfile implements ProfileHandler {
      * @param channel
      * @returns
      */
-    public unsubscribeChannel(channelEntry: ChannelEntry): Promise<boolean> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = {
-                    "channel_id": channelEntry.getChannelId(),
-                    "updated_at": channelEntry.getUpdatedAt(),
-                    "status": channelEntry.getStatus()
-                }
-                const appid = config.ApplicationDID // todo
-                logger.log('Unsubscribe channel targetDid: ', channelEntry.getTargetDid(), 'scriptName:', config.SCRIPT_UPDATE_SUBSCRIPTION, 'params:', params)
-                let result = await this.hiveservice.callScript(config.SCRIPT_UPDATE_SUBSCRIPTION, params, channelEntry.getTargetDid(), appid)
-                logger.log('Unsubscribe channel success: ', result)
-                resolve(true)
-            } catch (error) {
-                logger.error('Unsubscribe channel error:', error)
-                reject(error)
-            }
-        })
+    public unsubscribeChannel(channelEntry: ChannelEntry): Promise<void> {
+        const params = {
+            "channel_id": channelEntry.getChannelId(),
+            "updated_at": channelEntry.getUpdatedAt(),
+            "status": channelEntry.getStatus()
+        }
+        const appid = config.ApplicationDID // todo
+        return this.hiveservice.callScript(config.SCRIPT_UPDATE_SUBSCRIPTION, params, channelEntry.getTargetDid(), config.ApplicationDID, "TODO: userDid")
+            .then (result => {
+                // TODO
+            }).catch (error => {
+                logger.error("Unsbuscribe channel error:", error)
+                throw new Error(error)
+            })
    }
 }

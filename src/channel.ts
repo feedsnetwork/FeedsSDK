@@ -156,4 +156,8 @@ export class Channel implements ChannelHandler {
 
         return parseResult
     }
+
+    static parseChannel(data: any) : Channel {
+        return new Channel(data);
+    }
 }
