@@ -10,7 +10,7 @@ const logger = new Logger("Channel")
 export class Channel implements ChannelHandler {
     private readonly channelInfo: ChannelInfo;
 
-    private constructor(channelInfo: ChannelInfo) {
+    protected constructor(channelInfo: ChannelInfo) {
         this.channelInfo = channelInfo;
     }
 
@@ -146,7 +146,7 @@ export class Channel implements ChannelHandler {
         throw new Error('Method not implemented.')
     }
 
-    static parse(targetDid: string, channels: any): Channel[] {
+    static parse(targetDid: string, channels: Channel[]): Channel[] {
         let parseResult = []
         channels.forEach(item => {
             const channelInfo = ChannelInfo.parse(targetDid, item)

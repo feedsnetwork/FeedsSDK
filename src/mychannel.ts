@@ -12,7 +12,7 @@ import { Channel } from './Channel';
 const logger = new Logger("MyChannel")
 
 export class MyChannel extends Channel implements ChannelInfoFetcher {
-    private channelInfo: ChannelInfo;
+   // private channelInfo: ChannelInfo;
     private published: boolean;
     private hiveservice: hiveService
 
@@ -292,6 +292,17 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
         })
 
         return parseResult
+    }
+
+    static parseOne(targetDid: string, channels: any): MyChannel {
+        let parseResult = []
+        channels.forEach(item => {
+            const channelInfo = ChannelInfo.parse(targetDid, item)
+            const myChannel = new MyChannel(channelInfo)
+            parseResult.push(myChannel)
+        })
+
+        return parseResult[0]
     }
 
 }

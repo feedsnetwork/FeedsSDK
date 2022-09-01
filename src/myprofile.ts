@@ -33,17 +33,13 @@ export class MyProfile implements ProfileHandler {
      * @returns A promise object that contains the number of owned channels.
      */
     public async queryOwnedChannelCount(): Promise<number> {
-        return new Promise<number>(async () => {
-            try {
-                const filter = {}
-                const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
-                const channels = MyChannel.parse(this.userDid, result)
-                return channels.length
-            } catch (error) {
+        return this.hiveservice.queryDBData(config.TABLE_CHANNELS, {})
+            .then (result => {
+                return MyChannel.parse(this.userDid, result).length
+            }).catch (error => {
                 logger.error('fetch own channel count error: ', error)
-                throw new Error(error);
-            }
-        })
+                throw new Error(error)
+            });
     }
 
      /**
@@ -52,17 +48,13 @@ export class MyProfile implements ProfileHandler {
       * @returns A promise object that contains an array of channels.
       */
     public queryOwnedChannels(): Promise<Channel[]> {
-        return new Promise<Channel[]>(async () => {
-            try {
-                const filter = {}
-                const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
-                const channels = MyChannel.parse(this.userDid, result)
-                //resolve(channels)
-            } catch (error) {
-                logger.error('fetch own channels error: ', error)
-                throw new Error(error);
-            }
-        })
+        return this.hiveservice.queryDBData(config.TABLE_CHANNELS, {})
+            .then (result => {
+                return MyChannel.parse(this.userDid, result);
+            }).catch (error => {
+                logger.error('query owned channel error: ', error)
+                throw new Error(error)
+            })
     }
 
     /**
@@ -72,12 +64,15 @@ export class MyProfile implements ProfileHandler {
      * @param dispatcher The disptach routine to handle a channel.
      */
     public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<Channel>) {
-        return this.queryOwnedChannels().then(channels => {
-            channels.forEach(async (channel) => {
-                await dispatcher.dispatch(channel);
-                // TODO:
+        return this.queryOwnedChannels()
+            .then (channels => {
+                channels.forEach( channel => {
+                    dispatcher.dispatch(channel)
+                })
+            }).catch ( error => {
+                logger.error('query owned channel error: ', error)
+                throw new Error(error)
             })
-        })
     }
 
     /**
@@ -87,17 +82,16 @@ export class MyProfile implements ProfileHandler {
      * @returns A promise object that contains the channel information.
      */
     public queryOwnedChannnelById(channelId: string): Promise<Channel> {
-        return new Promise(async () => {
-            try {
-                const filter = { "channel_id": channelId }
-                const result = await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
-                const channels = MyChannel.parse(this.userDid, result)
-                //resolve(channels[0])
-            } catch (error) {
+        const filter = {
+            "channel_id": channelId
+        }
+        return this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
+            .then (result => {
+                return MyChannel.parseOne(this.userDid, result)
+            }).catch (error => {
                 logger.error('fetch own channels error: ', error)
                 throw new Error(error);
-            }
-        })
+            })
     }
 
     /**
@@ -107,9 +101,13 @@ export class MyProfile implements ProfileHandler {
      * @param dispatcher The disaptch routine to handle channel information
      */
     public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<Channel>) {
-        return this.queryOwnedChannnelById(channelId).then(async(channel) => {
-            await dispatcher.dispatch(channel);
-        })
+        return this.queryOwnedChannnelById(channelId)
+            .then (channel => {
+                dispatcher.dispatch(channel);
+            }).catch (error => {
+                logger.error('query owned channel by channelid error: ', error)
+                throw new Error(error);
+            })
     }
 
     /**
@@ -118,16 +116,14 @@ export class MyProfile implements ProfileHandler {
      * @returns A promise object that contains the number of subscribed channels.
      */
     public querySubscriptionCount(): Promise<number> {
-        return new Promise(async () => {
-            try {
-                const result = await this.hiveservice.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, {})
-                const parseResult = this.parseBackupSubscribedChannel(result)
-                return parseResult.length;
-            } catch (error) {
+        return this.hiveservice.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, {})
+            .then (result => {
+                // return this.parseBackupSubscribedChannel(result).length
+                return 0
+            }).catch (error => {
                 logger.error('fetch subscription count error: ', error)
-                throw new Error(error);
-            }
-        })
+                throw new Error(error)
+            })
     }
 
     parseBackupSubscribedChannel(result: any): SubscribedChannel[] {
