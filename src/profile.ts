@@ -7,14 +7,6 @@ import { ProfileHandler } from "./profilehandler";
 export class Profile implements ProfileHandler {
     private appContext: AppContext;
 
-    /**
-     * Get the total number of subscribed channels from local store
-     * @returns The number of subscribed channels
-     */
-    public getNumberOfSubscriptions(): number {
-        throw new Error("Method not implemented.");
-    }
-
     public getOwnedChannelCount(): number {
         throw new Error("Method not implemented.");
     }
@@ -32,14 +24,36 @@ export class Profile implements ProfileHandler {
     }
 
     public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<Channel>) {
-        throw new Error("Method not implemented.");
+        return new Promise<Channel[]>( async() => {
+            await this.queryOwnedChannels()
+        }).then (channels => {
+            channels.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch (error => {
+            throw new Error(error)
+        })
     }
 
     public queryOwnedChannnelById(channelId: string): Promise<Channel> {
         throw new Error("Method not implemented.");
     }
 
-    public async queryAndDispatchOwnedChannelById(dispatcher: Dispatcher<Channel>) {
+    public async queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<Channel>) {
+        return new Promise<Channel>( async() => {
+            await this.queryOwnedChannnelById(channelId)
+        }).then (channel => {
+            dispatcher.dispatch(channel)
+        }).catch (error => {
+            throw new Error(error)
+        })
+    }
+
+    /**
+     * Get the total number of subscribed channels from local storage
+     * @returns The number of subscribed channels
+     */
+    public getSubscriptionCount(): number {
         throw new Error("Method not implemented.");
     }
 
@@ -54,6 +68,15 @@ export class Profile implements ProfileHandler {
     public async queryAndDispatchSubscriptions(earlierThan: number,
         upperLimit: number,
         dispatcher: Dispatcher<Channel>) {
-        throw new Error("Method not implemented.");
+
+        return new Promise<Channel[]>( async() => {
+            await this.querySubscriptions(earlierThan, upperLimit)
+        }).then (channels => {
+            channels.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch (error => {
+            throw new Error(error)
+        })
     }
 }
