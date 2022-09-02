@@ -8,11 +8,13 @@ import { hiveService } from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 import { Channel } from './Channel';
 import { PostChunk } from './PostChunk';
+import { Profile } from './profile';
+import { MyProfile } from './MyProfile';
 
 const logger = new Logger("MyChannel")
 
-export class MyChannel extends Channel implements ChannelHandler {
-    //private channelInfo: ChannelInfo;
+export class MyChannel implements ChannelHandler {
+    private channelInfo: ChannelInfo;
     private published: boolean;
     private hiveservice: hiveService
 
@@ -32,26 +34,26 @@ export class MyChannel extends Channel implements ChannelHandler {
      * Fetch channel property information from remote chanenl.
      * @returns The promise object containing the channel information
      */
-    public queryChannelInfo(): Promise<ChannelInfo> {
+    public async queryChannelInfo(): Promise<ChannelInfo> {
         return new Promise<any>( async() => {
-            const params = { "channel_id": this.getChannelInfo().getChannelId() }
+            const params = { "channel_id": this.channelInfo.getChannelId() }
             const appId = config.ApplicationDID
-            const ownerDid = this.getChannelInfo().getOwnerDid()
-            await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, ownerDid, appId, ownerDid)
+            const ownerDid = this.channelInfo.getOwnerDid()
+            await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, ownerDid, appId)
         }).then (result => {
-            return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
+            return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result)
         }).catch (error => {
             logger.log('Query channel information error: ', error)
             throw new Error(error)
         })
     }
 
-     /**
-      * Fetch channel property information and send it to dispatcher routine.
-      *
-      * @param dispatcher the dispatch routine to deal with channel infomration;
-      */
-    public queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
+    /**
+     * Fetch channel property information and send it to dispatcher routine.
+     *
+     * @param dispatcher the dispatch routine to deal with channel infomration;
+     */
+    public async queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
         return new Promise<ChannelInfo[]>( async() => {
             await this.queryChannelInfo();
         }).then ( channelInfos => {
@@ -69,7 +71,7 @@ export class MyChannel extends Channel implements ChannelHandler {
      * @param channelInfo new channel information to be updated.
      * @returns The promise of whether updated in success or failure
      */
-    public updateChannelInfo(channelInfo: ChannelInfo): Promise<void> {
+    public async updateChannelInfo(channelInfo: ChannelInfo) {
         return new Promise<void>( async() => {
             let doc = {
                 "name"  : channelInfo.getName(),
@@ -101,7 +103,7 @@ export class MyChannel extends Channel implements ChannelHandler {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns
      */
-    public queryPosts(earilerThan: number, upperLimit: number): Promise<PostChunk[]> {
+    public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostChunk[]> {
         return new Promise( async() => {
             const filter = {
                 "limit": { "$lt": upperLimit },
@@ -109,7 +111,7 @@ export class MyChannel extends Channel implements ChannelHandler {
             }
             await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
         }).then ((result: any) => {
-            let userDid = this.getChannelInfo().getOwnerDid()
+            let userDid = this.channelInfo.getOwnerDid()
             let posts = []
             result.forEach(item => {
                 posts.push(Post.parse(userDid, item))
@@ -122,14 +124,16 @@ export class MyChannel extends Channel implements ChannelHandler {
     }
 
     /**
+     * Query the list of posts from this channel and dispatch them one by one to
+     * customized dispatcher routine.
      *
-     * @param until
-     * @param upperLimit
-     * @param dispatcher
+     * @param earlierThan The timestamp
+     * @param upperNumber The maximum number of posts in this query request.
+     * @param dispatcher The dispatcher routine to deal with a post.
      */
-    public queryAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<PostChunk>) {
+    public async queryAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<PostChunk>) {
         return new Promise<PostChunk[]>( async() => {
-            this.queryPosts(until, upperLimit)
+            await this.queryPosts(until, upperLimit)
         }).then (posts => {
             posts.forEach(item => {
                 dispatcher.dispatch(item)
@@ -139,15 +143,16 @@ export class MyChannel extends Channel implements ChannelHandler {
             throw new Error(error)
         })
     }
-
-    /**
+     /**
+     * Query the list of Posts from this channel by a speific range of time.
      *
-     * @param start
-     * @param end
+     * @param start The beginning timestamp
+     * @param end The end timestamp
+     * @returns An promise object that contains a list of posts.
      */
-    public queryPostsByRangeOfTime(start: number, end: number): Promise<PostChunk[]> {
+    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostChunk[]> {
         return new Promise( async() => {
-            const channelId = this.getChannelInfo().getChannelId()
+            const channelId = this.channelInfo.getChannelId()
             const filter = {
                 "channel_id": channelId,
                 "created": { $gt: start, $lt: end }
@@ -156,7 +161,7 @@ export class MyChannel extends Channel implements ChannelHandler {
         }).then ((data: any) => {
             let posts = []
             data.forEach(item => {
-                posts.push(Post.parse(this.getChannelInfo().getOwnerDid(), item));
+                posts.push(Post.parse(this.channelInfo.getOwnerDid(), item));
             })
             return posts
         }).catch (error => {
@@ -172,9 +177,11 @@ export class MyChannel extends Channel implements ChannelHandler {
      * @param upperLimit
      * @param dispatcher
      */
-    public queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number, dispatcher: Dispatcher<PostChunk>) {
+    public async queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
+        dispatcher: Dispatcher<PostChunk>) {
+
         return new Promise<PostChunk[]>( async() => {
-            this.queryPostsByRangeOfTime(start, end)
+            await this.queryPostsByRangeOfTime(start, end)
         }).then (posts => {
             posts.forEach(item => {
                 dispatcher.dispatch(item)
@@ -189,17 +196,17 @@ export class MyChannel extends Channel implements ChannelHandler {
      *
      * @param postId
      */
-    public fetchPost(postId: string): Promise<PostChunk> {
+    public async queryPost(postId: string): Promise<PostChunk> {
         return new Promise<any>( async() => {
             const filter = {
-                "channel_id": this.getChannelInfo().getChannelId(),
+                "channel_id": this.channelInfo.getChannelId(),
                 "postId": postId
             }
             await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
         }).then ((data) => {
             let posts = []
             data.forEach(item => {
-                posts.push(Post.parse(this.getChannelInfo().getOwnerDid(), item));
+                posts.push(Post.parse(this.channelInfo.getOwnerDid(), item));
             })
             return posts[0]
         }).catch (error => {
@@ -213,9 +220,9 @@ export class MyChannel extends Channel implements ChannelHandler {
      * @param postId
      * @param dispatcher
      */
-    public fetchAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
+    public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
         return new Promise<PostChunk>( async() => {
-            this.queryPost(postId)
+            await this.queryPost(postId)
         }).then (post => {
             dispatcher.dispatch(post)
         }).catch (error => {
@@ -224,13 +231,14 @@ export class MyChannel extends Channel implements ChannelHandler {
         })
     }
 
+
     /**
      *
      */
-    public queryNumberOfSubscribers(): Promise<number> {
+    public async querySubscriberCount(): Promise<number> {
         return new Promise( async() => {
             const filter = {
-                "channel_id": this.getChannelInfo().getChannelId()
+                "channel_id": this.channelInfo.getChannelId()
             }
             await this.hiveservice.queryDBData(config.TABLE_SUBSCRIPTIONS, filter)
         }).then ((result: any) => {
@@ -243,11 +251,20 @@ export class MyChannel extends Channel implements ChannelHandler {
 
     /**
      *
+     * @param earilerThan
+     * @param upperlimit
+     */
+    public async querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    /**
+     *
      * @param until
      * @param upperLimit
      * @param dispatcher
      */
-    public fetchAndDispatchSubscribers(until: number, upperLimit: number, dispatcher: Dispatcher<Profile>) {
+    public queryAndDispatchSubscribers(until: number, upperLimit: number, dispatcher: Dispatcher<Profile>) {
         throw new Error('Method not implemented.');
     }
 
@@ -284,13 +301,13 @@ export class MyChannel extends Channel implements ChannelHandler {
      */
     public deletePost(postId: string): Promise<void> {
         return new Promise<void>( async() => {
-            const channelId = this.getChannelInfo().getChannelId()
+            const channelId = this.channelInfo.getChannelId()
             const doc = {
                 "updated_at": new Date().getTime(),
                 "status": 1,
             }
             let filter = {
-                "channel_id": this.getChannelInfo().getChannelId(),
+                "channel_id": this.channelInfo.getChannelId(),
                 "post_id": postId
             }
             let update = { "$set": doc }
