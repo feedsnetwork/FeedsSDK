@@ -6,6 +6,7 @@ import { ChannelHandler } from './ChannelHandler'
 import { PostChunk } from './PostChunk'
 import { config } from "./config"
 import { hiveService } from "./hiveService"
+import { Profile } from './profile'
 
 const logger = new Logger("Channel")
 
@@ -26,23 +27,23 @@ export class Channel implements ChannelHandler {
     }
 
     /**
-     * Query the channel infomation from remote channel
+     * Query the channel infomation from remote channel on Vault.
      * @returns An promise object that contains channel information.
      */
-    public queryChannelInfo(): Promise<ChannelInfo> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const appid = config.ApplicationDID
-                const targetDid = this.channelInfo.getOwnerDid()
-                const params = { "channel_id": this.channelInfo.getChannelId() }
-                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, targetDid, appid,)
-                logger.log('Query channel info success: ', result)
-                const channelInfo = ChannelInfo.parse(targetDid, result.find_message.items)
-                resolve(channelInfo)
-            } catch (error) {
-                logger.error('Query channel info error:', error)
-                reject(error)
+    public async queryChannelInfo(): Promise<ChannelInfo> {
+        return new Promise<any>( async() => {
+            const params = {
+                "channel_id": this.getChannelInfo().getChannelId()
             }
+            const appId = config.ApplicationDID
+            const ownerDid = this.getChannelInfo().getOwnerDid()
+            await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params,
+                this.getChannelInfo().getOwnerDid(), config.ApplicationDID)
+        }).then (result => {
+            return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
+        }).catch (error => {
+            logger.log('Query channel information error: ', error)
+            throw new Error(error)
         })
     }
 
@@ -51,53 +52,72 @@ export class Channel implements ChannelHandler {
      *
      * @param dispatcher The dispatcher routine to deal with channel information
      */
-    public async queryAndDispatchInfo(dispatcher: Dispatcher<ChannelInfo>) {
-        throw new Error('Method not implemented.')
-    }
-
-    /**
-     * Query the list of posts from this channel that are earler than specific time
-     * and with limited number.
-     *
-     * @param earlierThan The timestamp
-     * @param upperNumber The maximum number of posts in this query request
-     * @returns An promise object that contains a list of posts.
-     */
-    public queryPosts(earlierThan: number, upperLimit: number): Promise<PostChunk[]> {
-        return new Promise(async (resolve, reject) => {
-            try { //TODO: 需注册新的script
-                const appid = config.ApplicationDID
-                const targetDid = this.channelInfo.getOwnerDid()
-                const params = { "channel_id": this.channelInfo.getChannelId(), "limit": { "$lt": upperLimit }, "created": { "$gt": earlierThan } }
-                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params, targetDid, appid)
-                logger.log('query posts success: ', result)
-                let posts = []
-                result.find_message.items.array.forEach(item => {
-                    const post = PostChunk.parse(targetDid, item)
-                    posts.push(post)
-                })
-                resolve(posts)
-            } catch (error) {
-                logger.error('query posts error:', error)
-                reject(error)
-            }
+    public async queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
+        return new Promise<ChannelInfo[]>( async() => {
+            await this.queryChannelInfo();
+        }).then ( channelInfos => {
+            channelInfos.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch ( error => {
+            logger.log('Query channel information error: ', error);
+            throw new Error(error)
         })
     }
 
+    /**
+     * fetch a list of Posts with timestamps that are earlier than specific timestamp
+     * and limited number of this list too.
+     *
+     * @param earilerThan The timestamp than which the posts to be fetched should be
+     *                    earlier
+     * @param upperLimit The max limit of the posts in this transaction.
+     * @returns An promise object that contains a list of posts.
+     */
+     public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostChunk[]> {
+        return new Promise( async() => {
+            const params = {
+                "channel_id": this.channelInfo.getChannelId(),
+                "limit": { "$lt": upperLimit },
+                "created": { "$gt": earilerThan }
+            }
+            let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+                this.getChannelInfo().getOwnerDid(), config.ApplicationDID)
+        }).then ((result: any) => {
+            let targetDid = this.getChannelInfo().getOwnerDid()
+            let posts = []
+            result.find_message.items.array.forEach(item => {
+                const post = PostChunk.parse(targetDid, item)
+                posts.push(post)
+            })
+            return posts
+        }).catch (error => {
+            logger.error('Query posts error:', error)
+            throw new Error(error)
+        })
+    }
 
     /**
      * Query the list of posts from this channel and dispatch them one by one to
      * customized dispatcher routine.
      *
      * @param earlierThan The timestamp
-     * @param upperNumber The maximum number of posts in this query request.
+     * @param upperLimit The maximum number of posts in this query request.
      * @param dispatcher The dispatcher routine to deal with a post.
      */
-    public async queryAndDispatchPosts(earlierThan: number,
-        upperLimit: number,
+    public async queryAndDispatchPosts(earlierThan: number, upperLimit: number,
         dispatcher: Dispatcher<PostChunk>) {
 
-        throw new Error('Method not implemented.')
+        return new Promise<PostChunk[]>( async() => {
+            this.queryPosts(earlierThan, upperLimit)
+        }).then (posts => {
+            posts.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch (error => {
+            logger.error("Query posts error")
+            throw new Error(error)
+        })
     }
 
     /**
@@ -107,19 +127,26 @@ export class Channel implements ChannelHandler {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public queryPostsByRangeOfTime(start: number, end: number): Promise<PostChunk[]> {
-        return new Promise(async (resolve, reject) => {
-            const appid = config.ApplicationDID
+    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostChunk[]> {
+        return new Promise( async() => {
+            const params = {
+                "channel_id": this.channelInfo.getChannelId(),
+                "start": start,
+                "end": end
+            }
+            await this.hiveservice.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+                this.channelInfo.getOwnerDid(), config.ApplicationDID)
+        }).then ( (result: any)=> {
             const targetDid = this.channelInfo.getOwnerDid()
-            const params = { "channel_id": this.channelInfo.getChannelId(), "start": start, "end": end }
-            let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params, targetDid, appid)
-            logger.log('query posts success: ', result)
             let posts = []
             result.find_message.items.array.forEach(item => {
                 const post = PostChunk.parse(targetDid, item)
                 posts.push(post)
             })
-            resolve(posts)
+            return posts
+        }).catch (error => {
+            logger.error("Query posts error: ", error)
+            throw new Error(error)
         })
     }
 
@@ -132,12 +159,19 @@ export class Channel implements ChannelHandler {
      * @param upperLimit The maximum number of this query
      * @param dispatcher The dispatcher routine to deal with a post
      */
-    public queryAndDispatchPostsRangeOfTime(start: number,
-        end: number,
-        upperLimit: number,
+    public async queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
         dispatcher: Dispatcher<PostChunk>) {
 
-        throw new Error('Method not implemented.')
+        return new Promise<PostChunk[]>( async() => {
+            await this.queryPostsByRangeOfTime(start, end)
+        }).then (posts => {
+            posts.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch (error => {
+            logger.error("Query posts error")
+            throw new Error(error)
+        })
     }
 
     /**
@@ -146,20 +180,24 @@ export class Channel implements ChannelHandler {
      * @param postId The post id
      * @returns An promise object that contains the post.
      */
-    public queryPost(postId: string): Promise<PostChunk> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = { "channel_id": this.channelInfo.getChannelId(), "post_id": postId }
-                const appid = config.ApplicationDID
-                const targetDid = this.channelInfo.getOwnerDid()
-                let result = await this.hiveservice.callScript(config.SCRIPT_SPECIFIED_POST, params, targetDid, appid)
-                logger.log('Query post success: ', result)
-                resolve(result)
-            } catch (error) {
-                logger.error('Query post error:', error)
-                reject(error)
+    public async queryPost(postId: string): Promise<PostChunk> {
+        return new Promise<any>( async() => {
+            const params = {
+                "channel_id": this.getChannelInfo().getChannelId(),
+                "post_id": postId
             }
-        });
+            await await this.hiveservice.callScript(config.SCRIPT_SPECIFIED_POST, params,
+                this.channelInfo.getOwnerDid(), config.ApplicationDID)
+        }).then ((data) => {
+            let posts = []
+            data.forEach(item => {
+                posts.push(Post.parse(this.getChannelInfo().getOwnerDid(), item));
+            })
+            return posts[0]
+        }).catch (error => {
+            logger.error("Query post:", error)
+            throw new Error(error)
+        })
     }
 
     /**
@@ -168,15 +206,22 @@ export class Channel implements ChannelHandler {
      * @param postId The post id
      * @param dispatcher The routine to deal with the queried post
      */
-    public queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
-        throw new Error('Method not implemented.')
+    public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
+        return new Promise<PostChunk>( async() => {
+            await this.queryPost(postId)
+        }).then (post => {
+            dispatcher.dispatch(post)
+        }).catch (error => {
+            logger.error("Query post:", error)
+            throw new Error(error)
+        })
     }
 
     /**
      * Query the subscriber count of this channel.
      * @returns An promise object that contains the number of subscribers to this channel.
      */
-    public querySubscriberCount(): Promise<number> {
+    public async querySubscriberCount(): Promise<number> {
         throw new Error('Method not implemented.')
     }
 
@@ -186,9 +231,7 @@ export class Channel implements ChannelHandler {
      * @param earilerThan The timestamp
      * @param upperlimit The maximum number of subscribers for this query.
      */
-    public querySubscribers(earilerThan: number,
-        upperlimit: number): Promise<Subscriber[]> {
-
+    public async querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
         throw new Error("Method not implemented");
     }
 
@@ -198,9 +241,8 @@ export class Channel implements ChannelHandler {
      * @param upperLimit
      * @param dispatcher
      */
-    public queryAndDispatchSubscribers(earilerThan: number,
-        upperLimit: number,
-        dispatcher: Dispatcher<Subscriber>) {
+    public async queryAndDispatchSubscribers(earilerThan: number, upperLimit: number,
+        dispatcher: Dispatcher<Profile>) {
         throw new Error('Method not implemented.')
     }
 
