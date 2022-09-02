@@ -1,18 +1,18 @@
 import { Logger } from './utils/logger'
 import { Dispatcher } from './Dispatcher'
 import { ChannelInfo } from './ChannelInfo'
-import { ChannelHandler } from "./ChannelHandler"
 import { Post } from './Post';
-import { ChannelInfoFetcher } from './ChannelInfoFetcher';
+import { ChannelHandler } from './ChannelHandler';
 import { config } from "./config"
 import { hiveService } from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 import { Channel } from './Channel';
+import { PostChunk } from './PostChunk';
 
 const logger = new Logger("MyChannel")
 
-export class MyChannel extends Channel implements ChannelInfoFetcher {
-   // private channelInfo: ChannelInfo;
+export class MyChannel extends Channel implements ChannelHandler {
+    //private channelInfo: ChannelInfo;
     private published: boolean;
     private hiveservice: hiveService
 
@@ -29,32 +29,20 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
     }
 
     /**
-     * Get channel information from local store.
-     * @returns channel information object.
-     */
-    public getChannelInfo(): ChannelInfo {
-        return this.channelInfo;
-    }
-
-    /**
      * Fetch channel property information from remote chanenl.
      * @returns The promise object containing the channel information
      */
-    public fetchChannelInfo(): Promise<ChannelInfo> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const params = {
-                    "channel_id": this.channelInfo.getChannelId(),
-                }
-                const appid = config.ApplicationDID // todo
-                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, this.channelInfo.getOwnerDid(), appid, this.channelInfo.getOwnerDid())
-                logger.log('fetch channel info success: ', result)
-                const channelInfo = ChannelInfo.parse(this.channelInfo.getOwnerDid(), result)
-                resolve(channelInfo)
-            } catch (error) {
-                logger.log('fetch channel info error: ', error)
-                reject(error)
-            }
+    public queryChannelInfo(): Promise<ChannelInfo> {
+        return new Promise<any>( async() => {
+            const params = { "channel_id": this.getChannelInfo().getChannelId() }
+            const appId = config.ApplicationDID
+            const ownerDid = this.getChannelInfo().getOwnerDid()
+            await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, ownerDid, appId, ownerDid)
+        }).then (result => {
+            return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
+        }).catch (error => {
+            logger.log('Query channel information error: ', error)
+            throw new Error(error)
         })
     }
 
@@ -63,8 +51,17 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
       *
       * @param dispatcher the dispatch routine to deal with channel infomration;
       */
-    public fetchAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
-        // TODO;
+    public queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
+        return new Promise<ChannelInfo[]>( async() => {
+            await this.queryChannelInfo();
+        }).then ( channelInfos => {
+            channelInfos.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch ( error => {
+            logger.log('Query channel information error: ', error);
+            throw new Error(error)
+        })
     }
 
     /**
@@ -72,31 +69,26 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      * @param channelInfo new channel information to be updated.
      * @returns The promise of whether updated in success or failure
      */
-    public updateChannelInfo(channelInfo: ChannelInfo): Promise<boolean> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const doc =
-                {
-                    "name": channelInfo.getName(),
-                    "intro": channelInfo.getDescription(),
-                    "avatar": channelInfo.getAvatar(),
-                    "updated_at": channelInfo.getUpdatedAt(),
-                    "type": channelInfo.getType(),
-                    "tipping_address": channelInfo.getReceivingAddress(),
-                    "nft": channelInfo.getNft(),
-                    "memo": channelInfo.getMmemo(),
-                }
-                const option = new UpdateOptions(false, true)
-                let filter = { "channel_id": channelInfo.getChannelId() }
-                let update = { "$set": doc }
-
-                const updateResult = this.hiveservice.updateOneDBData(config.TABLE_CHANNELS, filter, update, option)
-                logger.trace('update channel success: ', updateResult)
-                resolve(true)
-            } catch (error) {
-                logger.error('update channel error', error)
-                reject(error)
+    public updateChannelInfo(channelInfo: ChannelInfo): Promise<void> {
+        return new Promise<void>( async() => {
+            let doc = {
+                "name"  : channelInfo.getName(),
+                "intro" : channelInfo.getDescription(),
+                "avatar": channelInfo.getAvatar(),
+                "updated_at": channelInfo.getUpdatedAt(),
+                "type"  : channelInfo.getType(),
+                "tipping_address": channelInfo.getReceivingAddress(),
+                "nft"   : channelInfo.getNft(),
+                "memo"  : channelInfo.getMmemo(),
             }
+            let filter = { "channel_id": channelInfo.getChannelId() }
+            let update = { "$set": doc }
+
+            await this.hiveservice.updateOneDBData(config.TABLE_CHANNELS, filter, update,
+                new UpdateOptions(false, true))
+        }).catch (error => {
+            logger.error('update channel information error', error)
+            throw new Error(error)
         })
     }
 
@@ -109,25 +101,23 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns
      */
-    public fetchPosts(earilerThan: number, upperLimit: number): Promise<Post[]> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let userDid = this.channelInfo.getOwnerDid()
-                const filter = { "limit": { "$lt": upperLimit }, "created": { "$gt": earilerThan } }
-                const result = await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
-                // const params = { "channel_id": this.channelInfo.getChannelId(), "start": earilerThan, "limit": { "$lt": upperLimit } }
-                // result.find_message.items
-                let posts = []
-                result.forEach(item => {
-                    const post = Post.parse(userDid, item)
-                    posts.push(post)
-                })
-                logger.log('Fetch posts success, result is', result)
-                resolve(posts)
-            } catch (error) {
-                logger.error('Fetch posts error:', error)
-                reject(error)
+    public queryPosts(earilerThan: number, upperLimit: number): Promise<PostChunk[]> {
+        return new Promise( async() => {
+            const filter = {
+                "limit": { "$lt": upperLimit },
+                "created": { "$gt": earilerThan }
             }
+            await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+        }).then ((result: any) => {
+            let userDid = this.getChannelInfo().getOwnerDid()
+            let posts = []
+            result.forEach(item => {
+                posts.push(Post.parse(userDid, item))
+            })
+            return posts
+        }).catch (error => {
+            logger.error('Query posts error:', error)
+            throw new Error(error)
         })
     }
 
@@ -137,8 +127,17 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      * @param upperLimit
      * @param dispatcher
      */
-    public fetchAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<Post>) {
-        throw new Error('Method not implemented.');
+    public queryAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<PostChunk>) {
+        return new Promise<PostChunk[]>( async() => {
+            this.queryPosts(until, upperLimit)
+        }).then (posts => {
+            posts.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch (error => {
+            logger.error("Query posts error")
+            throw new Error(error)
+        })
     }
 
     /**
@@ -146,24 +145,23 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      * @param start
      * @param end
      */
-    public fetchPostsByRangeOfTime(start: number, end: number): Promise<Post[]> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const channelId = this.channelInfo.getChannelId()
-                const filter = { "channel_id": channelId, "created": { $gt: start, $lt: end } }
-                const result = await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
-                // const filter = { created: { "$gt": start }, end: { "$gt": end } }
-                // const result = await this.hiveservice.queryDBData(config.TABLE_POSTS, filter)
-                let posts = []
-                result.forEach(item => {
-                    const post = Post.parse(this.channelInfo.getOwnerDid(), item)
-                    posts.push(post)
-                })
-                resolve(posts)
-            } catch (error) {
-                logger.error('Call script error:', error)
-                reject(error)
+    public queryPostsByRangeOfTime(start: number, end: number): Promise<PostChunk[]> {
+        return new Promise( async() => {
+            const channelId = this.getChannelInfo().getChannelId()
+            const filter = {
+                "channel_id": channelId,
+                "created": { $gt: start, $lt: end }
             }
+            await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+        }).then ((data: any) => {
+            let posts = []
+            data.forEach(item => {
+                posts.push(Post.parse(this.getChannelInfo().getOwnerDid(), item));
+            })
+            return posts
+        }).catch (error => {
+            logger.error("Query posts by range of time error:", error)
+            throw new Error(error)
         })
     }
 
@@ -174,30 +172,39 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      * @param upperLimit
      * @param dispatcher
      */
-    public fetchAndDispatchPostsRangeOfTime(start: number, end: number, upperLimit: number, dispatcher: Dispatcher<Post>) {
-        throw new Error('Method not implemented.');
+    public queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number, dispatcher: Dispatcher<PostChunk>) {
+        return new Promise<PostChunk[]>( async() => {
+            this.queryPostsByRangeOfTime(start, end)
+        }).then (posts => {
+            posts.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch (error => {
+            logger.error("Query posts by range of time error:", error)
+            throw new Error(error)
+        })
     }
 
     /**
      *
      * @param postId
      */
-    public fetchPost(postId: string): Promise<Post> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const channelId = this.channelInfo.getChannelId()
-                const filter = { "channel_id": channelId, "postId": postId }
-                const result = await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
-                let posts = []
-                result.forEach(item => {
-                    const post = Post.parse(this.channelInfo.getOwnerDid(), item)
-                    posts.push(post)
-                })
-                resolve(posts[0])
-            } catch (error) {
-                logger.error('Call script error:', error)
-                reject(error)
+    public fetchPost(postId: string): Promise<PostChunk> {
+        return new Promise<any>( async() => {
+            const filter = {
+                "channel_id": this.getChannelInfo().getChannelId(),
+                "postId": postId
             }
+            await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+        }).then ((data) => {
+            let posts = []
+            data.forEach(item => {
+                posts.push(Post.parse(this.getChannelInfo().getOwnerDid(), item));
+            })
+            return posts[0]
+        }).catch (error => {
+            logger.error("Query post:", error)
+            throw new Error(error)
         })
     }
 
@@ -206,26 +213,33 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      * @param postId
      * @param dispatcher
      */
-    public fetchAndDispatchPost(postId: string, dispatcher: Dispatcher<Post>) {
-        throw new Error('Method not implemented.');
+    public fetchAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
+        return new Promise<PostChunk>( async() => {
+            this.queryPost(postId)
+        }).then (post => {
+            dispatcher.dispatch(post)
+        }).catch (error => {
+            logger.error("Query post:", error)
+            throw new Error(error)
+        })
     }
 
     /**
      *
      */
-    public fetchNumberOfSubscribers(): Promise<number> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const channelId = this.channelInfo.getChannelId()
-                const filter = { "channel_id": channelId }
-                const result = await this.hiveservice.queryDBData(config.TABLE_SUBSCRIPTIONS, filter)
-                resolve(result.length)
-            } catch (error) {
-                logger.error('Call script error:', error)
-                reject(error)
+    public queryNumberOfSubscribers(): Promise<number> {
+        return new Promise( async() => {
+            const filter = {
+                "channel_id": this.getChannelInfo().getChannelId()
             }
+            await this.hiveservice.queryDBData(config.TABLE_SUBSCRIPTIONS, filter)
+        }).then ((result: any) => {
+            return result.length
+        }).catch ( error => {
+            logger.error("Query script error: ", error)
+            throw new Error(error)
         })
-    }    
+    }
 
     /**
      *
@@ -241,29 +255,26 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      *
      * @param postBody
      */
-    public post(postBody: Post): Promise<boolean> {
-        return new Promise(async (resolve, reject) => {
+    public post(postBody: Post): Promise<void> {
+        return new Promise<void>( async() => {
             const postInfo = postBody.getPostChunk()
-            const doc =
-            {
+            const doc = {
                 "channel_id": postInfo.getChannelId(),
-                "post_id": postInfo.getPostId(),
+                "post_id"   : postInfo.getPostId(),
                 "created_at": postInfo.getCreatedAt(),
                 "updated_at": postInfo.getUpdatedAt(),
-                "content": postInfo.getContent().toString(),
-                "status": postInfo.getStatus(),
-                "memo": postInfo.getMemo(),
-                "type": postInfo.getType(),
-                "tag": postInfo.getTag(),
-                "proof": postInfo.getProof()
+                "content"   : postInfo.getContent().toString(),
+                "status"    : postInfo.getStatus(),
+                "memo"  : postInfo.getMemo(),
+                "type"  : postInfo.getType(),
+                "tag"   : postInfo.getTag(),
+                "proof" : postInfo.getProof()
             }
-            try {
-                await this.hiveservice.insertDBData(config.TABLE_POSTS, doc)
-                resolve(true)
-            } catch (error) {
-                logger.error('insert post data error: ', error)
-                reject(error)
-            }
+
+            await this.hiveservice.insertDBData(config.TABLE_POSTS, doc)
+        }).catch(error => {
+            logger.error('Post data error: ', error)
+            throw new Error(error)
         })
     }
 
@@ -271,26 +282,22 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
      *
      * @param postId
      */
-    public deletePost(postId: string): Promise<boolean> {
-        return new Promise(async (resolve, reject) => {
-            const updatedAt = new Date().getTime()
-            const channelId = this.channelInfo.getChannelId()
-            const doc =
-            {
-                "updated_at": updatedAt,
+    public deletePost(postId: string): Promise<void> {
+        return new Promise<void>( async() => {
+            const channelId = this.getChannelInfo().getChannelId()
+            const doc = {
+                "updated_at": new Date().getTime(),
                 "status": 1,
             }
-            const option = new UpdateOptions(false, true)
-            let filter = { "channel_id": channelId, "post_id": postId }
-            let update = { "$set": doc }
-            try {
-                const result = await this.hiveservice.updateOneDBData(config.TABLE_POSTS, filter, update, option)
-                logger.log('Delete post success: ', result)
-                resolve(true)
-            } catch (error) {
-                logger.error('Delete data from postDB error: ', error)
-                reject(error)
+            let filter = {
+                "channel_id": this.getChannelInfo().getChannelId(),
+                "post_id": postId
             }
+            let update = { "$set": doc }
+            await this.hiveservice.updateOneDBData(config.TABLE_POSTS, filter, update, new UpdateOptions(false, true))
+        }).catch (error => {
+            logger.error('Delete data from postDB error: ', error)
+            throw new Error(error)
         })
     }
 
@@ -315,6 +322,4 @@ export class MyChannel extends Channel implements ChannelInfoFetcher {
 
         return parseResult[0]
     }
-
 }
-
