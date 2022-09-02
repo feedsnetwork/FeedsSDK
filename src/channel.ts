@@ -4,11 +4,14 @@ import { ChannelInfo } from './ChannelInfo'
 import { Dispatcher } from './Dispatcher'
 import { ChannelHandler } from './ChannelHandler'
 import { PostChunk } from './PostChunk'
+import { config } from "./config"
+import { hiveService } from "./hiveService"
 
 const logger = new Logger("Channel")
 
 export class Channel implements ChannelHandler {
     private readonly channelInfo: ChannelInfo;
+    private hiveservice: hiveService
 
     protected constructor(channelInfo: ChannelInfo) {
         this.channelInfo = channelInfo;
@@ -27,7 +30,20 @@ export class Channel implements ChannelHandler {
      * @returns An promise object that contains channel information.
      */
     public queryChannelInfo(): Promise<ChannelInfo> {
-        throw new Error('Method not implemented.')
+        return new Promise(async (resolve, reject) => {
+            try {
+                const appid = config.ApplicationDID
+                const targetDid = this.channelInfo.getOwnerDid()
+                const params = { "channel_id": this.channelInfo.getChannelId() }
+                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, targetDid, appid,)
+                logger.log('Query channel info success: ', result)
+                const channelInfo = ChannelInfo.parse(targetDid, result.find_message.items)
+                resolve(channelInfo)
+            } catch (error) {
+                logger.error('Query channel info error:', error)
+                reject(error)
+            }
+        })
     }
 
     /**
@@ -48,8 +64,26 @@ export class Channel implements ChannelHandler {
      * @returns An promise object that contains a list of posts.
      */
     public queryPosts(earlierThan: number, upperLimit: number): Promise<PostChunk[]> {
-        throw new Error('Method not implemented.')
+        return new Promise(async (resolve, reject) => {
+            try { //TODO: 需注册新的script
+                const appid = config.ApplicationDID
+                const targetDid = this.channelInfo.getOwnerDid()
+                const params = { "channel_id": this.channelInfo.getChannelId(), "limit": { "$lt": upperLimit }, "created": { "$gt": earlierThan } }
+                let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params, targetDid, appid)
+                logger.log('query posts success: ', result)
+                let posts = []
+                result.find_message.items.array.forEach(item => {
+                    const post = PostChunk.parse(targetDid, item)
+                    posts.push(post)
+                })
+                resolve(posts)
+            } catch (error) {
+                logger.error('query posts error:', error)
+                reject(error)
+            }
+        })
     }
+
 
     /**
      * Query the list of posts from this channel and dispatch them one by one to
@@ -74,7 +108,19 @@ export class Channel implements ChannelHandler {
      * @returns An promise object that contains a list of posts.
      */
     public queryPostsByRangeOfTime(start: number, end: number): Promise<PostChunk[]> {
-        throw new Error('Method not implemented.')
+        return new Promise(async (resolve, reject) => {
+            const appid = config.ApplicationDID
+            const targetDid = this.channelInfo.getOwnerDid()
+            const params = { "channel_id": this.channelInfo.getChannelId(), "start": start, "end": end }
+            let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params, targetDid, appid)
+            logger.log('query posts success: ', result)
+            let posts = []
+            result.find_message.items.array.forEach(item => {
+                const post = PostChunk.parse(targetDid, item)
+                posts.push(post)
+            })
+            resolve(posts)
+        })
     }
 
     /**
@@ -101,7 +147,19 @@ export class Channel implements ChannelHandler {
      * @returns An promise object that contains the post.
      */
     public queryPost(postId: string): Promise<PostChunk> {
-        throw new Error('Method not implemented.')
+        return new Promise(async (resolve, reject) => {
+            try {
+                const params = { "channel_id": this.channelInfo.getChannelId(), "post_id": postId }
+                const appid = config.ApplicationDID
+                const targetDid = this.channelInfo.getOwnerDid()
+                let result = await this.hiveservice.callScript(config.SCRIPT_SPECIFIED_POST, params, targetDid, appid)
+                logger.log('Query post success: ', result)
+                resolve(result)
+            } catch (error) {
+                logger.error('Query post error:', error)
+                reject(error)
+            }
+        });
     }
 
     /**

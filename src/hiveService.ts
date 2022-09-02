@@ -28,7 +28,7 @@ export class hiveService {
       condition, allowAnonymousUser, allowAnonymousApp)
   }
 
-  async callScript(scriptName: string, document: any, targetDid: string, appid: string, userDid: string): Promise<any> {
+  async callScript(scriptName: string, document: any, targetDid: string, appid: string): Promise<any> {
     return this.scriptRunner.callScript<any>(scriptName, document, targetDid, appid)
   }
 
