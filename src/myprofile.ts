@@ -334,7 +334,7 @@ export class MyProfile implements ProfileHandler {
             }
 
             await this.vault.callScript(config.SCRIPT_SUBSCRIBE_CHANNEL, params,
-                channelEntry.getTargetDid(), config.ApplicationDID)
+                channelEntry.getTargetDid(), this.appContext.getAppDid())
         }).then (result => {
             return Channel.parseChannel(result)
         }).catch (error => {
@@ -356,9 +356,8 @@ export class MyProfile implements ProfileHandler {
                 "updated_at": channelEntry.getUpdatedAt(),
                 "status": channelEntry.getStatus()
             }
-            const appid = config.ApplicationDID // todo
             return this.vault.callScript(config.SCRIPT_UPDATE_SUBSCRIPTION, params,
-                    channelEntry.getTargetDid(), config.ApplicationDID)
+                    channelEntry.getTargetDid(), this.appContext.getAppDid())
         }).then (result => {
             // TODO
         }).catch (error => {

@@ -1,6 +1,5 @@
 export class config {
   // namespace('gu.config')
-  static ApplicationDID = ''
   static TABLE_FEEDS_SCRIPTING = "feeds_scripting" // 存储feeds信息：版本号等
 
   static TABLE_CHANNELS = "channels" // 存储所有的channle 信息，已订阅者可以访问，仅自己写入

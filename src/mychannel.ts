@@ -41,7 +41,7 @@ export class MyChannel implements ChannelHandler {
                 "channel_id": this.channelInfo.getChannelId()
             }
             await this.vault.callScript(feeds.SCRIPT_QUERY_CHANNEL_INFO, params, this.channelInfo.getOwnerDid(),
-                this.appContext.applicationDID)
+                this.appContext.getAppDid())
 
         }).then (result => {
             return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result)
