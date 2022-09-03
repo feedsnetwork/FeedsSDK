@@ -26,7 +26,7 @@ type MediaData = {
 }
 
 
-export class PostChunk {
+export class PostBody {
 
     private readonly targetDid: string;
     private readonly postId: string;
@@ -46,41 +46,41 @@ export class PostChunk {
         this.channelId = channelId;
     }
 
-    public setCreatedAt(createdAt: number): PostChunk {
+    public setCreatedAt(createdAt: number): PostBody {
         this.createdAt = createdAt;
         return this;
     }
 
-    public setUpdatedAt(updatedAt: number): PostChunk {
+    public setUpdatedAt(updatedAt: number): PostBody {
         this.updatedAt = updatedAt;
         return this;
     }
 
-    public setContent(content: PostContent): PostChunk {
+    public setContent(content: PostContent): PostBody {
         this.content = content;
         return this;
     }
 
-    public setStatus(status: number): PostChunk {
+    public setStatus(status: number): PostBody {
         this.status = status;
         return this;
     }
-    public setType(type: string): PostChunk {
+    public setType(type: string): PostBody {
         this.type = type;
         return this;
     }
 
-    public setTag(tag: string): PostChunk {
+    public setTag(tag: string): PostBody {
         this.tag = tag;
         return this;
     }
 
-    public setProof(proof: string): PostChunk {
+    public setProof(proof: string): PostBody {
         this.proof = proof;
         return this;
     }
 
-    public setMemo(memo: string): PostChunk {
+    public setMemo(memo: string): PostBody {
         this.memo = memo;
         return this;
     }
@@ -129,7 +129,7 @@ export class PostChunk {
         return this.memo;
     }
 
-    public static parse(targetDid: string, result: any): PostChunk {
+    public static parse(targetDid: string, result: any): PostBody {
         let contents = null
         let postContent: PostContent = {
             version: '',
@@ -171,7 +171,7 @@ export class PostChunk {
                 mediaType: contents['mediaType']
             }
         }
-        const postChunk = new PostChunk(targetDid, result.post_id, result.channel_id)
+        const postChunk = new PostBody(targetDid, result.post_id, result.channel_id)
         postChunk.setCreatedAt(result.created_at)
         postChunk.setUpdatedAt(result.updated_at)
         postChunk.content(postContent)

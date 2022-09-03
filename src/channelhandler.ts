@@ -1,6 +1,6 @@
 import { ChannelInfo } from "./ChannelInfo"
 import { Dispatcher } from "./Dispatcher"
-import { PostChunk } from "./PostChunk"
+import { PostBody } from "./postbody"
 import { Profile } from "./profile";
 
 export interface ChannelHandler {
@@ -13,34 +13,34 @@ export interface ChannelHandler {
     queryPosts(
         earlierThan: number,
         maximum: number
-    ): Promise<PostChunk[]>
+    ): Promise<PostBody[]>
 
     queryAndDispatchPosts(
         until: number,
         upperLimit: number,
-        dispatcher: Dispatcher<PostChunk>
+        dispatcher: Dispatcher<PostBody>
     )
 
     queryPostsByRangeOfTime(
         start: number,
         end: number,
         upperLimit: number
-    ): Promise<PostChunk[]>
+    ): Promise<PostBody[]>
 
     queryAndDispatchPostsByRangeOfTime(
         start: number,
         end: number,
         upperLimit: number,
-        dispatcher: Dispatcher<PostChunk>
+        dispatcher: Dispatcher<PostBody>
     )
 
     queryPost(
         postId: string
-    ): Promise<PostChunk>
+    ): Promise<PostBody>
 
     queryAndDispatchPost(
         postId: string,
-        dispatcher: Dispatcher<PostChunk>
+        dispatcher: Dispatcher<PostBody>
     )
 
     querySubscriberCount(): Promise<number>;
