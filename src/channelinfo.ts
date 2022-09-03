@@ -160,5 +160,4 @@ export class ChannelInfo {
 
         return channelInfo
     }
-
 }

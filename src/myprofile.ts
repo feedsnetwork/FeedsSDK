@@ -4,7 +4,7 @@ import { ProfileHandler } from "./profilehandler"
 import { ChannelInfo } from "./ChannelInfo"
 import { Dispatcher } from "./Dispatcher"
 import { MyChannel } from "./MyChannel"
-import { hiveService } from "./hiveService"
+import { hiveService as VaultService } from "./hiveService"
 import { config } from "./config"
 import { Logger } from './utils/logger'
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
@@ -24,7 +24,7 @@ export class MyProfile implements ProfileHandler {
     private readonly appDid: string;
     private readonly appInstanceDid: string;
 
-    private hiveservice: hiveService
+    private vault: VaultService
     private resolveCache: string;
 
     /**
@@ -34,7 +34,7 @@ export class MyProfile implements ProfileHandler {
      */
     public async queryOwnedChannelCount(): Promise<number> {
         return new Promise( async() => {
-            await this.hiveservice.queryDBData(config.TABLE_CHANNELS, {});
+            await this.vault.queryDBData(config.TABLE_CHANNELS, {});
         }).then (result => {
             return MyChannel.parse(this.userDid, result).length
         }).catch (error => {
@@ -48,9 +48,9 @@ export class MyProfile implements ProfileHandler {
       *
       * @returns A promise object that contains an array of channels.
       */
-    public queryOwnedChannels(): Promise<Channel[]> {
+    public async queryOwnedChannels(): Promise<ChannelInfo[]> {
         return new Promise( async() => {
-            await this.hiveservice.queryDBData(config.TABLE_CHANNELS, {})
+            await this.vault.queryDBData(config.TABLE_CHANNELS, {})
         }).then (result => {
             return MyChannel.parse(this.userDid, result);
         }).catch (error => {
@@ -65,10 +65,8 @@ export class MyProfile implements ProfileHandler {
      *
      * @param dispatcher The disptach routine to handle a channel.
      */
-    public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<Channel>) {
-        return new Promise<Channel[]>( async() => {
-            await this.queryOwnedChannels()
-        }).then (channels => {
+    public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
+        return this.queryOwnedChannels().then (channels => {
             channels.forEach( channel => {
                 dispatcher.dispatch(channel)
             })
@@ -84,10 +82,10 @@ export class MyProfile implements ProfileHandler {
      * @param channelId The channelId of channel to query
      * @returns A promise object that contains the channel information.
      */
-    public queryOwnedChannnelById(channelId: string): Promise<Channel> {
+    public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         return new Promise( async() => {
             const filter = { "channel_id": channelId }
-            await this.hiveservice.queryDBData(config.TABLE_CHANNELS, filter)
+            await this.vault.queryDBData(config.TABLE_CHANNELS, filter)
         }).then (result => {
             return MyChannel.parseOne(this.userDid, result)
         }).catch (error => {
@@ -102,10 +100,8 @@ export class MyProfile implements ProfileHandler {
      * @param channelId The channelid to query
      * @param dispatcher The disaptch routine to handle channel information
      */
-    public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<Channel>) {
-        return new Promise<Channel>( async() => {
-            await this.queryOwnedChannnelById(channelId)
-        }).then (channel => {
+    public async queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
+        return this.queryOwnedChannnelById(channelId).then (channel => {
             dispatcher.dispatch(channel);
         }).catch (error => {
             logger.error('query owned channel by channelid error: ', error)
@@ -118,9 +114,9 @@ export class MyProfile implements ProfileHandler {
      *
      * @returns A promise object that contains the number of subscribed channels.
      */
-    public querySubscriptionCount(): Promise<number> {
+    public async querySubscriptionCount(): Promise<number> {
         return new Promise( async() => {
-            await this.hiveservice.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, {})
+            await this.vault.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, {})
         }).then (result => {
             // return this.parseBackupSubscribedChannel(result).length
             return 0
@@ -153,32 +149,32 @@ export class MyProfile implements ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-    public querySubscriptions(earlierThan: number, maximum: number): Promise<Channel[]> {
+    public async querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
         return new Promise(async () => {
-            try {
-                const filter = {
-                    "limit" : { "$lt": maximum },
-                    "created": { "$gt": earlierThan }
-                }
-                const result = this.hiveservice.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, filter)
-                logger.log('fetch subscription count success: ', result)
-                const parseResult = this.parseBackupSubscribedChannel(result)
-
-                parseResult.forEach(async item => {
-                    const params = {
-                        "channel_id": item.channelId,
-                    }
-                    const appid = config.ApplicationDID
-                    const scriptName = config.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID
-                    logger.log('Call script, targetDid:', item.targetDid, 'scriptName:', scriptName, 'params:', params)
-                    let detailResult = await this.hiveservice.callScript(scriptName, params, item.targetDid, appid, this.userDid)
-                    logger.log('Call script success, result is', detailResult)
-                    return Channel.parse(item.targetDid, detailResult.find_message.items)
-                })
-            } catch (error) {
-                logger.error('fetch subscription count error: ', error)
-                throw new Error(error);
+            const filter = {
+                "limit" : { "$lt": maximum },
+                "created": { "$gt": earlierThan }
             }
+            const result = this.vault.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, filter)
+            // const parseResult = this.parseBackupSubscribedChannel(result)
+        }).then (result => {
+            /*
+            parseResult.forEach(async item => {
+                const params = {
+                    "channel_id": item.channelId,
+                }
+                const appid = config.ApplicationDID
+                const scriptName = config.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID
+                logger.log('Call script, targetDid:', item.targetDid, 'scriptName:', scriptName, 'params:', params)
+                let detailResult = await this.vault.callScript(scriptName, params, item.targetDid, appid, this.userDid)
+                logger.log('Call script success, result is', detailResult)
+                return Channel.parse(item.targetDid, detailResult.find_message.items)
+            })
+             */
+            return null
+        }).catch (error => {
+            logger.error('fetch subscription count error: ', error)
+            throw new Error(error);
         })
     }
 
@@ -190,13 +186,10 @@ export class MyProfile implements ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-    public queryAndDispatchSubscriptions(earlierThan: number,
-        maximum: number,
-        dispatcher: Dispatcher<Channel>) {
+    public async queryAndDispatchSubscriptions(earlierThan: number, maximum: number,
+        dispatcher: Dispatcher<ChannelInfo>) {
 
-        return new Promise<Channel[]>( async() => {
-            await this.querySubscriptions(earlierThan, maximum)
-        }).then(channels => {
+        return this.querySubscriptions(earlierThan, maximum).then(channels => {
             channels.forEach((channel) => {
                 dispatcher.dispatch(channel);
             })
@@ -211,35 +204,33 @@ export class MyProfile implements ProfileHandler {
      * @param receivingAddr the ESC address to receive tipping payment
      * @param category channel category
      * @param proof [option] sigature to the channel metadata
-     * @returns
      */
-    public createChannel(channelInfo: ChannelInfo): Promise<MyChannel> {
-        return new Promise(async (resolve, reject) => {
+    public async createChannel(channelInfo: ChannelInfo) {
+        return new Promise(async () => {
             const doc = {
                 "channel_id": channelInfo.getChannelId(),
-                "name": channelInfo.getName(),
-                "display_name": channelInfo.getDisplayName(),
-                "intro": channelInfo.getDescription(),
-                "avatar": channelInfo.getAvatar(),
+                "name"      : channelInfo.getName(),
+                "display_name"  : channelInfo.getDisplayName(),
+                "intro"     : channelInfo.getDescription(),
+                "avatar"    : channelInfo.getAvatar(),
                 "created_at": channelInfo.getCreatedAt(),
                 "updated_at": channelInfo.getUpdatedAt(),
-                "type": channelInfo.getType(),
+                "type"      : channelInfo.getType(),
                 "tipping_address": channelInfo.getReceivingAddress(),
-                "nft": channelInfo.getNft(),
-                "memo": channelInfo.getMmemo(),
-                "category": channelInfo.getCategory(),
-                "proof": channelInfo.getProof()
+                "nft"       : channelInfo.getNft(),
+                "memo"      : channelInfo.getMmemo(),
+                "category"  : channelInfo.getCategory(),
+                "proof"     : channelInfo.getProof()
             }
 
-            try {
-                const insertResult = await this.hiveservice.insertDBData(config.TABLE_CHANNELS, doc)
-                logger.log('Create channel success, result is: ', insertResult)
-                const handleResult = MyChannel.parse(this.userDid, [doc])
-                resolve(handleResult[0])
-            } catch (error) {
-                logger.error('Create channel error: ', error)
-                reject(error)
-            }
+            await this.vault.insertDBData(config.TABLE_CHANNELS, doc)
+        }).then( result => {
+            // TODO:
+            const channelInfos = MyChannel.parse(this.userDid, [result])
+            return channelInfos[0]
+        }).catch (error => {
+            logger.error("Create channel error: ", error)
+            throw new Error(error)
         })
     }
 
@@ -255,9 +246,8 @@ export class MyProfile implements ProfileHandler {
      * @returns
      */
 
-    public freezeChannel(_channelId: string): Promise<boolean> {
+    public async freezeChannel(_channelId: string) {
         throw new Error("Method not implemented");
-        // TODO:
     }
 
     /**
@@ -266,9 +256,8 @@ export class MyProfile implements ProfileHandler {
      * @param _channelId
      * @returns
      */
-    public unfreezeChannel(_channelId: string): Promise<boolean> {
+    public async unfreezeChannel(_channelId: string) {
         throw new Error("Method not implemented");
-        // TODO:
     }
 
     /**
@@ -282,22 +271,23 @@ export class MyProfile implements ProfileHandler {
      * @param channelId channel id of the channel to be deleted.
      * @returns
      */
-    public deleteChannel(channelId: string): Promise<void> {
-        const doc = {
-            "updated_at": new Date().getTime(),
-            "status": 1,
-        }
-        const filter = { "channel_id": channelId }
-        const update = { "$set": doc}
-
-        return this.hiveservice.updateOneDBData(config.TABLE_CHANNELS, filter, update,
-                new UpdateOptions(false, true))
-            .then (() => {
-                // TODO: reserved
-            }).catch (error => {
-                logger.error("Delete channel error: ", error)
-                throw new Error(error)
+    public async deleteChannel(channelId: string) {
+        return new Promise( async() => {
+            const doc = {
+                "updated_at": new Date().getTime(),
+                "status": 1,
             }
+            const filter = { "channel_id": channelId }
+            const update = { "$set": doc}
+
+            return this.vault.updateOneDBData(config.TABLE_CHANNELS, filter, update,
+                new UpdateOptions(false, true))
+        }).then (() => {
+            // TODO: reserved
+        }).catch (error => {
+            logger.error("Delete channel error: ", error)
+            throw new Error(error)
+        })
     }
 
     /**
@@ -306,9 +296,8 @@ export class MyProfile implements ProfileHandler {
      * @param myChannel
      * @returns
      */
-    public purgeChannel(_channelId: string): Promise<boolean> {
+    public async purgeChannel(_channelId: string) {
         throw new Error("Method not implemented");
-        // TODO:
     }
 
     /**
@@ -318,9 +307,8 @@ export class MyProfile implements ProfileHandler {
      * @param channelId the channel Identifier to be published on registry contract.
      * @returns
      */
-    public publishChannel(_myChannel: MyChannel): Promise<boolean> {
+    public async publishChannel(_myChannel: MyChannel) {
         throw new Error("Method not implemented");
-        // TODO:
     }
 
     /**
@@ -328,9 +316,8 @@ export class MyProfile implements ProfileHandler {
      * @param _channelId
      * @returns
      */
-    public unpublishChannel(_channelId: string): Promise<boolean> {
+    public async unpublishChannel(_channelId: string) {
         throw new Error("Method not implemented");
-        // TODO:
     }
 
     /**
@@ -339,23 +326,25 @@ export class MyProfile implements ProfileHandler {
      * @param channel
      * @returns
      */
-    public subscribeChannel(channelEntry: ChannelEntry): Promise<Channel> {
-        const params = {
-            "channel_id": channelEntry.getChannelId(),
-            "created_at": channelEntry.getCreatedAt(),
-            "display_name": channelEntry.getDisplayName(),
-            "updated_at": channelEntry.getUpdatedAt(),
-            "status": channelEntry.getStatus()
-        }
+    public async subscribeChannel(channelEntry: ChannelEntry) {
+        return new Promise( async() => {
+            const params = {
+                "channel_id": channelEntry.getChannelId(),
+                "created_at": channelEntry.getCreatedAt(),
+                "display_name": channelEntry.getDisplayName(),
+                "updated_at": channelEntry.getUpdatedAt(),
+                "status"    : channelEntry.getStatus()
+            }
 
-        return this.hiveservice.callScript(config.SCRIPT_SUBSCRIBE_CHANNEL, params, channelEntry.getTargetDid(), config.ApplicationDID, "TODO: userDid")
-            .then (result => {
-                return Channel.parseChannel(result)
-            }).catch (error => {
-                logger.error('Subscribe channel error:', error)
-                throw new Error(error)
-            })
-    }
+            await this.vault.callScript(config.SCRIPT_SUBSCRIBE_CHANNEL, params,
+                channelEntry.getTargetDid(), config.ApplicationDID)
+        }).then (result => {
+            return Channel.parseChannel(result)
+        }).catch (error => {
+            logger.error('Subscribe channel error:', error)
+            throw new Error(error)
+        })
+}
 
     /**
      * TODO:
@@ -363,19 +352,21 @@ export class MyProfile implements ProfileHandler {
      * @param channel
      * @returns
      */
-    public unsubscribeChannel(channelEntry: ChannelEntry): Promise<void> {
-        const params = {
-            "channel_id": channelEntry.getChannelId(),
-            "updated_at": channelEntry.getUpdatedAt(),
-            "status": channelEntry.getStatus()
-        }
-        const appid = config.ApplicationDID // todo
-        return this.hiveservice.callScript(config.SCRIPT_UPDATE_SUBSCRIPTION, params, channelEntry.getTargetDid(), config.ApplicationDID, "TODO: userDid")
-            .then (result => {
-                // TODO
-            }).catch (error => {
-                logger.error("Unsbuscribe channel error:", error)
-                throw new Error(error)
-            })
+    public async unsubscribeChannel(channelEntry: ChannelEntry) {
+        return new Promise( async() => {
+            const params = {
+                "channel_id": channelEntry.getChannelId(),
+                "updated_at": channelEntry.getUpdatedAt(),
+                "status": channelEntry.getStatus()
+            }
+            const appid = config.ApplicationDID // todo
+            return this.vault.callScript(config.SCRIPT_UPDATE_SUBSCRIPTION, params,
+                    channelEntry.getTargetDid(), config.ApplicationDID)
+        }).then (result => {
+            // TODO
+        }).catch (error => {
+            logger.error("Unsbuscribe channel error:", error)
+            throw new Error(error)
+        })
    }
 }
