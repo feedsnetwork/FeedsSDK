@@ -21,11 +21,8 @@ export class MyProfile implements ProfileHandler {
     private appContext: AppContext;
 
     private readonly userDid: string;
-    private readonly appDid: string;
-    private readonly appInstanceDid: string;
 
     private vault: VaultService
-    private resolveCache: string;
 
     /**
      * Query the total number of channels created by this profile.

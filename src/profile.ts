@@ -1,6 +1,7 @@
 
 import { AppContext } from "./appcontext";
 import { Channel } from "./Channel";
+import { ChannelInfo } from "./ChannelInfo";
 import { Dispatcher } from "./Dispatcher";
 import { ProfileHandler } from "./profilehandler";
 
@@ -19,14 +20,12 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
-    public queryOwnedChannels(): Promise<Channel[]> {
+    public queryOwnedChannels(): Promise<ChannelInfo[]> {
         throw new Error("Method not implemented.");
     }
 
-    public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<Channel>) {
-        return new Promise<Channel[]>( async() => {
-            await this.queryOwnedChannels()
-        }).then (channels => {
+    public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
+        return this.queryOwnedChannels().then (channels => {
             channels.forEach(item => {
                 dispatcher.dispatch(item)
             })
@@ -35,14 +34,12 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    public queryOwnedChannnelById(channelId: string): Promise<Channel> {
+    public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         throw new Error("Method not implemented.");
     }
 
-    public async queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<Channel>) {
-        return new Promise<Channel>( async() => {
-            await this.queryOwnedChannnelById(channelId)
-        }).then (channel => {
+    public async queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
+        return this.queryOwnedChannnelById(channelId).then (channel => {
             dispatcher.dispatch(channel)
         }).catch (error => {
             throw new Error(error)
@@ -61,17 +58,14 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
-    public querySubscriptions(earlierThan: number, upperLimit: number): Promise<Channel[]> {
+    public querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
         throw new Error("Method not implemented.");
     }
 
-    public async queryAndDispatchSubscriptions(earlierThan: number,
-        upperLimit: number,
-        dispatcher: Dispatcher<Channel>) {
+    public async queryAndDispatchSubscriptions(earlierThan: number, upperLimit: number,
+        dispatcher: Dispatcher<ChannelInfo>) {
 
-        return new Promise<Channel[]>( async() => {
-            await this.querySubscriptions(earlierThan, upperLimit)
-        }).then (channels => {
+        return this.querySubscriptions(earlierThan, upperLimit).then (channels => {
             channels.forEach(item => {
                 dispatcher.dispatch(item)
             })
