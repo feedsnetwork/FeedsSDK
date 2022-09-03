@@ -1,4 +1,3 @@
-
 export class config {
   // namespace('gu.config')
   static ApplicationDID = ''

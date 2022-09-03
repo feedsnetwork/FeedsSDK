@@ -5,14 +5,16 @@ import { Dispatcher } from './Dispatcher'
 import { ChannelHandler } from './ChannelHandler'
 import { PostChunk } from './PostChunk'
 import { config } from "./config"
-import { hiveService } from "./hiveService"
+import { hiveService as VaultService } from "./hiveService"
 import { Profile } from './profile'
+import { AppContext } from './appcontext'
 
 const logger = new Logger("Channel")
 
 export class Channel implements ChannelHandler {
-    private readonly channelInfo: ChannelInfo;
-    private hiveservice: hiveService
+    private appContext: AppContext;
+    private channelInfo: ChannelInfo;
+    private vault: VaultService
 
     protected constructor(channelInfo: ChannelInfo) {
         this.channelInfo = channelInfo;
@@ -37,11 +39,11 @@ export class Channel implements ChannelHandler {
             }
             const appId = config.ApplicationDID
             const ownerDid = this.getChannelInfo().getOwnerDid()
-            await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params,
+            await this.vault.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params,
                 this.getChannelInfo().getOwnerDid(), config.ApplicationDID)
-        }).then (result => {
+        }).then(result => {
             return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
-        }).catch (error => {
+        }).catch(error => {
             logger.log('Query channel information error: ', error)
             throw new Error(error)
         })
@@ -53,13 +55,9 @@ export class Channel implements ChannelHandler {
      * @param dispatcher The dispatcher routine to deal with channel information
      */
     public async queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
-        return new Promise<ChannelInfo[]>( async() => {
-            await this.queryChannelInfo();
-        }).then ( channelInfos => {
-            channelInfos.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch ( error => {
+        return this.queryChannelInfo().then( channelInfo => {
+            dispatcher.dispatch(channelInfo)
+        }).catch(error => {
             logger.log('Query channel information error: ', error);
             throw new Error(error)
         })
@@ -81,9 +79,9 @@ export class Channel implements ChannelHandler {
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            let result = await this.hiveservice.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            let result = await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
                 this.getChannelInfo().getOwnerDid(), config.ApplicationDID)
-        }).then ((result: any) => {
+        }).then((result: any) => {
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
             result.find_message.items.array.forEach(item => {
@@ -91,7 +89,7 @@ export class Channel implements ChannelHandler {
                 posts.push(post)
             })
             return posts
-        }).catch (error => {
+        }).catch(error => {
             logger.error('Query posts error:', error)
             throw new Error(error)
         })
@@ -108,13 +106,11 @@ export class Channel implements ChannelHandler {
     public async queryAndDispatchPosts(earlierThan: number, upperLimit: number,
         dispatcher: Dispatcher<PostChunk>) {
 
-        return new Promise<PostChunk[]>( async() => {
-            this.queryPosts(earlierThan, upperLimit)
-        }).then (posts => {
+        return this.queryPosts(earlierThan, upperLimit).then (posts => {
             posts.forEach(item => {
                 dispatcher.dispatch(item)
             })
-        }).catch (error => {
+        }).catch(error => {
             logger.error("Query posts error")
             throw new Error(error)
         })
@@ -134,9 +130,9 @@ export class Channel implements ChannelHandler {
                 "start": start,
                 "end": end
             }
-            await this.hiveservice.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
                 this.channelInfo.getOwnerDid(), config.ApplicationDID)
-        }).then ( (result: any)=> {
+        }).then((result: any)=> {
             const targetDid = this.channelInfo.getOwnerDid()
             let posts = []
             result.find_message.items.array.forEach(item => {
@@ -144,7 +140,7 @@ export class Channel implements ChannelHandler {
                 posts.push(post)
             })
             return posts
-        }).catch (error => {
+        }).catch(error => {
             logger.error("Query posts error: ", error)
             throw new Error(error)
         })
@@ -162,9 +158,7 @@ export class Channel implements ChannelHandler {
     public async queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
         dispatcher: Dispatcher<PostChunk>) {
 
-        return new Promise<PostChunk[]>( async() => {
-            await this.queryPostsByRangeOfTime(start, end)
-        }).then (posts => {
+        return this.queryPostsByRangeOfTime(start, end).then (posts => {
             posts.forEach(item => {
                 dispatcher.dispatch(item)
             })
@@ -186,7 +180,7 @@ export class Channel implements ChannelHandler {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
-            await await this.hiveservice.callScript(config.SCRIPT_SPECIFIED_POST, params,
+            await await this.vault.callScript(config.SCRIPT_SPECIFIED_POST, params,
                 this.channelInfo.getOwnerDid(), config.ApplicationDID)
         }).then ((data) => {
             let posts = []
@@ -207,9 +201,7 @@ export class Channel implements ChannelHandler {
      * @param dispatcher The routine to deal with the queried post
      */
     public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
-        return new Promise<PostChunk>( async() => {
-            await this.queryPost(postId)
-        }).then (post => {
+        return this.queryPost(postId).then (post => {
             dispatcher.dispatch(post)
         }).catch (error => {
             logger.error("Query post:", error)

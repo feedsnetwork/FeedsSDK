@@ -1,4 +1,4 @@
-import { Profile } from "./MyProfile"
+import { MyProfile } from "./MyProfile"
 
 export class Authentication {
     private contractor(appDid: string) {
@@ -9,8 +9,8 @@ export class Authentication {
      *
      * @returns
      */
-    public sign(): Promise<Profile> {
-        return new Promise<Profile>((resolve, reject) => { })
+    public sign(): Promise<MyProfile> {
+        return new Promise<MyProfile>((resolve, reject) => { })
         // TODO:
     }
 
