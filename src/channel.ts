@@ -37,10 +37,8 @@ export class Channel implements ChannelHandler {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId()
             }
-            const appId = config.ApplicationDID
-            const ownerDid = this.getChannelInfo().getOwnerDid()
             await this.vault.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.getChannelInfo().getOwnerDid(), config.ApplicationDID)
+                this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid())
         }).then(result => {
             return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
         }).catch(error => {
@@ -79,8 +77,8 @@ export class Channel implements ChannelHandler {
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            let result = await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
-                this.getChannelInfo().getOwnerDid(), config.ApplicationDID)
+            await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+                this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid())
         }).then((result: any) => {
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
@@ -131,7 +129,7 @@ export class Channel implements ChannelHandler {
                 "end": end
             }
             await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
-                this.channelInfo.getOwnerDid(), config.ApplicationDID)
+                this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
         }).then((result: any)=> {
             const targetDid = this.channelInfo.getOwnerDid()
             let posts = []
@@ -181,7 +179,7 @@ export class Channel implements ChannelHandler {
                 "post_id": postId
             }
             await await this.vault.callScript(config.SCRIPT_SPECIFIED_POST, params,
-                this.channelInfo.getOwnerDid(), config.ApplicationDID)
+                this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
         }).then ((data) => {
             let posts = []
             data.forEach(item => {

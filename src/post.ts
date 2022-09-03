@@ -2,7 +2,6 @@ import { Logger } from './utils/logger'
 import { PostBody } from './postbody'
 import { Dispatcher } from './Dispatcher';
 import { Comment } from './Comment'
-import { theme } from '@elastosfoundation/elastos-connectivity-sdk-js';
 import { config } from "./config"
 import { hiveService } from "./hiveService"
 import { AppContext } from './appcontext';
@@ -36,11 +35,10 @@ export class Post {
                 "post_id": this.getBody().getPostId(),
                 "comment_id": commentId
             }
-            const appid = config.ApplicationDID
             const targetDid = this.getBody().getTargetDid()
 
             await this.vault.callScript(config.SCRIPT_DELETE_COMMENT, params, targetDid,
-                this.appContext.applicationDID)
+                this.appContext.getAppDid())
         }).then( result => {
             // TODO:
         }).catch (error => {
@@ -58,7 +56,7 @@ export class Post {
                 "created": { "$gt": earlierThan }
             }
             await this.vault.callScript(config.SCRIPT_SOMETIME_COMMENT, params,
-                this.getBody().getTargetDid(), this.appContext.applicationDID)
+                this.getBody().getTargetDid(), this.appContext.getAppDid())
         }).then(result => {
             // TODO:
             return result
@@ -82,7 +80,7 @@ export class Post {
                 "end": end
             }
             await this.vault.callScript(config.SCRIPT_SOMETIME_COMMENT, params,
-                this.getBody().getTargetDid(), this.appContext.applicationDID)
+                this.getBody().getTargetDid(), this.appContext.getAppDid())
         }).then(result => {
             // TODO:
             return result
@@ -105,7 +103,7 @@ export class Post {
                 "comment_id": commentId
             }
             await this.vault.callScript(config.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
-                this.getBody().getTargetDid(), this.appContext.applicationDID)
+                this.getBody().getTargetDid(), this.appContext.getAppDid())
         }).then(result => {
             // TODO:
             return result

@@ -17,7 +17,7 @@ export class Comment {
     }
 } */
 
-export class comment {
+export class Comment {
 
 }
 
