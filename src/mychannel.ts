@@ -3,24 +3,25 @@ import { Dispatcher } from './Dispatcher'
 import { ChannelInfo } from './ChannelInfo'
 import { Post } from './Post';
 import { ChannelHandler } from './ChannelHandler';
-import { config } from "./config"
-import { hiveService } from "./hiveService"
+import { config as feeds } from "./config"
+import { hiveService as VaultService} from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
-import { Channel } from './Channel';
 import { PostChunk } from './PostChunk';
 import { Profile } from './profile';
-import { MyProfile } from './MyProfile';
+import { AppContext } from './appcontext';
 
 const logger = new Logger("MyChannel")
 
 export class MyChannel implements ChannelHandler {
+    private appContext: AppContext;
     private channelInfo: ChannelInfo;
     private published: boolean;
-    private hiveservice: hiveService
+    private vault: VaultService
 
-    /*private constructor(channel: ChannelInfo) {
-        this.channelInfo = channel;
-    }*/
+    public constructor(appContex: AppContext, channelInfo: ChannelInfo) {
+        this.appContext = appContex
+        this.channelInfo = channelInfo
+    }
 
     /**
      * Check whether this channel is published on the registry contract or not.
@@ -36,10 +37,12 @@ export class MyChannel implements ChannelHandler {
      */
     public async queryChannelInfo(): Promise<ChannelInfo> {
         return new Promise<any>( async() => {
-            const params = { "channel_id": this.channelInfo.getChannelId() }
-            const appId = config.ApplicationDID
-            const ownerDid = this.channelInfo.getOwnerDid()
-            await this.hiveservice.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params, ownerDid, appId)
+            const params = {
+                "channel_id": this.channelInfo.getChannelId()
+            }
+            await this.vault.callScript(feeds.SCRIPT_QUERY_CHANNEL_INFO, params, this.channelInfo.getOwnerDid(),
+                this.appContext.applicationDID)
+
         }).then (result => {
             return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result)
         }).catch (error => {
@@ -54,12 +57,8 @@ export class MyChannel implements ChannelHandler {
      * @param dispatcher the dispatch routine to deal with channel infomration;
      */
     public async queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
-        return new Promise<ChannelInfo[]>( async() => {
-            await this.queryChannelInfo();
-        }).then ( channelInfos => {
-            channelInfos.forEach(item => {
-                dispatcher.dispatch(item)
-            })
+        return this.queryChannelInfo().then (channelInfo => {
+            dispatcher.dispatch(channelInfo)
         }).catch ( error => {
             logger.log('Query channel information error: ', error);
             throw new Error(error)
@@ -86,8 +85,7 @@ export class MyChannel implements ChannelHandler {
             let filter = { "channel_id": channelInfo.getChannelId() }
             let update = { "$set": doc }
 
-            await this.hiveservice.updateOneDBData(config.TABLE_CHANNELS, filter, update,
-                new UpdateOptions(false, true))
+            await this.vault.updateOneDBData(feeds.TABLE_CHANNELS, filter, update, new UpdateOptions(false, true))
         }).catch (error => {
             logger.error('update channel information error', error)
             throw new Error(error)
@@ -109,7 +107,7 @@ export class MyChannel implements ChannelHandler {
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+            await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
         }).then ((result: any) => {
             let userDid = this.channelInfo.getOwnerDid()
             let posts = []
@@ -132,9 +130,7 @@ export class MyChannel implements ChannelHandler {
      * @param dispatcher The dispatcher routine to deal with a post.
      */
     public async queryAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<PostChunk>) {
-        return new Promise<PostChunk[]>( async() => {
-            await this.queryPosts(until, upperLimit)
-        }).then (posts => {
+        return this.queryPosts(until, upperLimit).then (posts => {
             posts.forEach(item => {
                 dispatcher.dispatch(item)
             })
@@ -157,7 +153,7 @@ export class MyChannel implements ChannelHandler {
                 "channel_id": channelId,
                 "created": { $gt: start, $lt: end }
             }
-            await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+            await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
         }).then ((data: any) => {
             let posts = []
             data.forEach(item => {
@@ -179,10 +175,7 @@ export class MyChannel implements ChannelHandler {
      */
     public async queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
         dispatcher: Dispatcher<PostChunk>) {
-
-        return new Promise<PostChunk[]>( async() => {
-            await this.queryPostsByRangeOfTime(start, end)
-        }).then (posts => {
+        return this.queryPostsByRangeOfTime(start, end).then (posts => {
             posts.forEach(item => {
                 dispatcher.dispatch(item)
             })
@@ -202,7 +195,7 @@ export class MyChannel implements ChannelHandler {
                 "channel_id": this.channelInfo.getChannelId(),
                 "postId": postId
             }
-            await this.hiveservice.queryDBData(config.SCRIPT_SOMETIME_POST, filter)
+            await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
         }).then ((data) => {
             let posts = []
             data.forEach(item => {
@@ -221,16 +214,13 @@ export class MyChannel implements ChannelHandler {
      * @param dispatcher
      */
     public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
-        return new Promise<PostChunk>( async() => {
-            await this.queryPost(postId)
-        }).then (post => {
+        return this.queryPost(postId).then (post => {
             dispatcher.dispatch(post)
         }).catch (error => {
             logger.error("Query post:", error)
             throw new Error(error)
         })
     }
-
 
     /**
      *
@@ -240,7 +230,7 @@ export class MyChannel implements ChannelHandler {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId()
             }
-            await this.hiveservice.queryDBData(config.TABLE_SUBSCRIPTIONS, filter)
+            await this.vault.queryDBData(feeds.TABLE_SUBSCRIPTIONS, filter)
         }).then ((result: any) => {
             return result.length
         }).catch ( error => {
@@ -288,7 +278,7 @@ export class MyChannel implements ChannelHandler {
                 "proof" : postInfo.getProof()
             }
 
-            await this.hiveservice.insertDBData(config.TABLE_POSTS, doc)
+            await this.vault.insertDBData(feeds.TABLE_POSTS, doc)
         }).catch(error => {
             logger.error('Post data error: ', error)
             throw new Error(error)
@@ -301,7 +291,6 @@ export class MyChannel implements ChannelHandler {
      */
     public deletePost(postId: string): Promise<void> {
         return new Promise<void>( async() => {
-            const channelId = this.channelInfo.getChannelId()
             const doc = {
                 "updated_at": new Date().getTime(),
                 "status": 1,
@@ -311,30 +300,28 @@ export class MyChannel implements ChannelHandler {
                 "post_id": postId
             }
             let update = { "$set": doc }
-            await this.hiveservice.updateOneDBData(config.TABLE_POSTS, filter, update, new UpdateOptions(false, true))
+            await this.vault.updateOneDBData(feeds.TABLE_POSTS, filter, update, new UpdateOptions(false, true))
         }).catch (error => {
             logger.error('Delete data from postDB error: ', error)
             throw new Error(error)
         })
     }
 
-    static parse(targetDid: string, channels: any): MyChannel[] {
+    static parse(targetDid: string, channels: any): ChannelInfo[] {
         let parseResult = []
         channels.forEach(item => {
             const channelInfo = ChannelInfo.parse(targetDid, item)
-            const myChannel = new MyChannel(channelInfo)
-            parseResult.push(myChannel)
+            parseResult.push(channelInfo)
         })
 
         return parseResult
     }
 
-    static parseOne(targetDid: string, channels: any): MyChannel {
+    static parseOne(targetDid: string, channels: any): ChannelInfo {
         let parseResult = []
         channels.forEach(item => {
             const channelInfo = ChannelInfo.parse(targetDid, item)
-            const myChannel = new MyChannel(channelInfo)
-            parseResult.push(myChannel)
+            parseResult.push(channelInfo)
         })
 
         return parseResult[0]
