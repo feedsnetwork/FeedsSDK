@@ -3,7 +3,7 @@ import { Post } from './Post'
 import { ChannelInfo } from './ChannelInfo'
 import { Dispatcher } from './Dispatcher'
 import { ChannelHandler } from './ChannelHandler'
-import { PostChunk } from './PostChunk'
+import { PostBody } from './postbody'
 import { config } from "./config"
 import { hiveService as VaultService } from "./hiveService"
 import { Profile } from './profile'
@@ -72,7 +72,7 @@ export class Channel implements ChannelHandler {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns An promise object that contains a list of posts.
      */
-     public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostChunk[]> {
+     public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
         return new Promise( async() => {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
@@ -85,7 +85,7 @@ export class Channel implements ChannelHandler {
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
             result.find_message.items.array.forEach(item => {
-                const post = PostChunk.parse(targetDid, item)
+                const post = PostBody.parse(targetDid, item)
                 posts.push(post)
             })
             return posts
@@ -104,7 +104,7 @@ export class Channel implements ChannelHandler {
      * @param dispatcher The dispatcher routine to deal with a post.
      */
     public async queryAndDispatchPosts(earlierThan: number, upperLimit: number,
-        dispatcher: Dispatcher<PostChunk>) {
+        dispatcher: Dispatcher<PostBody>) {
 
         return this.queryPosts(earlierThan, upperLimit).then (posts => {
             posts.forEach(item => {
@@ -123,7 +123,7 @@ export class Channel implements ChannelHandler {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostChunk[]> {
+    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
         return new Promise( async() => {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
@@ -136,7 +136,7 @@ export class Channel implements ChannelHandler {
             const targetDid = this.channelInfo.getOwnerDid()
             let posts = []
             result.find_message.items.array.forEach(item => {
-                const post = PostChunk.parse(targetDid, item)
+                const post = PostBody.parse(targetDid, item)
                 posts.push(post)
             })
             return posts
@@ -156,7 +156,7 @@ export class Channel implements ChannelHandler {
      * @param dispatcher The dispatcher routine to deal with a post
      */
     public async queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
-        dispatcher: Dispatcher<PostChunk>) {
+        dispatcher: Dispatcher<PostBody>) {
 
         return this.queryPostsByRangeOfTime(start, end).then (posts => {
             posts.forEach(item => {
@@ -174,7 +174,7 @@ export class Channel implements ChannelHandler {
      * @param postId The post id
      * @returns An promise object that contains the post.
      */
-    public async queryPost(postId: string): Promise<PostChunk> {
+    public async queryPost(postId: string): Promise<PostBody> {
         return new Promise<any>( async() => {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
@@ -200,7 +200,7 @@ export class Channel implements ChannelHandler {
      * @param postId The post id
      * @param dispatcher The routine to deal with the queried post
      */
-    public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
+    public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostBody>) {
         return this.queryPost(postId).then (post => {
             dispatcher.dispatch(post)
         }).catch (error => {

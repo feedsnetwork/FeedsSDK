@@ -6,7 +6,7 @@ import { ChannelHandler } from './ChannelHandler';
 import { config as feeds } from "./config"
 import { hiveService as VaultService} from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
-import { PostChunk } from './PostChunk';
+import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { AppContext } from './appcontext';
 
@@ -101,7 +101,7 @@ export class MyChannel implements ChannelHandler {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns
      */
-    public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostChunk[]> {
+    public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
         return new Promise( async() => {
             const filter = {
                 "limit": { "$lt": upperLimit },
@@ -129,7 +129,7 @@ export class MyChannel implements ChannelHandler {
      * @param upperNumber The maximum number of posts in this query request.
      * @param dispatcher The dispatcher routine to deal with a post.
      */
-    public async queryAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<PostChunk>) {
+    public async queryAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<PostBody>) {
         return this.queryPosts(until, upperLimit).then (posts => {
             posts.forEach(item => {
                 dispatcher.dispatch(item)
@@ -146,7 +146,7 @@ export class MyChannel implements ChannelHandler {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostChunk[]> {
+    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
         return new Promise( async() => {
             const channelId = this.channelInfo.getChannelId()
             const filter = {
@@ -174,7 +174,7 @@ export class MyChannel implements ChannelHandler {
      * @param dispatcher
      */
     public async queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
-        dispatcher: Dispatcher<PostChunk>) {
+        dispatcher: Dispatcher<PostBody>) {
         return this.queryPostsByRangeOfTime(start, end).then (posts => {
             posts.forEach(item => {
                 dispatcher.dispatch(item)
@@ -189,7 +189,7 @@ export class MyChannel implements ChannelHandler {
      *
      * @param postId
      */
-    public async queryPost(postId: string): Promise<PostChunk> {
+    public async queryPost(postId: string): Promise<PostBody> {
         return new Promise<any>( async() => {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId(),
@@ -213,7 +213,7 @@ export class MyChannel implements ChannelHandler {
      * @param postId
      * @param dispatcher
      */
-    public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostChunk>) {
+    public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostBody>) {
         return this.queryPost(postId).then (post => {
             dispatcher.dispatch(post)
         }).catch (error => {
@@ -224,6 +224,7 @@ export class MyChannel implements ChannelHandler {
 
     /**
      *
+     * @returns
      */
     public async querySubscriberCount(): Promise<number> {
         return new Promise( async() => {
@@ -262,23 +263,24 @@ export class MyChannel implements ChannelHandler {
      *
      * @param postBody
      */
-    public post(postBody: Post): Promise<void> {
+    public async post(postBody: Post) {
         return new Promise<void>( async() => {
-            const postInfo = postBody.getPostChunk()
+            const body = postBody.getBody()
             const doc = {
-                "channel_id": postInfo.getChannelId(),
-                "post_id"   : postInfo.getPostId(),
-                "created_at": postInfo.getCreatedAt(),
-                "updated_at": postInfo.getUpdatedAt(),
-                "content"   : postInfo.getContent().toString(),
-                "status"    : postInfo.getStatus(),
-                "memo"  : postInfo.getMemo(),
-                "type"  : postInfo.getType(),
-                "tag"   : postInfo.getTag(),
-                "proof" : postInfo.getProof()
+                "channel_id": body.getChannelId(),
+                "post_id"   : body.getPostId(),
+                "created_at": body.getCreatedAt(),
+                "updated_at": body.getUpdatedAt(),
+                "content"   : body.getContent().toString(),
+                "status"    : body.getStatus(),
+                "memo"  : body.getMemo(),
+                "type"  : body.getType(),
+                "tag"   : body.getTag(),
+                "proof" : body.getProof()
             }
-
             await this.vault.insertDBData(feeds.TABLE_POSTS, doc)
+        }).then(result => {
+            // TODO: deal with result.
         }).catch(error => {
             logger.error('Post data error: ', error)
             throw new Error(error)
@@ -289,7 +291,7 @@ export class MyChannel implements ChannelHandler {
      *
      * @param postId
      */
-    public deletePost(postId: string): Promise<void> {
+    public async deletePost(postId: string) {
         return new Promise<void>( async() => {
             const doc = {
                 "updated_at": new Date().getTime(),
@@ -301,6 +303,8 @@ export class MyChannel implements ChannelHandler {
             }
             let update = { "$set": doc }
             await this.vault.updateOneDBData(feeds.TABLE_POSTS, filter, update, new UpdateOptions(false, true))
+        }).then( result => {
+            // TODO: deal with result.
         }).catch (error => {
             logger.error('Delete data from postDB error: ', error)
             throw new Error(error)
