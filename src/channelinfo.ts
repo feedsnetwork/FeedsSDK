@@ -1,20 +1,22 @@
 import { utils } from "./utils/utils";
 
-export class ChannelInfo {
+class ChannelInfo {
     private readonly ownerDid: string;
     private readonly channelId: string;
     private readonly name: string;
+
     private displayName: string;
-    private intro: string;
+    private descritpion: string;
     private receivingAddress: string;
     private avatar: string;
+    private category: string;
     private createdAt: number;
     private updatedAt: number;
-    private type: string;
-    private nft: string;
-    private category: string;
-    private proof: string;
-    private memo: string;
+
+    private type: string;   // TODO:
+    private nft: string;    // TODO:
+    private memo: string;   // TODO:
+    private proof: string;  // TODO:
 
     private constructor(_ownerDid: string, _channelId: string, _name: string) {
         this.ownerDid = _ownerDid;
@@ -29,7 +31,7 @@ export class ChannelInfo {
     public static clone(channel: ChannelInfo): ChannelInfo {
         return (new ChannelInfo(channel.ownerDid, channel.channelId, channel.name))
             .setDisplayName(channel.displayName)
-            .setDescription(channel.intro)
+            .setDescription(channel.descritpion)
             .setReceivingAddress(channel.receivingAddress);
     }
 
@@ -39,7 +41,7 @@ export class ChannelInfo {
     }
 
     public setDescription(description: string): ChannelInfo {
-        this.intro = description;
+        this.descritpion = description;
         return this;
     }
 
@@ -50,6 +52,11 @@ export class ChannelInfo {
 
     public setAvatar(avatar: string): ChannelInfo {
         this.avatar = avatar;
+        return this;
+    }
+
+    public setCategory(category: string): ChannelInfo {
+        this.category = category;
         return this;
     }
 
@@ -70,11 +77,6 @@ export class ChannelInfo {
 
     public setNft(nft: string): ChannelInfo {
         this.nft = nft;
-        return this;
-    }
-
-    public setCategory(category: string): ChannelInfo {
-        this.category = category;
         return this;
     }
 
@@ -105,7 +107,7 @@ export class ChannelInfo {
     }
 
     public getDescription(): string {
-        return this.intro;
+        return this.descritpion;
     }
 
     public getReceivingAddress(): string {
@@ -114,6 +116,10 @@ export class ChannelInfo {
 
     public getAvatar(): string {
         return this.avatar;
+    }
+
+    public getCategory(): string {
+        return this.category;
     }
 
     public getCreatedAt(): Number {
@@ -132,10 +138,6 @@ export class ChannelInfo {
         return this.nft;
     }
 
-    public getCategory(): string {
-        return this.category;
-    }
-
     public getProof(): string {
         return this.proof;
     }
@@ -146,8 +148,8 @@ export class ChannelInfo {
 
     static parse(targetDid: string, channel: any): ChannelInfo {
         const channelInfo = new ChannelInfo(targetDid, channel.channel_id, channel.name)
-        channelInfo.setDisplayName = channel.display_name
-        channelInfo.setDescription = channel.intro
+        channelInfo.displayName = channel.display_name
+        channelInfo.descritpion = channel.intro
         channelInfo.receivingAddress = channel.tipping_address
         channelInfo.avatar = channel.avatar
         channelInfo.createdAt = channel.created_at
@@ -160,4 +162,8 @@ export class ChannelInfo {
 
         return channelInfo
     }
+}
+
+export {
+    ChannelInfo
 }

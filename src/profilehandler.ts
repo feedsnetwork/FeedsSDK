@@ -1,7 +1,7 @@
 import { ChannelInfo } from "./ChannelInfo";
 import { Dispatcher } from "./Dispatcher";
 
-export interface ProfileHandler {
+interface ProfileHandler {
     /**
      * Query the total number of owned channels.
      * @returns A promise object that contains the number of owned channels.
@@ -32,7 +32,7 @@ export interface ProfileHandler {
      * Query specific owned channel by channelid and send it to dispatcher routine.
      * @param dispatcher The dispatcher routine to handle the channel
      */
-    queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>);
+    queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>): Promise<void>
 
     /**
      * Query the total acount of subscribed channels.
@@ -55,5 +55,9 @@ export interface ProfileHandler {
       * @param maximum
       * @param dispatcher
       */
-     queryAndDispatchSubscriptions(earlierThan: number, maximum: number, dispatcher: Dispatcher<ChannelInfo>);
+     queryAndDispatchSubscriptions(earlierThan: number, maximum: number, dispatcher: Dispatcher<ChannelInfo>): Promise<void>
+}
+
+export {
+    ProfileHandler
 }

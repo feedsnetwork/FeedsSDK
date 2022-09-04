@@ -3,12 +3,12 @@ import { Dispatcher } from "./Dispatcher"
 import { PostBody } from "./postbody"
 import { Profile } from "./profile";
 
-export interface ChannelHandler {
+interface ChannelHandler {
     queryChannelInfo(): Promise<ChannelInfo>
 
     queryAndDispatchChannelInfo(
         dispatcher: Dispatcher<ChannelInfo>
-    )
+    ): Promise<void>
 
     queryPosts(
         earlierThan: number,
@@ -19,7 +19,7 @@ export interface ChannelHandler {
         until: number,
         upperLimit: number,
         dispatcher: Dispatcher<PostBody>
-    )
+    ): Promise<void>
 
     queryPostsByRangeOfTime(
         start: number,
@@ -41,7 +41,7 @@ export interface ChannelHandler {
     queryAndDispatchPost(
         postId: string,
         dispatcher: Dispatcher<PostBody>
-    )
+    ): Promise<void>
 
     querySubscriberCount(): Promise<number>;
 
@@ -54,5 +54,9 @@ export interface ChannelHandler {
         earilerThan: number,
         upperLimit: number,
         dispatcher: Dispatcher<Profile>
-    )
+    ): Promise<void>
+}
+
+export {
+    ChannelHandler
 }
