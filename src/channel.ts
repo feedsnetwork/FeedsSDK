@@ -10,13 +10,16 @@ import { Profile } from './profile'
 import { AppContext } from './appcontext'
 
 const logger = new Logger("Channel")
-
-export class Channel implements ChannelHandler {
+/**
+ * This class represent the channel owned by others. Users can only read posts
+ * from this channel.
+ */
+class Channel implements ChannelHandler {
     private appContext: AppContext;
     private channelInfo: ChannelInfo;
     private vault: VaultService
 
-    protected constructor(channelInfo: ChannelInfo) {
+    public constructor(channelInfo: ChannelInfo) {
         this.channelInfo = channelInfo;
     }
 
@@ -262,4 +265,8 @@ export class Channel implements ChannelHandler {
     static parseChannel(data: any) : Channel {
         return new Channel(data);
     }
+}
+
+export {
+    Channel,
 }
