@@ -34,7 +34,7 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
+    public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         throw new Error("Method not implemented.");
     }
 
@@ -54,11 +54,11 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
-    public querySubscriptionCount(): Promise<number> {
+    public async querySubscriptionCount(): Promise<number> {
         throw new Error("Method not implemented.");
     }
 
-    public querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
+    public async querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
         throw new Error("Method not implemented.");
     }
 

@@ -36,13 +36,15 @@ export class MyChannel implements ChannelHandler {
      * @returns The promise object containing the channel information
      */
     public async queryChannelInfo(): Promise<ChannelInfo> {
-        return new Promise<any>( async() => {
+        return new Promise<any>( async(resolve, _reject) => {
             const params = {
                 "channel_id": this.channelInfo.getChannelId()
             }
-            await this.vault.callScript(feeds.SCRIPT_QUERY_CHANNEL_INFO, params, this.channelInfo.getOwnerDid(),
-                this.appContext.getAppDid())
+            const result = await this.vault.callScript(feeds.SCRIPT_QUERY_CHANNEL_INFO, params,
+                this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
 
+            // TODO: error
+            resolve(result)
         }).then (result => {
             return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result)
         }).catch (error => {
@@ -71,8 +73,8 @@ export class MyChannel implements ChannelHandler {
      * @returns The promise of whether updated in success or failure
      */
     public async updateChannelInfo(channelInfo: ChannelInfo) {
-        return new Promise<void>( async() => {
-            let doc = {
+        return new Promise<void>( async(resolve, _reject) => {
+            const doc = {
                 "name"  : channelInfo.getName(),
                 "intro" : channelInfo.getDescription(),
                 "avatar": channelInfo.getAvatar(),
@@ -82,10 +84,14 @@ export class MyChannel implements ChannelHandler {
                 "nft"   : channelInfo.getNft(),
                 "memo"  : channelInfo.getMmemo(),
             }
-            let filter = { "channel_id": channelInfo.getChannelId() }
-            let update = { "$set": doc }
+            const filter = { "channel_id": channelInfo.getChannelId() }
+            const update = { "$set": doc }
 
-            await this.vault.updateOneDBData(feeds.TABLE_CHANNELS, filter, update, new UpdateOptions(false, true))
+            await this.vault.updateOneDBData(feeds.TABLE_CHANNELS, filter, update,
+                new UpdateOptions(false, true))
+
+            // TODO: error
+            resolve()
         }).catch (error => {
             logger.error('update channel information error', error)
             throw new Error(error)
@@ -102,12 +108,14 @@ export class MyChannel implements ChannelHandler {
      * @returns
      */
     public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
-        return new Promise( async() => {
+        return new Promise( async(resolve, _reject) => {
             const filter = {
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
+            const result = await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
+            // TODO:
+            resolve(result)
         }).then ((result: any) => {
             let userDid = this.channelInfo.getOwnerDid()
             let posts = []
@@ -147,13 +155,15 @@ export class MyChannel implements ChannelHandler {
      * @returns An promise object that contains a list of posts.
      */
     public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
-        return new Promise( async() => {
+        return new Promise( async(resolve, _reject) => {
             const channelId = this.channelInfo.getChannelId()
             const filter = {
                 "channel_id": channelId,
                 "created": { $gt: start, $lt: end }
             }
-            await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
+            const result = await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
+            // TODO:
+            resolve(result)
         }).then ((data: any) => {
             let posts = []
             data.forEach(item => {
@@ -190,12 +200,14 @@ export class MyChannel implements ChannelHandler {
      * @param postId
      */
     public async queryPost(postId: string): Promise<PostBody> {
-        return new Promise<any>( async() => {
+        return new Promise<any>( async(resolve, _reject) => {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "postId": postId
             }
-            await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
+            const result = await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
+            // TODO:
+            resolve(result)
         }).then ((data) => {
             let posts = []
             data.forEach(item => {
@@ -227,11 +239,13 @@ export class MyChannel implements ChannelHandler {
      * @returns
      */
     public async querySubscriberCount(): Promise<number> {
-        return new Promise( async() => {
+        return new Promise( async(resolve, _reject) => {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId()
             }
-            await this.vault.queryDBData(feeds.TABLE_SUBSCRIPTIONS, filter)
+            const result = await this.vault.queryDBData(feeds.TABLE_SUBSCRIPTIONS, filter)
+            // TODO:
+            resolve(result)
         }).then ((result: any) => {
             return result.length
         }).catch ( error => {
@@ -264,7 +278,7 @@ export class MyChannel implements ChannelHandler {
      * @param postBody
      */
     public async post(postBody: Post) {
-        return new Promise<void>( async() => {
+        return new Promise<void>( async(resolve, _reject) => {
             const body = postBody.getBody()
             const doc = {
                 "channel_id": body.getChannelId(),
@@ -278,7 +292,9 @@ export class MyChannel implements ChannelHandler {
                 "tag"   : body.getTag(),
                 "proof" : body.getProof()
             }
-            await this.vault.insertDBData(feeds.TABLE_POSTS, doc)
+            const result = await this.vault.insertDBData(feeds.TABLE_POSTS, doc)
+            // TODO:
+            resolve()
         }).then(result => {
             // TODO: deal with result.
         }).catch(error => {
@@ -292,17 +308,19 @@ export class MyChannel implements ChannelHandler {
      * @param postId
      */
     public async deletePost(postId: string) {
-        return new Promise<void>( async() => {
+        return new Promise<void>( async(resolve, _reject) => {
             const doc = {
                 "updated_at": new Date().getTime(),
                 "status": 1,
             }
-            let filter = {
+            const filter = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "post_id": postId
             }
-            let update = { "$set": doc }
+            const update = { "$set": doc }
             await this.vault.updateOneDBData(feeds.TABLE_POSTS, filter, update, new UpdateOptions(false, true))
+            // TODO: error
+            resolve()
         }).then( result => {
             // TODO: deal with result.
         }).catch (error => {

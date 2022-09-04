@@ -33,12 +33,15 @@ export class Channel implements ChannelHandler {
      * @returns An promise object that contains channel information.
      */
     public async queryChannelInfo(): Promise<ChannelInfo> {
-        return new Promise<any>( async() => {
+        return new Promise<any>( async(resolve, _reject) => {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId()
             }
-            await this.vault.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid())
+            const result = await this.vault.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params,
+                this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid());
+
+            // TODO error.
+            resolve(result)
         }).then(result => {
             return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
         }).catch(error => {
@@ -71,14 +74,17 @@ export class Channel implements ChannelHandler {
      * @returns An promise object that contains a list of posts.
      */
      public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
-        return new Promise( async() => {
+        return new Promise( async(resolve, _reject) => {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
-                this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid())
+            const result = await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+                this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid());
+
+            // TODO: error.
+            resolve(result)
         }).then((result: any) => {
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
@@ -122,14 +128,17 @@ export class Channel implements ChannelHandler {
      * @returns An promise object that contains a list of posts.
      */
     public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
-        return new Promise( async() => {
+        return new Promise( async(resolve, _reject) => {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "start": start,
                 "end": end
             }
-            await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            const result = await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
                 this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
+
+            // TOOD: error
+            resolve(result)
         }).then((result: any)=> {
             const targetDid = this.channelInfo.getOwnerDid()
             let posts = []
@@ -173,13 +182,16 @@ export class Channel implements ChannelHandler {
      * @returns An promise object that contains the post.
      */
     public async queryPost(postId: string): Promise<PostBody> {
-        return new Promise<any>( async() => {
+        return new Promise<any>( async(resolve, _reject) => {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
-            await await this.vault.callScript(config.SCRIPT_SPECIFIED_POST, params,
-                this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
+            const result = await this.vault.callScript(config.SCRIPT_SPECIFIED_POST, params,
+                this.channelInfo.getOwnerDid(), this.appContext.getAppDid());
+
+            // TODO: error.
+            resolve(result)
         }).then ((data) => {
             let posts = []
             data.forEach(item => {

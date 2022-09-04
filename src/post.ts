@@ -29,7 +29,7 @@ export class Post {
     }
 
     public async deleteComment(commentId: string) {
-        return new Promise( async() => {
+        return new Promise( async(resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
@@ -37,8 +37,10 @@ export class Post {
             }
             const targetDid = this.getBody().getTargetDid()
 
-            await this.vault.callScript(config.SCRIPT_DELETE_COMMENT, params, targetDid,
-                this.appContext.getAppDid())
+            const result = await this.vault.callScript(config.SCRIPT_DELETE_COMMENT, params,
+                targetDid, this.appContext.getAppDid())
+            // TODO: error.
+            resolve(result)
         }).then( result => {
             // TODO:
         }).catch (error => {
@@ -47,16 +49,19 @@ export class Post {
         });
     }
 
-    public queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
-        return new Promise<Comment[]>(async () => {
+    public async queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
+        return new Promise<Comment[]>(async (resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "limit": { "$lt": maximum },
                 "created": { "$gt": earlierThan }
             }
-            await this.vault.callScript(config.SCRIPT_SOMETIME_COMMENT, params,
+            const result = await this.vault.callScript(config.SCRIPT_SOMETIME_COMMENT, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
+
+            // TODO: error
+            resolve(result)
         }).then(result => {
             // TODO:
             return result
@@ -66,21 +71,29 @@ export class Post {
         })
     }
 
-    public async fetchAndDispatchComments(earlierThan: number, maximum: number,
+    public async queryAndDispatchComments(earlierThan: number, maximum: number,
         dispatcher: Dispatcher<Comment>) {
-        // TODO:
+        return this.queryComments(earlierThan, maximum).then((comments) => {
+            comments.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch( error => {
+            throw new Error(error)
+        })
     }
 
-    public fetchCommentsRangeOfTime(begin: number, end: number, maximum: number): Promise<Comment[]> {
-        return new Promise<Comment[]>(async (resolve, reject) => {
+    public async queryCommentsRangeOfTime(begin: number, end: number, maximum: number): Promise<Comment[]> {
+        return new Promise<Comment[]>(async (resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "start": begin,
                 "end": end
             }
-            await this.vault.callScript(config.SCRIPT_SOMETIME_COMMENT, params,
+            const result = await this.vault.callScript(config.SCRIPT_SOMETIME_COMMENT, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
+            // TODO: error.
+            resolve(result)
         }).then(result => {
             // TODO:
             return result
@@ -90,20 +103,28 @@ export class Post {
         })
     }
 
-    public async fetchAndDispatchCommentsRangeOfTime(begin: number, end: number, maximum: number,
+    public async queryAndDispatchCommentsRangeOfTime(begin: number, end: number, maximum: number,
         dispatcher: Dispatcher<Comment>) {
-        //TODO;
+        return this.queryComments(begin, end).then((comments) => {
+            comments.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch( error => {
+            throw new Error(error)
+        })
     }
 
-    public fetchCommentById(commentId: string): Promise<Comment> {
-        return new Promise(async (resolve, reject) => {
+    public async queryCommentById(commentId: string): Promise<Comment> {
+        return new Promise(async (resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "comment_id": commentId
             }
-            await this.vault.callScript(config.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
+            const result = await this.vault.callScript(config.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
+            //TODO:
+            resolve(result)
         }).then(result => {
             // TODO:
             return result
@@ -113,8 +134,12 @@ export class Post {
         })
     }
 
-    public async fetchAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {
-        //TODO;
+    public async queryAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {
+        return this.queryCommentById(commentId).then((comment) => {
+            dispatcher.dispatch(comment)
+        }).catch( error => {
+            throw new Error(error)
+        })
     }
 
     public static parse(targetDid: string, result: any): Post {
