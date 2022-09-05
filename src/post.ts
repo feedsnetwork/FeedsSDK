@@ -2,9 +2,10 @@ import { Logger } from './utils/logger'
 import { PostBody } from './postbody'
 import { Dispatcher } from './Dispatcher';
 import { Comment } from './Comment'
-import { config } from "./config"
 import { hiveService } from "./hiveService"
 import { AppContext } from './appcontext';
+import { ScriptingNames as scripts } from './vault/constants';
+
 const logger = new Logger("Post")
 
 export class Post {
@@ -37,7 +38,7 @@ export class Post {
             }
             const targetDid = this.getBody().getTargetDid()
 
-            const result = await this.vault.callScript(config.SCRIPT_DELETE_COMMENT, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
                 targetDid, this.appContext.getAppDid())
             // TODO: error.
             resolve(result)
@@ -57,7 +58,7 @@ export class Post {
                 "limit": { "$lt": maximum },
                 "created": { "$gt": earlierThan }
             }
-            const result = await this.vault.callScript(config.SCRIPT_SOMETIME_COMMENT, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
 
             // TODO: error
@@ -90,7 +91,7 @@ export class Post {
                 "start": begin,
                 "end": end
             }
-            const result = await this.vault.callScript(config.SCRIPT_SOMETIME_COMMENT, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
             // TODO: error.
             resolve(result)
@@ -115,13 +116,13 @@ export class Post {
     }
 
     public async queryCommentById(commentId: string): Promise<Comment> {
-        return new Promise(async (resolve, _reject) => {
+        return new Promise<Comment>(async (resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "comment_id": commentId
             }
-            const result = await this.vault.callScript(config.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
             //TODO:
             resolve(result)

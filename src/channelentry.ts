@@ -5,6 +5,7 @@ export class ChannelEntry {
     private updatedAt: number
     private displayName: string
     private status: number
+
     public constructor(targetDid: string, channelId: string, displayName: string, status: number) {
         this.channelId = channelId;
         this.createdAt = new Date().getTime()
