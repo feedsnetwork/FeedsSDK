@@ -4,10 +4,10 @@ import { ChannelInfo } from './ChannelInfo'
 import { Dispatcher } from './Dispatcher'
 import { ChannelHandler } from './ChannelHandler'
 import { PostBody } from './postbody'
-import { config } from "./config"
 import { hiveService as VaultService } from "./hiveService"
 import { Profile } from './profile'
 import { AppContext } from './appcontext'
+import { ScriptingNames as scripts } from './vault/constants'
 
 const logger = new Logger("Channel")
 /**
@@ -40,7 +40,7 @@ class Channel implements ChannelHandler {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId()
             }
-            const result = await this.vault.callScript(config.SCRIPT_QUERY_CHANNEL_INFO, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
                 this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid());
 
             // TODO error.
@@ -83,7 +83,7 @@ class Channel implements ChannelHandler {
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            const result = await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
                 this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid());
 
             // TODO: error.
@@ -137,7 +137,7 @@ class Channel implements ChannelHandler {
                 "start": start,
                 "end": end
             }
-            const result = await this.vault.callScript(config.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
                 this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
 
             // TOOD: error
@@ -190,7 +190,7 @@ class Channel implements ChannelHandler {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
-            const result = await this.vault.callScript(config.SCRIPT_SPECIFIED_POST, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_SPECIFIED_POST, params,
                 this.channelInfo.getOwnerDid(), this.appContext.getAppDid());
 
             // TODO: error.
@@ -198,7 +198,8 @@ class Channel implements ChannelHandler {
         }).then ((data) => {
             let posts = []
             data.forEach(item => {
-                posts.push(Post.parse(this.getChannelInfo().getOwnerDid(), item));
+                Post.parse(this.getChannelInfo().getOwnerDid(), item)
+                // TODO:
             })
             return posts[0]
         }).catch (error => {
@@ -256,7 +257,7 @@ class Channel implements ChannelHandler {
         channels.forEach(item => {
             const channelInfo = ChannelInfo.parse(targetDid, item)
             const channel = new Channel(channelInfo)
-            parseResult.push(channel)
+            //parseResult.push(channel)
         })
 
         return parseResult

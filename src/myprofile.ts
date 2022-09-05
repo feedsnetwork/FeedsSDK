@@ -4,11 +4,12 @@ import { ProfileHandler } from "./profilehandler"
 import { ChannelInfo } from "./ChannelInfo"
 import { Dispatcher } from "./Dispatcher"
 import { MyChannel } from "./MyChannel"
+
 import { hiveService as VaultService } from "./hiveService"
-import { config } from "./config"
 import { Logger } from './utils/logger'
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 import { AppContext } from "./appcontext"
+import { CollectionNames as collections, ScriptingNames as scripts } from "./vault/constants"
 
 const logger = new Logger("Channel")
 
@@ -31,7 +32,7 @@ export class MyProfile implements ProfileHandler {
      */
     public async queryOwnedChannelCount(): Promise<number> {
         return new Promise( async(resolve, _reject) => {
-            const result = await this.vault.queryDBData(config.TABLE_CHANNELS, {});
+            const result = await this.vault.queryDBData(collections.CHANNELS, {})
             // TODO: error.
             resolve(result)
         }).then (result => {
@@ -49,7 +50,7 @@ export class MyProfile implements ProfileHandler {
       */
     public async queryOwnedChannels(): Promise<ChannelInfo[]> {
         return new Promise( async(resolve, _reject) => {
-            const result = await this.vault.queryDBData(config.TABLE_CHANNELS, {})
+            const result = await this.vault.queryDBData(collections.CHANNELS, {})
             // TODO: error
             resolve(result)
         }).then (result => {
@@ -86,7 +87,7 @@ export class MyProfile implements ProfileHandler {
     public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         return new Promise( async(resolve, _reject) => {
             const filter = { "channel_id": channelId }
-            const result = await this.vault.queryDBData(config.TABLE_CHANNELS, filter)
+            const result = await this.vault.queryDBData(collections.CHANNELS, filter)
             // TODO: error.
             resolve(result)
         }).then (result => {
@@ -119,10 +120,10 @@ export class MyProfile implements ProfileHandler {
      */
     public async querySubscriptionCount(): Promise<number> {
         return new Promise( async(resolve, _reject) => {
-            const result = await this.vault.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, {})
+            const result = await this.vault.queryDBData(collections.BACKUP_SUBSCRIBEDCHANNELS, {})
             // TODO:
             resolve(result)
-        }).then (result => {
+        }).then (_result => {
             // return this.parseBackupSubscribedChannel(result).length
             return 0
         }).catch (error => {
@@ -155,16 +156,16 @@ export class MyProfile implements ProfileHandler {
       * @param upperLimit
       */
     public async querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
-        return new Promise(async (resolve, _reject) => {
+        return new Promise<any>(async (resolve, _reject) => {
             const filter = {
                 "limit" : { "$lt": maximum },
                 "created": { "$gt": earlierThan }
             }
-            const result = this.vault.queryDBData(config.TABLE_BACKUP_SUBSCRIBEDCHANNEL, filter)
+            const result = this.vault.queryDBData(collections.BACKUP_SUBSCRIBEDCHANNELS, filter)
             // const parseResult = this.parseBackupSubscribedChannel(result)
             // TODO: error.
             resolve(result)
-        }).then (result => {
+        }).then ((result: ChannelInfo[]) => {
             /*
             parseResult.forEach(async item => {
                 const params = {
@@ -178,7 +179,7 @@ export class MyProfile implements ProfileHandler {
                 return Channel.parse(item.targetDid, detailResult.find_message.items)
             })
              */
-            return null
+            return result
         }).catch (error => {
             logger.error('fetch subscription count error: ', error)
             throw new Error(error);
@@ -230,7 +231,7 @@ export class MyProfile implements ProfileHandler {
                 "proof"     : channelInfo.getProof()
             }
 
-            const result = await this.vault.insertDBData(config.TABLE_CHANNELS, doc)
+            const result = await this.vault.insertDBData(collections.CHANNELS, doc)
             // TODO:
             resolve(result)
         }).then( result => {
@@ -289,7 +290,7 @@ export class MyProfile implements ProfileHandler {
             const filter = { "channel_id": channelId }
             const update = { "$set": doc}
 
-            const result = this.vault.updateOneDBData(config.TABLE_CHANNELS, filter, update,
+            const result = this.vault.updateOneDBData(collections.CHANNELS, filter, update,
                 new UpdateOptions(false, true))
             // TODO: error.
             resolve(result)
@@ -347,7 +348,7 @@ export class MyProfile implements ProfileHandler {
                 "status"    : channelEntry.getStatus()
             }
 
-            const result = await this.vault.callScript(config.SCRIPT_SUBSCRIBE_CHANNEL, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_SUBSCRIBE_CHANNEL, params,
                 channelEntry.getTargetDid(), this.appContext.getAppDid())
 
             // TODO: error.
@@ -373,11 +374,11 @@ export class MyProfile implements ProfileHandler {
                 "updated_at": channelEntry.getUpdatedAt(),
                 "status": channelEntry.getStatus()
             }
-            const result = await this.vault.callScript(config.SCRIPT_UPDATE_SUBSCRIPTION, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_UPDATE_SUBSCRIPTION, params,
                     channelEntry.getTargetDid(), this.appContext.getAppDid())
             // TODO: error
             resolve(result)
-        }).then (result => {
+        }).then (_result => {
             // TODO
         }).catch (error => {
             logger.error("Unsbuscribe channel error:", error)

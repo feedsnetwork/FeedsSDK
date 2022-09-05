@@ -9,6 +9,7 @@ import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { AppContext } from './appcontext';
+import { CollectionNames as collections, ScriptingNames as scripts } from './vault/constants';
 
 const logger = new Logger("MyChannel")
 
@@ -40,7 +41,7 @@ export class MyChannel implements ChannelHandler {
             const params = {
                 "channel_id": this.channelInfo.getChannelId()
             }
-            const result = await this.vault.callScript(feeds.SCRIPT_QUERY_CHANNEL_INFO, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
                 this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
 
             // TODO: error
@@ -113,14 +114,14 @@ export class MyChannel implements ChannelHandler {
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            const result = await this.vault.queryDBData(feeds.SCRIPT_SOMETIME_POST, filter)
+            const result = await this.vault.queryDBData(scripts.SCRIPT_SOMETIME_POST, filter)
             // TODO:
             resolve(result)
         }).then ((result: any) => {
-            let userDid = this.channelInfo.getOwnerDid()
             let posts = []
             result.forEach(item => {
-                posts.push(Post.parse(userDid, item))
+                Post.parse(this.channelInfo.getOwnerDid(), item)
+                // posts.push()
             })
             return posts
         }).catch (error => {
@@ -167,7 +168,8 @@ export class MyChannel implements ChannelHandler {
         }).then ((data: any) => {
             let posts = []
             data.forEach(item => {
-                posts.push(Post.parse(this.channelInfo.getOwnerDid(), item));
+                Post.parse(this.channelInfo.getOwnerDid(), item)
+                // posts.push()
             })
             return posts
         }).catch (error => {
@@ -211,7 +213,8 @@ export class MyChannel implements ChannelHandler {
         }).then ((data) => {
             let posts = []
             data.forEach(item => {
-                posts.push(Post.parse(this.channelInfo.getOwnerDid(), item));
+                Post.parse(this.channelInfo.getOwnerDid(), item)
+                // posts.push()
             })
             return posts[0]
         }).catch (error => {
@@ -269,7 +272,7 @@ export class MyChannel implements ChannelHandler {
      * @param upperLimit
      * @param dispatcher
      */
-    public queryAndDispatchSubscribers(until: number, upperLimit: number, dispatcher: Dispatcher<Profile>) {
+    public async queryAndDispatchSubscribers(until: number, upperLimit: number, dispatcher: Dispatcher<Profile>) {
         throw new Error('Method not implemented.');
     }
 
@@ -318,7 +321,7 @@ export class MyChannel implements ChannelHandler {
                 "post_id": postId
             }
             const update = { "$set": doc }
-            await this.vault.updateOneDBData(feeds.TABLE_POSTS, filter, update, new UpdateOptions(false, true))
+            await this.vault.updateOneDBData(collections.POSTS, filter, update, new UpdateOptions(false, true))
             // TODO: error
             resolve()
         }).then( result => {
@@ -330,7 +333,7 @@ export class MyChannel implements ChannelHandler {
     }
 
     static parse(targetDid: string, channels: any): ChannelInfo[] {
-        let parseResult = []
+        let parseResult: ChannelInfo[] = []
         channels.forEach(item => {
             const channelInfo = ChannelInfo.parse(targetDid, item)
             parseResult.push(channelInfo)
@@ -340,7 +343,7 @@ export class MyChannel implements ChannelHandler {
     }
 
     static parseOne(targetDid: string, channels: any): ChannelInfo {
-        let parseResult = []
+        let parseResult: ChannelInfo[] = []
         channels.forEach(item => {
             const channelInfo = ChannelInfo.parse(targetDid, item)
             parseResult.push(channelInfo)
