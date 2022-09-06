@@ -1,6 +1,7 @@
 {
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "tests/src/**/*"
   ],
   "exclude": [
     "node_modules",
@@ -17,7 +18,7 @@
       "dom"
     ],
     "moduleResolution": "node",
-    //"outDir": "dist",
+    // "outDir": "out-tsc",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "emitDeclarationOnly": false,
@@ -35,16 +36,16 @@
     "resolveJsonModule": true,
     "rootDirs": [
       "src/",
-      "src/tests/"
+      "tests/src"
     ],
     "typeRoots": [
       "node_modules/@types"
     ]
   },
   "typedocOptions": {
-    "entryPoints": [
-      "src/index.ts"
-    ],
-    "out": "docs"
+      "entryPoints": [
+        "src/index.ts"
+      ],
+      "out": "docs"
   }
 }
