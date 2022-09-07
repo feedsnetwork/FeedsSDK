@@ -1,47 +1,86 @@
 import { MyProfile } from "./MyProfile"
 import { connectivity, DID } from '@elastosfoundation/elastos-connectivity-sdk-js'
-import { EssentialsConnector } from '@elastosfoundation/essentials-connector-client-browser';
-import { DefaultDIDAdapter, DIDBackend, VerifiablePresentation } from '@elastosfoundation/did-js-sdk';
-import { AppContext } from "@elastosfoundation/hive-js-sdk/typings";
+// import { EssentialsConnector } from '@elastosfoundation/essentials-connector-client-browser';
+import { DefaultDIDAdapter, DIDBackend, VerifiablePresentation, DIDDocument } from '@elastosfoundation/did-js-sdk';
+import { Executable, InsertOptions, File as HiveFile, ScriptRunner, Vault, AppContext, Logger as HiveLogger, UpdateResult, UpdateOptions, Condition, InsertResult } from "@elastosfoundation/hive-js-sdk";
+import { AppContext as FeedsAppContext } from "./appcontext"
+import { Logger } from './utils/logger'
 
+const logger = new Logger("Authentication")
 export class Authentication {
     private appContext: AppContext
-    private essentialsConnector = new EssentialsConnector();
+    private feedsAppcontext: FeedsAppContext
+    // private essentialsConnector = new EssentialsConnector();
     private contractor(appDid: string) {
         // TODO:
-    }
-
-    private initConnectivitySDK() {
-        const avaiConnectors = connectivity.getAvailableConnectors()
-        if (avaiConnectors.findIndex( (option) => option.name == this.essentialsConnector.name) !== -1) {
-            await connectivity.unregisterConnector(this.essentialsConnector.name)
-            console.log('unregister connector succeeded')
-        }
-
-        await connectivity.registerConnector(this.essentialsConnector).then( async() => {
-            connectivity.setApplicationDID(this.appContext.getAppDid())
-/*
-            connectivityInitialized = true;
-
-            console.log('essentialsConnector', essentialsConnector);
-            console.log('Wallet connect provider', essentialsConnector.getWalletConnectProvider());
-
-            const hasLink = isUsingEssentialsConnector() && essentialsConnector.hasWalletConnectSession();
-            console.log('Has link to essentials?', hasLink);
-
-            // Restore the wallet connect session - TODO: should be done by the connector itself?
-            if (hasLink && !essentialsConnector.getWalletConnectProvider().connected)
-                await essentialsConnector.getWalletConnectProvider().enable();
-*/
-        });
     }
 
     applicationDID(applicationDID: any) {
         throw new Error("Method not implemented.");
     }
 
+    createHiveAppcontext(): Promise<AppContext> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const appInstanceDid = this.feedsAppcontext.getAppDid()
+                const userDid = this.feedsAppcontext.getUserDid()
+                const applicationDid = this.feedsAppcontext.getApplicationDid()
+
+                const appInstanceDIDDocumentString = this.feedsAppcontext.getAppInstanceDIDDocument()
+                HiveLogger.setDefaultLevel(HiveLogger.TRACE)
+                const currentNet = this.feedsAppcontext.getNetwork()
+                DIDBackend.initialize(new DefaultDIDAdapter(currentNet))
+                try {
+                    AppContext.setupResolver(currentNet, this.feedsAppcontext.getResolveCache())
+                } catch (error) {
+                }
+                const path = this.feedsAppcontext.getLocalDataDir()
+                // auth
+                let self = this
+                const context = await AppContext.build({
+                    getLocalDataDir(): string {
+                        return path
+                    },
+                    getAppInstanceDocument(): Promise<DIDDocument> {
+                        return new Promise(async (resolve, reject) => {
+                            try {
+                                let appInstanceDidDocument = DIDDocument._parseOnly(appInstanceDIDDocumentString)
+                                resolve(appInstanceDidDocument)
+                            } catch (error) {
+                                logger.error("get AppInstanceDocument Error: ", error)
+                                reject(error)
+                            }
+                        })
+                    },
+                    getAuthorization(jwtToken: string): Promise<string> {
+                        return new Promise(async (resolve, reject) => {
+                            try {
+                                console.log('Get authorization jwtToken is', jwtToken);
+                                const authToken = 'TODO: '
+                                console.log('Get authorization authToken is', authToken);
+                                resolve(authToken)
+                            } catch (error) {
+                                logger.error("get Authorization Error: ", error)
+                                reject(error)
+                            }
+                        })
+                    }
+                }, userDid, applicationDid)
+                resolve(context)
+            } catch (error) {
+                logger.error("creat context error: ", error)
+                reject(error)
+            }
+        })
+    }
+
+    generateHiveAuthPresentationJWT() {
+        // TODO:
+    }
+
+    /*
     public async signin() {
-        await this.initConnectivitySDK();
+        // await this.initConnectivitySDK();
 
         return new Promise<VerifiablePresentation>(async() => {
             const didAccess = new DID.DIDAccess()
@@ -78,11 +117,11 @@ export class Authentication {
             }
 
             sessionStorage.setItem("USER_DID", JSON.stringify(user));
-                */
+
         }).catch (async error => {
-            await this.essentialsConnector.getWalletConnectProvider().disconnect()
+            // await this.essentialsConnector.getWalletConnectProvider().disconnect()
         })
 
     // TODO:
-    }
+    }*/
 }

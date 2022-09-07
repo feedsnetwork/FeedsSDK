@@ -1,11 +1,3 @@
-/*
- * @Author: liaihong
- * @Date: 2022-09-05 09:50:21
- * @LastEditors: liaihong
- * @LastEditTime: 2022-09-06 16:51:17
- * @FilePath: /feeds-js-sdk-new/src/appcontext.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
 import { Logger } from './utils/logger'
 import { IllegalArgumentException } from "./exceptions/exceptions"
 
@@ -16,6 +8,10 @@ export class AppContext {
 
     private readonly applicationDid: string = "FEEDS-APPDID"
     private readonly network: string
+    private readonly resolveCache: string // todo
+    private readonly localDataDir: string // todo
+    private readonly appInstanceDIDDocument: string // todo
+    private readonly userDid: string // todo
 
     private constructor(network: string) {
         this.network = network
@@ -23,6 +19,18 @@ export class AppContext {
 
     public getAppDid(): string {
         return this.applicationDid
+    }
+
+    public getUserDid(): string {
+        return this.userDid
+    }
+
+    public getApplicationDid(): string {
+        return this.applicationDid
+    }
+
+    public getAppInstanceDIDDocument(): string {
+        return this.appInstanceDIDDocument
     }
 
     public static initialize(currentNet: string) {
@@ -44,4 +52,17 @@ export class AppContext {
     public static isInitialized(): boolean {
         return this.sInstance !== null
     }
+
+    public getNetwork(): string {
+        return this.network
+    }
+
+    public getResolveCache(): string {
+        return this.resolveCache
+    }
+
+    public getLocalDataDir(): string {
+        return this.localDataDir
+    }
+
 }
