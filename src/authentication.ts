@@ -1,4 +1,3 @@
-import { MyProfile } from "./MyProfile"
 import { connectivity, DID as ConDID } from '@elastosfoundation/elastos-connectivity-sdk-js'
 // import { EssentialsConnector } from '@elastosfoundation/essentials-connector-client-browser';
 import { DefaultDIDAdapter, DIDBackend, VerifiablePresentation, DIDDocument, JWTParserBuilder, JWTHeader } from '@elastosfoundation/did-js-sdk';

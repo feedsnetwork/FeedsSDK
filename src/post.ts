@@ -6,19 +6,20 @@ import { hiveService } from "./hiveService"
 import { AppContext } from './appcontext';
 import { ScriptingNames as scripts } from './vault/constants';
 
-const logger = new Logger("Post")
+//const logger = new Logger("Post")
 
-export class Post {
+export class PostA {
     //private appContext: AppContext;
-    private body1: PostBody;
-    private vault: hiveService
+   // private body1: PostBody;
+    //private vault: hiveService
 
-    private constructor(body: PostBody, ) {
-        this.body1 = body;
-    }
+    //private constructor(body: PostBody) {
+        //his.body1 = body;
+    //}
 
     public getBody(): PostBody {
-        return this.body1
+        //return this.body1
+        return null;
     }
 
     public addComent(): Promise<string> {
@@ -151,14 +152,16 @@ export class Post {
         })
     }
 
-    public static parse(targetDid: string, result: any): Post {
+    public static parse(targetDid: string, result: any): PostA {
+        /*
         try {
             const postChun = PostBody.parse(targetDid, result)
             const post = new Post(postChun)
             return post
         } catch (error) {
-            logger.error('Parse post result error: ', error)
+            //logger.error('Parse post result error: ', error)
             throw error
-        }
+        }*/
+        return null;
     }
 }

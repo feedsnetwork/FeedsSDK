@@ -1,7 +1,7 @@
 import { Logger } from './utils/logger'
 import { Dispatcher } from './Dispatcher'
 import { ChannelInfo } from './ChannelInfo'
-import { Post } from './Post';
+import { PostA as Post } from './Post';
 import { ChannelHandler } from './ChannelHandler';
 import { hiveService as VaultService} from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"

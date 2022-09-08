@@ -1,7 +1,7 @@
 //import { utils } from "./utils/utils";
 
-class ChannelInfo {
-    private _ownerDid: string;
+export class ChannelInfo {
+    private downerDid: string;
     private channelId: string;
     private name: string;
 
@@ -13,13 +13,13 @@ class ChannelInfo {
     private createdAt: number;
     private updatedAt: number;
 
-    private type: string;   // TODO:
+    private _type: string;   // TODO:
     private nft: string;    // TODO:
     private memo: string;   // TODO:
     private proof: string;  // TODO:
 
     private constructor(_ownerDid: string, _channelId: string, _name: string) {
-        this._ownerDid = _ownerDid;
+        this.downerDid = _ownerDid;
         this.channelId = _channelId;
         this.name = _name;
     }
@@ -30,7 +30,7 @@ class ChannelInfo {
     }
 
     public static clone(channel: ChannelInfo): ChannelInfo {
-        return (new ChannelInfo(channel._ownerDid, channel.channelId, channel.name))
+        return (new ChannelInfo(channel.downerDid, channel.channelId, channel.name))
             .setDisplayName(channel.displayName)
             .setDescription(channel.descritpion)
             .setReceivingAddress(channel.receivingAddress);
@@ -72,7 +72,7 @@ class ChannelInfo {
     }
 
     public setType(type: string): ChannelInfo {
-        this.type = type;
+        this._type = type;
         return this;
     }
 
@@ -132,7 +132,7 @@ class ChannelInfo {
     }
 
     public getType(): string {
-        return this.type;
+        return this._type;
     }
 
     public getNft(): string {
@@ -148,6 +148,7 @@ class ChannelInfo {
     }
 
     static parse(targetDid: string, channel: any): ChannelInfo {
+        /*
         const channelInfo = new ChannelInfo(targetDid, channel.channel_id, channel.name)
         channelInfo.displayName = channel.display_name
         channelInfo.descritpion = channel.intro
@@ -162,9 +163,7 @@ class ChannelInfo {
         channelInfo.memo = channel.memo
 
         return channelInfo
+        */
+        return null
     }
-}
-
-export {
-    ChannelInfo
 }

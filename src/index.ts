@@ -1,12 +1,3 @@
-/*
- * @Author: liaihong
- * @Date: 2022-08-25 20:32:54
- * @LastEditors: liaihong
- * @LastEditTime: 2022-09-06 12:10:44
- * @FilePath: /feeds-js-sdk-new/src/index.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
-
 'use strict'
 
 import { AppContext } from "./appcontext"
@@ -19,7 +10,7 @@ import { Dispatcher } from "./dispatcher"
 import * as Utils from "./utils/utils"
 import { MyChannel } from "./mychannel"
 import { MyProfile } from "./myprofile"
-import { Post } from "./post"
+import { PostA } from "./post"
 import { PostBody } from "./postbody"
 import { Profile } from "./profile"
 import { ProfileHandler } from "./profilehandler"
@@ -38,17 +29,15 @@ export {
     Logger,
     AppContext,
     Authentication,
+    MyProfile,
+    Profile,
+    MyChannel,
     Channel,
     ChannelEntry,
-    ChannelInfo,
-    Utils,
-    MyChannel,
-    MyProfile,
-    Post,
     PostBody,
-    Profile
+    //PostA
 }
-
+/*
 interface ConfigOptions {
     id: string;
     url: string;
@@ -71,4 +60,4 @@ class LibraryStarter {
     }
 }
 
-export default LibraryStarter
+export default LibraryStarter*/

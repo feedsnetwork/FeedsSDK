@@ -1,6 +1,6 @@
-import { Post } from "./Post";
+import { PostA } from "./Post";
 
-enum MediaType {
+export enum MediaType {
     noMeida = 0,
     containsImg = 1,
     containsVideo = 2,
@@ -29,9 +29,9 @@ export class PostContent {}
 
 export class PostBody {
 
-    private readonly targetDid: string;
-    private readonly postId: string;
-    private readonly channelId: string;
+    private targetDid: string;
+    private postId: string;
+    private channelId: string;
     private createdAt: number;
     private updatedAt: number;
     private content: PostContent;

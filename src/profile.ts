@@ -9,7 +9,7 @@ import { Logger } from './utils/logger'
 
 const logger = new Logger("Profile")
 
-export class Profile implements ProfileHandler {
+export class Profile {
     private appContext: AppContext;
     private readonly targetDid: string;
     private readonly userDid: string;
