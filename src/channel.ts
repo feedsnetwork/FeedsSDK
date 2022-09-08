@@ -252,15 +252,21 @@ class Channel implements ChannelHandler {
         throw new Error('Method not implemented.')
     }
 
-    static parse(targetDid: string, channels: Channel[]): Channel[] {
+    static parseMany(targetDid: string, channels: any): Channel[] {
         let parseResult = []
         channels.forEach(item => {
             const channelInfo = ChannelInfo.parse(targetDid, item)
             const channel = new Channel(channelInfo)
-            //parseResult.push(channel)
+            parseResult.push(channel)
         })
 
         return parseResult
+    }
+
+    static parseOne(targetDid: string, channels: any): Channel {
+        const channelInfo = ChannelInfo.parse(targetDid, item)
+        const channel = new Channel(channelInfo)
+        return channel
     }
 
     static parseChannel(data: any) : Channel {

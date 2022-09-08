@@ -1,19 +1,53 @@
-
 import { AppContext } from "./appcontext";
 import { Channel } from "./Channel";
 import { ChannelInfo } from "./ChannelInfo";
 import { Dispatcher } from "./Dispatcher";
 import { ProfileHandler } from "./profilehandler";
+import { hiveService as VaultService } from "./hiveService"
+import { CollectionNames as collections, ScriptingNames as scripts } from "./vault/constants"
+import { Logger } from './utils/logger'
+
+const logger = new Logger("Profile")
 
 export class Profile implements ProfileHandler {
     private appContext: AppContext;
+    private readonly targetDid: string;
+    private vault: VaultService
 
-    public getOwnedChannelCount(): number {
-        throw new Error("Method not implemented.");
+    public async getOwnedChannelCount(): Promise<number> {
+        return new Promise<number>(async (resolve, _reject) => {
+            const filter = {
+            }
+            const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
+                this.targetDid, this.appContext.getAppDid())
+            const channels = result.find_message.items
+            resolve(channels.length)
+        }).catch(error => {
+            logger.error('get owned channels count error: ', error)
+            throw new Error(error)
+        })
     }
 
-    public getOwnedChannels(): Channel[] {
-        throw new Error("Method not implemented.");
+    //创建的channel
+    public async getOwnedChannels(): Promise<Channel[]> {
+        return new Promise<Channel[]>(async (resolve, _reject) => {
+            const filter = {
+            }
+            const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
+                this.targetDid, this.appContext.getAppDid())
+            const data = result.find_message.items
+            return data
+        }).then(result => {
+            let channels = []
+            result.forEach(item => {
+                const channel = Channel.parseOne(this.targetDid, item)
+                channels.push(channel)
+            })
+            return channels
+        }).catch(error => {
+            logger.error('get owned channels error: ', error)
+            throw new Error(error)
+        })
     }
 
     public queryOwnedChannelCount(): Promise<number> {
