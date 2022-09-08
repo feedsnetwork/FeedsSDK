@@ -15,6 +15,15 @@ export class Profile implements ProfileHandler {
     private vault: VaultService
 
     public async getOwnedChannelCount(): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
+
+    //创建的channel
+    public async getOwnedChannels(): Promise<Channel[]> {
+        throw new Error("Method not implemented.");
+    }
+
+    public queryOwnedChannelCount(): Promise<number> {
         return new Promise<number>(async (resolve, _reject) => {
             const filter = {
             }
@@ -28,8 +37,7 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    //创建的channel
-    public async getOwnedChannels(): Promise<Channel[]> {
+    public queryOwnedChannels(): Promise<ChannelInfo[]> {
         return new Promise<Channel[]>(async (resolve, _reject) => {
             const filter = {
             }
@@ -48,14 +56,6 @@ export class Profile implements ProfileHandler {
             logger.error('get owned channels error: ', error)
             throw new Error(error)
         })
-    }
-
-    public queryOwnedChannelCount(): Promise<number> {
-        throw new Error("Method not implemented.");
-    }
-
-    public queryOwnedChannels(): Promise<ChannelInfo[]> {
-        throw new Error("Method not implemented.");
     }
 
     public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
