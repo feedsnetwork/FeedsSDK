@@ -1,4 +1,4 @@
-import { Logger } from './utils/logger'
+//import { Logger } from './utils/logger'
 import { Post } from './Post'
 import { ChannelInfo } from './ChannelInfo'
 import { Dispatcher } from './Dispatcher'
@@ -9,12 +9,12 @@ import { Profile } from './profile'
 import { AppContext } from './appcontext'
 import { ScriptingNames as scripts } from './vault/constants'
 
-const logger = new Logger("Channel")
+//const logger = new Logger("Channel")
 /**
  * This class represent the channel owned by others. Users can only read posts
  * from this channel.
  */
-class Channel implements ChannelHandler {
+class Channel {
     private appContext: AppContext;
     private channelInfo: ChannelInfo;
     private vault: VaultService
@@ -35,12 +35,12 @@ class Channel implements ChannelHandler {
      * Query the channel infomation from remote channel on Vault.
      * @returns An promise object that contains channel information.
      */
-    public async queryChannelInfo(): Promise<ChannelInfo> {
-        return new Promise<any>( async(resolve, _reject) => {
+    public queryChannelInfo(): Promise<ChannelInfo> {
+        return new Promise<any>( (resolve, _reject) => {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId()
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
+            const result = this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
                 this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid());
 
             // TODO error.
@@ -48,7 +48,7 @@ class Channel implements ChannelHandler {
         }).then(result => {
             return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
         }).catch(error => {
-            logger.log('Query channel information error: ', error)
+            //logger.log('Query channel information error: ', error)
             throw new Error(error)
         })
     }
@@ -58,11 +58,11 @@ class Channel implements ChannelHandler {
      *
      * @param dispatcher The dispatcher routine to deal with channel information
      */
-    public async queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
+    public queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryChannelInfo().then( channelInfo => {
             dispatcher.dispatch(channelInfo)
         }).catch(error => {
-            logger.log('Query channel information error: ', error);
+            //logger.log('Query channel information error: ', error);
             throw new Error(error)
         })
     }
@@ -76,14 +76,14 @@ class Channel implements ChannelHandler {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns An promise object that contains a list of posts.
      */
-     public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
-        return new Promise( async(resolve, _reject) => {
+     public queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
+        return new Promise( (resolve, _reject) => {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            const result = this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
                 this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid());
 
             // TODO: error.
@@ -97,7 +97,7 @@ class Channel implements ChannelHandler {
             })
             return posts
         }).catch(error => {
-            logger.error('Query posts error:', error)
+            //logger.error('Query posts error:', error)
             throw new Error(error)
         })
     }
@@ -110,7 +110,7 @@ class Channel implements ChannelHandler {
      * @param upperLimit The maximum number of posts in this query request.
      * @param dispatcher The dispatcher routine to deal with a post.
      */
-    public async queryAndDispatchPosts(earlierThan: number, upperLimit: number,
+    public queryAndDispatchPosts(earlierThan: number, upperLimit: number,
         dispatcher: Dispatcher<PostBody>) {
 
         return this.queryPosts(earlierThan, upperLimit).then (posts => {
@@ -118,7 +118,7 @@ class Channel implements ChannelHandler {
                 dispatcher.dispatch(item)
             })
         }).catch(error => {
-            logger.error("Query posts error")
+            //logger.error("Query posts error")
             throw new Error(error)
         })
     }
@@ -130,14 +130,14 @@ class Channel implements ChannelHandler {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
-        return new Promise( async(resolve, _reject) => {
+    public queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
+        return new Promise( (resolve, _reject) => {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "start": start,
                 "end": end
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            const result = this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
                 this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
 
             // TOOD: error
@@ -151,7 +151,7 @@ class Channel implements ChannelHandler {
             })
             return posts
         }).catch(error => {
-            logger.error("Query posts error: ", error)
+            //logger.error("Query posts error: ", error)
             throw new Error(error)
         })
     }
@@ -165,7 +165,7 @@ class Channel implements ChannelHandler {
      * @param upperLimit The maximum number of this query
      * @param dispatcher The dispatcher routine to deal with a post
      */
-    public async queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
+    public queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
         dispatcher: Dispatcher<PostBody>) {
 
         return this.queryPostsByRangeOfTime(start, end).then (posts => {
@@ -173,7 +173,7 @@ class Channel implements ChannelHandler {
                 dispatcher.dispatch(item)
             })
         }).catch (error => {
-            logger.error("Query posts error")
+            //logger.error("Query posts error")
             throw new Error(error)
         })
     }
@@ -184,13 +184,13 @@ class Channel implements ChannelHandler {
      * @param postId The post id
      * @returns An promise object that contains the post.
      */
-    public async queryPost(postId: string): Promise<PostBody> {
-        return new Promise<any>( async(resolve, _reject) => {
+    public queryPost(postId: string): Promise<PostBody> {
+        return new Promise<any>( (resolve, _reject) => {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_SPECIFIED_POST, params,
+            const result = this.vault.callScript(scripts.SCRIPT_SPECIFIED_POST, params,
                 this.channelInfo.getOwnerDid(), this.appContext.getAppDid());
 
             // TODO: error.
@@ -203,7 +203,7 @@ class Channel implements ChannelHandler {
             })
             return posts[0]
         }).catch (error => {
-            logger.error("Query post:", error)
+            //logger.error("Query post:", error)
             throw new Error(error)
         })
     }
@@ -214,11 +214,11 @@ class Channel implements ChannelHandler {
      * @param postId The post id
      * @param dispatcher The routine to deal with the queried post
      */
-    public async queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostBody>) {
+    public queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostBody>) {
         return this.queryPost(postId).then (post => {
             dispatcher.dispatch(post)
         }).catch (error => {
-            logger.error("Query post:", error)
+            //logger.error("Query post:", error)
             throw new Error(error)
         })
     }
@@ -227,7 +227,7 @@ class Channel implements ChannelHandler {
      * Query the subscriber count of this channel.
      * @returns An promise object that contains the number of subscribers to this channel.
      */
-    public async querySubscriberCount(): Promise<number> {
+    public querySubscriberCount(): Promise<number> {
         throw new Error('Method not implemented.')
     }
 
@@ -237,7 +237,7 @@ class Channel implements ChannelHandler {
      * @param earilerThan The timestamp
      * @param upperlimit The maximum number of subscribers for this query.
      */
-    public async querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
+    public querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
         throw new Error("Method not implemented");
     }
 
@@ -247,8 +247,8 @@ class Channel implements ChannelHandler {
      * @param upperLimit
      * @param dispatcher
      */
-    public async queryAndDispatchSubscribers(earilerThan: number, upperLimit: number,
-        dispatcher: Dispatcher<Profile>) {
+    public  queryAndDispatchSubscribers(earilerThan: number, upperLimit: number,
+        dispatcher: Dispatcher<Profile>): Promise<void> {
         throw new Error('Method not implemented.')
     }
 

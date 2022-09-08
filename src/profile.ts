@@ -15,36 +15,38 @@ export class Profile implements ProfileHandler {
     private readonly userDid: string;
     private vault: VaultService
 
-    public async getOwnedChannelCount(): Promise<number> {
+    public getOwnedChannelCount(): Promise<number> {
         throw new Error("Method not implemented.");
     }
 
     //创建的channel
-    public async getOwnedChannels(): Promise<Channel[]> {
+    public getOwnedChannels(): Promise<Channel[]> {
         throw new Error("Method not implemented.");
     }
 
-    public async queryOwnedChannelCount(): Promise<number> {
-        return new Promise<number>(async (resolve, _reject) => {
+    public queryOwnedChannelCount(): Promise<number> {
+        return new Promise<number>( (resolve, _reject) => {
             const filter = {
             }
-            const result = await this.vault.callScript(collections.CHANNELS, filter,
+            const result = this.vault.callScript(collections.CHANNELS, filter,
                 this.targetDid, this.appContext.getAppDid())
-            const channels = result.find_message.items
-            resolve(channels.length)
+            //const channels = result.find_message.items
+            //resolve(channels.length)
+            resolve(result)
         }).catch(error => {
             logger.error('get owned channels count error: ', error)
             throw new Error(error)
         })
     }
 
-    public async queryOwnedChannels(): Promise<ChannelInfo[]> {
-        return new Promise<Channel[]>(async (resolve, _reject) => {
+    public queryOwnedChannels(): Promise<ChannelInfo[]> {
+        return new Promise<Channel[]>((resolve, _reject) => {
             const filter = {
             }
-            const result = await this.vault.callScript(collections.CHANNELS, filter,
+            const result = this.vault.callScript(collections.CHANNELS, filter,
                 this.targetDid, this.appContext.getAppDid())
-            return result.find_message.items
+            //return result.find_message.items
+            resolve(result)
         }).then(result => {
             let channels = []
             result.forEach(item => {
@@ -58,7 +60,7 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
+    public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannels().then (channels => {
             channels.forEach(item => {
                 dispatcher.dispatch(item)
@@ -68,21 +70,22 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-        return new Promise(async (resolve, _reject) => {
+    public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
+        return new Promise((resolve, _reject) => {
             const params = {
                 "channel_id": channelId,
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
+            const result = this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
                 this.targetDid, this.appContext.getAppDid())
-            return result.find_message.items
+            //return result.find_message.items
+            resolve(result)
         }).then(result => {
             const channelInfo = ChannelInfo.parse(this.targetDid, result[0])
             return channelInfo
         })
     }
 
-    public async queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
+    public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannnelById(channelId).then (channel => {
             dispatcher.dispatch(channel)
         }).catch (error => {
@@ -98,14 +101,15 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
-    public async querySubscriptionCount(): Promise<number> {
-        return new Promise<number>(async (resolve, _reject) => {
+    public querySubscriptionCount(): Promise<number> {
+        return new Promise<number>((resolve, _reject) => {
             const filter = {
             }
-            const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
+            const result = this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
                 this.targetDid, this.appContext.getAppDid())
-            const channels = result.find_message.items
-            resolve(channels.length)
+            //const channels = result.find_message.items
+            //resolve(channels.length)
+            resolve(result)
         }).catch(error => {
             logger.error('query subscription count error: ', error)
             throw new Error(error)
@@ -113,15 +117,16 @@ export class Profile implements ProfileHandler {
     }
 
     // 订阅的channels
-    public async querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
-        return new Promise<Channel[]>(async (resolve, _reject) => {
+    public querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
+        return new Promise<Channel[]>((resolve, _reject) => {
             // earlierThan : TODO:
             // upperLimit : TODO:
             const filter = {
             }
-            const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
+            const result = this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
                 this.targetDid, this.appContext.getAppDid())
-            return result.find_message.items
+            //return result.find_message.items
+            resolve(result)
         }).then(result => {
             let channels = []
             result.forEach(item => {
@@ -135,7 +140,7 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    public async queryAndDispatchSubscriptions(earlierThan: number, upperLimit: number,
+    public queryAndDispatchSubscriptions(earlierThan: number, upperLimit: number,
         dispatcher: Dispatcher<ChannelInfo>) {
 
         return this.querySubscriptions(earlierThan, upperLimit).then (channels => {

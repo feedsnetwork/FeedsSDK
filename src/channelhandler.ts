@@ -3,7 +3,7 @@ import { Dispatcher } from "./Dispatcher"
 import { PostBody } from "./postbody"
 import { Profile } from "./profile";
 
-interface ChannelHandler {
+export interface ChannelHandler {
     queryChannelInfo(): Promise<ChannelInfo>
 
     queryAndDispatchChannelInfo(
@@ -55,8 +55,4 @@ interface ChannelHandler {
         upperLimit: number,
         dispatcher: Dispatcher<Profile>
     ): Promise<void>
-}
-
-export {
-    ChannelHandler
 }

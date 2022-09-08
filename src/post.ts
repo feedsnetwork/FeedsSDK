@@ -9,27 +9,28 @@ import { ScriptingNames as scripts } from './vault/constants';
 const logger = new Logger("Post")
 
 export class Post {
-    private appContext: AppContext;
-    private body: PostBody;
+    //private appContext: AppContext;
+    private body1: PostBody;
     private vault: hiveService
 
     private constructor(body: PostBody, ) {
-        this.body = body;
+        this.body1 = body;
     }
 
     public getBody(): PostBody {
-        return this.body
+        return this.body1
     }
 
-    public async addComent(): Promise<string> {
+    public addComent(): Promise<string> {
         throw new Error("Method not implemented");
     }
 
-    public async updateComment(commentId: string) {
+    public updateComment(commentId: string): Promise<void> {
         throw new Error("Method not implemented");
     }
 
-    public async deleteComment(commentId: string) {
+    public deleteComment(commentId: string) {
+        /*
         return new Promise( async(resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
@@ -47,10 +48,12 @@ export class Post {
         }).catch (error => {
             logger.error('Delete comment error:', error)
             throw new Error(error)
-        });
+        });*/
+        throw new Error("Not implemented");
     }
 
-    public async queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
+    public queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
+        /*
         return new Promise<Comment[]>(async (resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
@@ -69,10 +72,11 @@ export class Post {
         }).catch(error => {
             logger.error('fetch comments error:', error)
             throw new Error(error)
-        })
+        })*/
+        throw new Error("Method not implemented");
     }
 
-    public async queryAndDispatchComments(earlierThan: number, maximum: number,
+    public queryAndDispatchComments(earlierThan: number, maximum: number,
         dispatcher: Dispatcher<Comment>) {
         return this.queryComments(earlierThan, maximum).then((comments) => {
             comments.forEach(item => {
@@ -83,7 +87,8 @@ export class Post {
         })
     }
 
-    public async queryCommentsRangeOfTime(begin: number, end: number, maximum: number): Promise<Comment[]> {
+    public queryCommentsRangeOfTime(begin: number, end: number, maximum: number): Promise<Comment[]> {
+       /*
         return new Promise<Comment[]>(async (resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
@@ -101,10 +106,11 @@ export class Post {
         }).catch(error => {
             logger.error('fetch comments range of time error:', error)
             throw new Error(error)
-        })
+        })*/
+        throw new Error("NOt implemented");
     }
 
-    public async queryAndDispatchCommentsRangeOfTime(begin: number, end: number, maximum: number,
+    public queryAndDispatchCommentsRangeOfTime(begin: number, end: number, maximum: number,
         dispatcher: Dispatcher<Comment>) {
         return this.queryComments(begin, end).then((comments) => {
             comments.forEach(item => {
@@ -115,7 +121,8 @@ export class Post {
         })
     }
 
-    public async queryCommentById(commentId: string): Promise<Comment> {
+    public queryCommentById(commentId: string): Promise<Comment> {
+    /*
         return new Promise<Comment>(async (resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
@@ -132,10 +139,11 @@ export class Post {
         }).catch(error => {
             logger.error('fetch comment by id error:', error)
             throw new Error(error)
-        })
+        })*/
+        throw new Error("Not implemented");
     }
 
-    public async queryAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {
+    public queryAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {
         return this.queryCommentById(commentId).then((comment) => {
             dispatcher.dispatch(comment)
         }).catch( error => {

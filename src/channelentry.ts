@@ -1,5 +1,5 @@
 export class ChannelEntry {
-    private targetDid: string
+    private _targetDid: string
     private channelId: string
     private createdAt: number
     private updatedAt: number
@@ -11,7 +11,7 @@ export class ChannelEntry {
         this.createdAt = new Date().getTime()
         this.updatedAt = new Date().getTime()
         this.displayName = displayName
-        this.targetDid = targetDid
+        this._targetDid = targetDid
         this.status = status
     }
 
@@ -26,7 +26,7 @@ export class ChannelEntry {
     }
 
     public getTargetDid(): string {
-        return this.targetDid
+        return this._targetDid
     }
 
     public getChannelId(): string {

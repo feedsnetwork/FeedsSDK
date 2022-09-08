@@ -54,7 +54,7 @@ export class Vault {
     insertDBData(collectName: string, doc: any,): Promise<InsertResult> {
       return this.dbService.insertOne(collectName, doc, new InsertOptions(false, true))
     }
-
+/*
     updateOneDBData(collectName: string, filter: JSONObject, update: JSONObject, option: UpdateOptions): Promise<UpdateResult> {
       return this.dbService.updateOne(collectName, filter, update, option)
     }
@@ -66,4 +66,5 @@ export class Vault {
     queryDBData(collectionName: string, filter: any): Promise<JSONObject[]> {
       return this.dbService.findMany(collectionName, filter)
     }
+*/
   }

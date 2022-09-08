@@ -1,12 +1,11 @@
-import { Logger } from './utils/logger'
-import { IllegalArgumentException } from "./exceptions/exceptions"
+//import { Logger } from './utils/logger'
 
-const logger = new Logger("AppContext")
+//const logger = new Logger("AppContext")
 
 export class AppContext {
-    private static sInstance: AppContext = null
+    //private static sInstance: AppContext = null
 
-    private readonly applicationDid: string = "FEEDS-APPDID"
+    private readonly applicationDid: string = "FEEDS-APPDID";
     private readonly network: string
     private readonly resolveCache: string // todo
     private readonly localDataDir: string // todo
@@ -33,6 +32,7 @@ export class AppContext {
         return this.appInstanceDIDDocument
     }
 
+    /*
     public static initialize(currentNet: string) {
         if (currentNet === null || currentNet === '') {
             logger.error("currentNet is null .")
@@ -51,7 +51,7 @@ export class AppContext {
 
     public static isInitialized(): boolean {
         return this.sInstance !== null
-    }
+    } */
 
     public getNetwork(): string {
         return this.network

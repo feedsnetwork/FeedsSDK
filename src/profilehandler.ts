@@ -58,6 +58,6 @@ interface ProfileHandler {
      queryAndDispatchSubscriptions(earlierThan: number, maximum: number, dispatcher: Dispatcher<ChannelInfo>): Promise<void>
 }
 
-export {
+export type {
     ProfileHandler
 }

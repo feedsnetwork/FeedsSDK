@@ -1,11 +1,11 @@
 import { Post } from "./Post";
 
-const enum MediaType {
+enum MediaType {
     noMeida = 0,
     containsImg = 1,
     containsVideo = 2,
 }
-
+/*
 export type PostContent = {
     version: string,
     content: string,
@@ -24,7 +24,8 @@ type MediaData = {
     additionalInfo: any,
     memo: any
 }
-
+*/
+export class PostContent {}
 
 export class PostBody {
 
@@ -137,12 +138,13 @@ export class PostBody {
             mediaData: [],
             mediaType: MediaType.noMeida
         }
+        /*
         try {
             contents = JSON.parse(result['content'])
         } catch (error) {
             throw error
-        }
-
+        } */
+/*
         if (contents) {
             let mDatas = contents['mediaData']
             let mData = {}
@@ -171,10 +173,11 @@ export class PostBody {
                 mediaType: contents['mediaType']
             }
         }
+*/
         const postChunk = new PostBody(targetDid, result.post_id, result.channel_id)
         postChunk.setCreatedAt(result.created_at)
         postChunk.setUpdatedAt(result.updated_at)
-        postChunk.content(postContent)
+        //postChunk.content(postContent)
         postChunk.setStatus(result.status)
         postChunk.setType(result.type)
         postChunk.setTag(result.tag)

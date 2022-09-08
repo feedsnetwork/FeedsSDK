@@ -13,12 +13,13 @@ import { CollectionNames as collections, ScriptingNames as scripts } from "./vau
 
 const logger = new Logger("Channel")
 
+/*
 type SubscribedChannel = {
     targetDid: string,// 订阅channel的创建者的did
     channelId: string
-}
+} */
 
-export class MyProfile implements ProfileHandler {
+export class MyProfile {
     private appContext: AppContext;
 
     private readonly userDid: string;
@@ -30,9 +31,9 @@ export class MyProfile implements ProfileHandler {
      *
      * @returns A promise object that contains the number of owned channels.
      */
-    public async queryOwnedChannelCount(): Promise<number> {
-        return new Promise( async(resolve, _reject) => {
-            const result = await this.vault.queryDBData(collections.CHANNELS, {})
+    public queryOwnedChannelCount(): Promise<number> {
+        return new Promise( (resolve, _reject) => {
+            const result = this.vault.queryDBData(collections.CHANNELS, {})
             // TODO: error.
             resolve(result)
         }).then (result => {
@@ -48,9 +49,9 @@ export class MyProfile implements ProfileHandler {
       *
       * @returns A promise object that contains an array of channels.
       */
-    public async queryOwnedChannels(): Promise<ChannelInfo[]> {
-        return new Promise( async(resolve, _reject) => {
-            const result = await this.vault.queryDBData(collections.CHANNELS, {})
+    public queryOwnedChannels(): Promise<ChannelInfo[]> {
+        return new Promise( (resolve, _reject) => {
+            const result = this.vault.queryDBData(collections.CHANNELS, {})
             // TODO: error
             resolve(result)
         }).then (result => {
@@ -67,7 +68,7 @@ export class MyProfile implements ProfileHandler {
      *
      * @param dispatcher The disptach routine to handle a channel.
      */
-    public async queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
+    public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannels().then (channels => {
             channels.forEach( channel => {
                 dispatcher.dispatch(channel)
@@ -84,10 +85,10 @@ export class MyProfile implements ProfileHandler {
      * @param channelId The channelId of channel to query
      * @returns A promise object that contains the channel information.
      */
-    public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-        return new Promise( async(resolve, _reject) => {
+    public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
+        return new Promise((resolve, _reject) => {
             const filter = { "channel_id": channelId }
-            const result = await this.vault.queryDBData(collections.CHANNELS, filter)
+            const result = this.vault.queryDBData(collections.CHANNELS, filter)
             // TODO: error.
             resolve(result)
         }).then (result => {
@@ -104,7 +105,7 @@ export class MyProfile implements ProfileHandler {
      * @param channelId The channelid to query
      * @param dispatcher The disaptch routine to handle channel information
      */
-    public async queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
+    public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannnelById(channelId).then (channel => {
             dispatcher.dispatch(channel);
         }).catch (error => {
@@ -118,9 +119,9 @@ export class MyProfile implements ProfileHandler {
      *
      * @returns A promise object that contains the number of subscribed channels.
      */
-    public async querySubscriptionCount(): Promise<number> {
-        return new Promise( async(resolve, _reject) => {
-            const result = await this.vault.queryDBData(collections.BACKUP_SUBSCRIBEDCHANNELS, {})
+    public querySubscriptionCount(): Promise<number> {
+        return new Promise( (resolve, _reject) => {
+            const result = this.vault.queryDBData(collections.BACKUP_SUBSCRIBEDCHANNELS, {})
             // TODO:
             resolve(result)
         }).then (_result => {
@@ -131,7 +132,7 @@ export class MyProfile implements ProfileHandler {
             throw new Error(error)
         })
     }
-
+/*
     parseBackupSubscribedChannel(result: any): SubscribedChannel[] {
         const subscribedChannels = result
         let parseResult: SubscribedChannel[] = []
@@ -146,7 +147,7 @@ export class MyProfile implements ProfileHandler {
             parseResult.push(subscribed)
         })
         return parseResult
-    }
+    }*/
 
     /**
       * Query a list of channels subscribed by this profile.
@@ -155,8 +156,8 @@ export class MyProfile implements ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-    public async querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
-        return new Promise<any>(async (resolve, _reject) => {
+    public querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
+        return new Promise<any>( (resolve, _reject) => {
             const filter = {
                 "limit" : { "$lt": maximum },
                 "created": { "$gt": earlierThan }
@@ -194,7 +195,7 @@ export class MyProfile implements ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-    public async queryAndDispatchSubscriptions(earlierThan: number, maximum: number,
+    public queryAndDispatchSubscriptions(earlierThan: number, maximum: number,
         dispatcher: Dispatcher<ChannelInfo>) {
 
         return this.querySubscriptions(earlierThan, maximum).then(channels => {
@@ -213,8 +214,8 @@ export class MyProfile implements ProfileHandler {
      * @param category channel category
      * @param proof [option] sigature to the channel metadata
      */
-    public async createChannel(channelInfo: ChannelInfo) {
-        return new Promise(async (resolve, _reject) => {
+    public createChannel(channelInfo: ChannelInfo) {
+        return new Promise((resolve, _reject) => {
             const doc = {
                 "channel_id": channelInfo.getChannelId(),
                 "name"      : channelInfo.getName(),
@@ -231,7 +232,7 @@ export class MyProfile implements ProfileHandler {
                 "proof"     : channelInfo.getProof()
             }
 
-            const result = await this.vault.insertDBData(collections.CHANNELS, doc)
+            const result = this.vault.insertDBData(collections.CHANNELS, doc)
             // TODO:
             resolve(result)
         }).then( result => {
@@ -256,7 +257,7 @@ export class MyProfile implements ProfileHandler {
      * @returns
      */
 
-    public async freezeChannel(_channelId: string) {
+    public freezeChannel(_channelId: string): Promise<void> {
         throw new Error("Method not implemented");
     }
 
@@ -266,7 +267,7 @@ export class MyProfile implements ProfileHandler {
      * @param _channelId
      * @returns
      */
-    public async unfreezeChannel(_channelId: string) {
+    public unfreezeChannel(_channelId: string): Promise<void> {
         throw new Error("Method not implemented");
     }
 
@@ -281,8 +282,8 @@ export class MyProfile implements ProfileHandler {
      * @param channelId channel id of the channel to be deleted.
      * @returns
      */
-    public async deleteChannel(channelId: string) {
-        return new Promise( async(resolve, _reject) => {
+    public deleteChannel(channelId: string) {
+        return new Promise( (resolve, _reject) => {
             const doc = {
                 "updated_at": new Date().getTime(),
                 "status": 1,
@@ -308,7 +309,7 @@ export class MyProfile implements ProfileHandler {
      * @param myChannel
      * @returns
      */
-    public async purgeChannel(_channelId: string) {
+    public purgeChannel(_channelId: string): Promise<void> {
         throw new Error("Method not implemented");
     }
 
@@ -319,7 +320,7 @@ export class MyProfile implements ProfileHandler {
      * @param channelId the channel Identifier to be published on registry contract.
      * @returns
      */
-    public async publishChannel(_myChannel: MyChannel) {
+    public publishChannel(_myChannel: MyChannel): Promise<void> {
         throw new Error("Method not implemented");
     }
 
@@ -328,7 +329,7 @@ export class MyProfile implements ProfileHandler {
      * @param _channelId
      * @returns
      */
-    public async unpublishChannel(_channelId: string) {
+    public unpublishChannel(_channelId: string): Promise<void> {
         throw new Error("Method not implemented");
     }
 
@@ -338,8 +339,8 @@ export class MyProfile implements ProfileHandler {
      * @param channel
      * @returns
      */
-    public async subscribeChannel(channelEntry: ChannelEntry) {
-        return new Promise( async(resolve, _reject) => {
+    public subscribeChannel(channelEntry: ChannelEntry) {
+        return new Promise( (resolve, _reject) => {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
                 "created_at": channelEntry.getCreatedAt(),
@@ -348,7 +349,7 @@ export class MyProfile implements ProfileHandler {
                 "status"    : channelEntry.getStatus()
             }
 
-            const result = await this.vault.callScript(scripts.SCRIPT_SUBSCRIBE_CHANNEL, params,
+            const result = this.vault.callScript(scripts.SCRIPT_SUBSCRIBE_CHANNEL, params,
                 channelEntry.getTargetDid(), this.appContext.getAppDid())
 
             // TODO: error.
@@ -367,14 +368,14 @@ export class MyProfile implements ProfileHandler {
      * @param channel
      * @returns
      */
-    public async unsubscribeChannel(channelEntry: ChannelEntry) {
-        return new Promise( async(resolve, _reject) => {
+    public unsubscribeChannel(channelEntry: ChannelEntry): Promise<void> {
+        return new Promise((resolve, _reject) => {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
                 "updated_at": channelEntry.getUpdatedAt(),
                 "status": channelEntry.getStatus()
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_UPDATE_SUBSCRIPTION, params,
+            const result = this.vault.callScript(scripts.SCRIPT_UPDATE_SUBSCRIPTION, params,
                     channelEntry.getTargetDid(), this.appContext.getAppDid())
             // TODO: error
             resolve(result)
