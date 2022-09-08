@@ -1,7 +1,7 @@
 import { Logger } from './utils/logger'
 import { PostBody } from './postbody'
-import { Dispatcher } from './Dispatcher';
-import { Comment } from './Comment'
+import { Dispatcher } from './dispatcher';
+import { Comment } from './comment'
 import { hiveService } from "./hiveService"
 import { AppContext } from './appcontext';
 import { ScriptingNames as scripts } from './vault/constants';

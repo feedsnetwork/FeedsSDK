@@ -1,8 +1,8 @@
 //import { Logger } from './utils/logger'
-import { PostA as Post } from './Post'
-import { ChannelInfo } from './ChannelInfo'
-import { Dispatcher } from './Dispatcher'
-import { ChannelHandler } from './ChannelHandler'
+import { PostA as Post } from './post'
+import { ChannelInfo } from './channelinfo'
+import { Dispatcher } from './dispatcher'
+import { ChannelHandler } from './channelhandler'
 import { PostBody } from './postbody'
 import { hiveService as VaultService } from "./hiveService"
 import { Profile } from './profile'

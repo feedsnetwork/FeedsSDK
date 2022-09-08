@@ -3,3 +3,5 @@ yarn.lock
 package-lock.json
 yarn-error.log
 typings/
+dist/
+browser-bundle-stats.html

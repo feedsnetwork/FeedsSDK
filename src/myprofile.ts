@@ -1,8 +1,8 @@
 
 import { AppContext } from "./appcontext";
-import { Channel } from "./Channel";
-import { ChannelInfo } from "./ChannelInfo";
-import { Dispatcher } from "./Dispatcher";
+import { Channel } from "./channel";
+import { ChannelInfo } from "./channelinfo";
+import { Dispatcher } from "./dispatcher";
 
 export class MyProfile {
     private appContext: AppContext;

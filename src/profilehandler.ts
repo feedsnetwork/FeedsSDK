@@ -1,5 +1,5 @@
-import { ChannelInfo } from "./ChannelInfo";
-import { Dispatcher } from "./Dispatcher";
+import { ChannelInfo } from "./channelinfo";
+import { Dispatcher } from "./dispatcher";
 
 interface ProfileHandler {
     /**
