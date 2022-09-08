@@ -1,7 +1,7 @@
 //import { utils } from "./utils/utils";
 
 export class ChannelInfo {
-    private downerDid: string;
+    private ownerDid: string;
     private channelId: string;
     private name: string;
 
@@ -19,17 +19,18 @@ export class ChannelInfo {
     private proof: string;  // TODO:
 
     private constructor(_ownerDid: string, _channelId: string, _name: string) {
-        this.downerDid = _ownerDid;
+        this.ownerDid = _ownerDid;
         this.channelId = _channelId;
         this.name = _name;
     }
 
-    /*public static generateChannelId(ownerDid: string, name: string): string {
-        return utils.generateChannelId(ownerDid, name)
-    }*/
+    public static generateChannelId(ownerDid: string, name: string): string {
+        //eturn utils.generateChannelId(ownerDid, name)
+        return ""
+    }
 
     public static clone(channel: ChannelInfo): ChannelInfo {
-        return (new ChannelInfo(channel.downerDid, channel.channelId, channel.name))
+        return (new ChannelInfo(channel.ownerDid, channel.channelId, channel.name))
             .setDisplayName(channel.displayName)
             .setDescription(channel.descritpion)
             .setReceivingAddress(channel.receivingAddress);

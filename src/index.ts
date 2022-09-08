@@ -29,10 +29,9 @@ export {
     Profile,
     MyChannel,
     Channel,
-    ChannelInfo,
     ChannelEntry,
-    PostBody,
-    Post
+    Post,
+    PostBody
 }
 /*
 interface ConfigOptions {
@@ -57,4 +56,5 @@ class LibraryStarter {
     }
 }
 
-export default LibraryStarter*/
+export default LibraryStarter
+*/
