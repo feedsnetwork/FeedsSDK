@@ -263,7 +263,7 @@ class Channel {
         return parseResult
     }
 
-    static parseOne(targetDid: string, channels: any): Channel {
+    static parseOne(targetDid: string, item: any): Channel {
         const channelInfo = ChannelInfo.parse(targetDid, item)
         const channel = new Channel(channelInfo)
         return channel

@@ -1,7 +1,6 @@
 'use strict'
 
 import { AppContext } from "./appcontext"
-import { Authentication } from "./authentication"
 import { Channel } from "./channel"
 import { ChannelEntry } from "./channelentry"
 import { ChannelHandler } from "./channelhandler"
@@ -28,14 +27,11 @@ export type {
 export {
     Logger,
     AppContext,
-    Authentication,
     MyProfile,
     Profile,
     MyChannel,
-    Channel,
     ChannelEntry,
-    PostBody,
-    //PostA
+    PostBody
 }
 /*
 interface ConfigOptions {
