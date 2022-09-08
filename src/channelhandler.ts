@@ -1,9 +1,9 @@
-import { ChannelInfo } from "./ChannelInfo"
-import { Dispatcher } from "./Dispatcher"
+import { ChannelInfo } from "./channelinfo"
+import { Dispatcher } from "./dispatcher"
 import { PostBody } from "./postbody"
 import { Profile } from "./profile";
 
-interface ChannelHandler {
+export interface ChannelHandler {
     queryChannelInfo(): Promise<ChannelInfo>
 
     queryAndDispatchChannelInfo(
@@ -55,8 +55,4 @@ interface ChannelHandler {
         upperLimit: number,
         dispatcher: Dispatcher<Profile>
     ): Promise<void>
-}
-
-export {
-    ChannelHandler
 }

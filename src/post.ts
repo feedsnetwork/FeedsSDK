@@ -1,7 +1,7 @@
 import { Logger } from './utils/logger'
 import { PostBody } from './postbody'
-import { Dispatcher } from './Dispatcher';
-import { Comment } from './Comment'
+import { Dispatcher } from './dispatcher';
+import { Comment } from './comment'
 import { hiveService } from "./hiveService"
 import { AppContext } from './appcontext';
 import { ScriptingNames as scripts } from './vault/constants';
@@ -13,24 +13,24 @@ export class Post {
     private body: PostBody;
     private vault: hiveService
 
-    private constructor(body: PostBody, ) {
+    private constructor(body: PostBody) {
         this.body = body;
     }
 
     public getBody(): PostBody {
-        return this.body
+        return this.body;
     }
 
-    public async addComent(): Promise<string> {
+    public addComent(): Promise<string> {
         throw new Error("Method not implemented");
     }
 
-    public async updateComment(commentId: string) {
+    public updateComment(commentId: string): Promise<void> {
         throw new Error("Method not implemented");
     }
 
-    public async deleteComment(commentId: string) {
-        return new Promise( async(resolve, _reject) => {
+    public deleteComment(commentId: string) {
+        return new Promise( (resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
@@ -38,7 +38,7 @@ export class Post {
             }
             const targetDid = this.getBody().getTargetDid()
 
-            const result = await this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
+            const result = this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
                 targetDid, this.appContext.getAppDid())
             // TODO: error.
             resolve(result)
@@ -48,17 +48,18 @@ export class Post {
             logger.error('Delete comment error:', error)
             throw new Error(error)
         });
+        throw new Error("Not implemented");
     }
 
-    public async queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
-        return new Promise<Comment[]>(async (resolve, _reject) => {
+    public queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
+        return new Promise<Comment[]>((resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "limit": { "$lt": maximum },
                 "created": { "$gt": earlierThan }
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
+            const result = this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
 
             // TODO: error
@@ -70,9 +71,10 @@ export class Post {
             logger.error('fetch comments error:', error)
             throw new Error(error)
         })
+        throw new Error("Method not implemented");
     }
 
-    public async queryAndDispatchComments(earlierThan: number, maximum: number,
+    public queryAndDispatchComments(earlierThan: number, maximum: number,
         dispatcher: Dispatcher<Comment>) {
         return this.queryComments(earlierThan, maximum).then((comments) => {
             comments.forEach(item => {
@@ -83,15 +85,15 @@ export class Post {
         })
     }
 
-    public async queryCommentsRangeOfTime(begin: number, end: number, maximum: number): Promise<Comment[]> {
-        return new Promise<Comment[]>(async (resolve, _reject) => {
+    public queryCommentsRangeOfTime(begin: number, end: number, maximum: number): Promise<Comment[]> {
+       return new Promise<Comment[]>((resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "start": begin,
                 "end": end
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
+            const result = this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
             // TODO: error.
             resolve(result)
@@ -102,9 +104,10 @@ export class Post {
             logger.error('fetch comments range of time error:', error)
             throw new Error(error)
         })
+        throw new Error("NOt implemented");
     }
 
-    public async queryAndDispatchCommentsRangeOfTime(begin: number, end: number, maximum: number,
+    public queryAndDispatchCommentsRangeOfTime(begin: number, end: number, maximum: number,
         dispatcher: Dispatcher<Comment>) {
         return this.queryComments(begin, end).then((comments) => {
             comments.forEach(item => {
@@ -115,14 +118,14 @@ export class Post {
         })
     }
 
-    public async queryCommentById(commentId: string): Promise<Comment> {
-        return new Promise<Comment>(async (resolve, _reject) => {
+    public queryCommentById(commentId: string): Promise<Comment> {
+        return new Promise<Comment>((resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "comment_id": commentId
             }
-            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
+            const result = this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
                 this.getBody().getTargetDid(), this.appContext.getAppDid())
             //TODO:
             resolve(result)
@@ -133,9 +136,10 @@ export class Post {
             logger.error('fetch comment by id error:', error)
             throw new Error(error)
         })
+        throw new Error("Not implemented");
     }
 
-    public async queryAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {
+    public queryAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {
         return this.queryCommentById(commentId).then((comment) => {
             dispatcher.dispatch(comment)
         }).catch( error => {
@@ -144,13 +148,15 @@ export class Post {
     }
 
     public static parse(targetDid: string, result: any): Post {
+        /*
         try {
             const postChun = PostBody.parse(targetDid, result)
             const post = new Post(postChun)
             return post
         } catch (error) {
-            logger.error('Parse post result error: ', error)
+            //logger.error('Parse post result error: ', error)
             throw error
-        }
+        }*/
+        return null;
     }
 }

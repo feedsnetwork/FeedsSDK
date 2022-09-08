@@ -1,4 +1,3 @@
-import { MyProfile } from "./MyProfile"
 import { connectivity, DID as ConDID } from '@elastosfoundation/elastos-connectivity-sdk-js'
 // import { EssentialsConnector } from '@elastosfoundation/essentials-connector-client-browser';
 import { DefaultDIDAdapter, DIDBackend, VerifiablePresentation, DIDDocument, JWTParserBuilder, JWTHeader } from '@elastosfoundation/did-js-sdk';
@@ -19,6 +18,7 @@ export class Authentication {
         throw new Error("Method not implemented.");
     }
 
+    /*
     createHiveAppcontext(): Promise<AppContext> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -71,14 +71,14 @@ export class Authentication {
                 reject(error)
             }
         })
-    }
+    }*/
 
     async generateHiveAuthPresentationJWT(challeng) {
         if (challeng === null || challeng === undefined || challeng === '') {
             logger.log('Params error: challeng 不能为空')
         }
 
-        // Parse, but verify on chain that this JWT is valid first 
+        // Parse, but verify on chain that this JWT is valid first
         const JWTParser = new JWTParserBuilder().build()
         const parseResult = await JWTParser.parse(challeng)
         const claims = parseResult.getBody()
@@ -90,7 +90,7 @@ export class Authentication {
         const hiveDid = claims.getIssuer()
         const appIdCredential = await this.issueDiplomaFor()
         const presentation = await this.createPresentation(appIdCredential, hiveDid, nonce)
-        const token = await this.createChallengeResponse(presentation, hiveDid, storePassword)
+        const token = await this.createChallengeResponse(presentation, hiveDid, "")
         return token
     }
 

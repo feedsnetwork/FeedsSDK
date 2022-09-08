@@ -2,7 +2,6 @@ import { Executable, InsertOptions, File as HiveFile, ScriptRunner, Vault, AppCo
 import { Claims, DIDDocument, JWTHeader, JWTParserBuilder, DID, DIDBackend, DefaultDIDAdapter, JSONObject, VerifiablePresentation } from '@elastosfoundation/did-js-sdk'
 import { connectivity, DID as ConDID, Hive } from "@elastosfoundation/elastos-connectivity-sdk-js"
 import { Logger } from './utils/logger'
-import { config } from './config'
 
 const logger = new Logger("Channel")
 export class hiveService {

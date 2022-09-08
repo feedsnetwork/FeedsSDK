@@ -1,9 +1,9 @@
-import { utils } from "./utils/utils";
+//import { utils } from "./utils/utils";
 
-class ChannelInfo {
-    private readonly ownerDid: string;
-    private readonly channelId: string;
-    private readonly name: string;
+export class ChannelInfo {
+    private downerDid: string;
+    private channelId: string;
+    private name: string;
 
     private displayName: string;
     private descritpion: string;
@@ -19,17 +19,17 @@ class ChannelInfo {
     private proof: string;  // TODO:
 
     private constructor(_ownerDid: string, _channelId: string, _name: string) {
-        this.ownerDid = _ownerDid;
+        this.downerDid = _ownerDid;
         this.channelId = _channelId;
         this.name = _name;
     }
 
-    public static generateChannelId(ownerDid: string, name: string): string {
+    /*public static generateChannelId(ownerDid: string, name: string): string {
         return utils.generateChannelId(ownerDid, name)
-    }
+    }*/
 
     public static clone(channel: ChannelInfo): ChannelInfo {
-        return (new ChannelInfo(channel.ownerDid, channel.channelId, channel.name))
+        return (new ChannelInfo(channel.downerDid, channel.channelId, channel.name))
             .setDisplayName(channel.displayName)
             .setDescription(channel.descritpion)
             .setReceivingAddress(channel.receivingAddress);
@@ -122,11 +122,11 @@ class ChannelInfo {
         return this.category;
     }
 
-    public getCreatedAt(): Number {
+    public getCreatedAt(): number {
         return this.createdAt;
     }
 
-    public getUpdatedAt(): Number {
+    public getUpdatedAt(): number {
         return this.updatedAt;
     }
 
@@ -162,8 +162,4 @@ class ChannelInfo {
 
         return channelInfo
     }
-}
-
-export {
-    ChannelInfo
 }
