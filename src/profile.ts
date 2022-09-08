@@ -28,7 +28,7 @@ export class Profile implements ProfileHandler {
         return new Promise<number>(async (resolve, _reject) => {
             const filter = {
             }
-            const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
+            const result = await this.vault.callScript(collections.CHANNELS, filter,
                 this.targetDid, this.appContext.getAppDid())
             const channels = result.find_message.items
             resolve(channels.length)
@@ -42,7 +42,7 @@ export class Profile implements ProfileHandler {
         return new Promise<Channel[]>(async (resolve, _reject) => {
             const filter = {
             }
-            const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
+            const result = await this.vault.callScript(collections.CHANNELS, filter,
                 this.targetDid, this.appContext.getAppDid())
             return result.find_message.items
         }).then(result => {
@@ -99,11 +99,40 @@ export class Profile implements ProfileHandler {
     }
 
     public async querySubscriptionCount(): Promise<number> {
-        throw new Error("Method not implemented.");
+        return new Promise<number>(async (resolve, _reject) => {
+            const filter = {
+            }
+            const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
+                this.targetDid, this.appContext.getAppDid())
+            const channels = result.find_message.items
+            resolve(channels.length)
+        }).catch(error => {
+            logger.error('query subscription count error: ', error)
+            throw new Error(error)
+        })
     }
 
+    // 订阅的channels
     public async querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
-        throw new Error("Method not implemented.");
+        return new Promise<Channel[]>(async (resolve, _reject) => {
+            // earlierThan : TODO:
+            // upperLimit : TODO:
+            const filter = {
+            }
+            const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
+                this.targetDid, this.appContext.getAppDid())
+            return result.find_message.items
+        }).then(result => {
+            let channels = []
+            result.forEach(item => {
+                const channel = Channel.parseOne(this.targetDid, item)
+                channels.push(channel)
+            })
+            return channels
+        }).catch(error => {
+            logger.error('query subscription channels error: ', error)
+            throw new Error(error)
+        })
     }
 
     public async queryAndDispatchSubscriptions(earlierThan: number, upperLimit: number,
