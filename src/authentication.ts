@@ -55,7 +55,7 @@ export class Authentication {
                         return new Promise(async (resolve, reject) => {
                             try {
                                 console.log('Get authorization jwtToken is', jwtToken);
-                                const authToken = 'TODO: '
+                                const authToken = self.generateHiveAuthPresentationJWT(jwtToken)
                                 console.log('Get authorization authToken is', authToken);
                                 resolve(authToken)
                             } catch (error) {
