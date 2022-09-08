@@ -12,6 +12,7 @@ const logger = new Logger("Profile")
 export class Profile implements ProfileHandler {
     private appContext: AppContext;
     private readonly targetDid: string;
+    private readonly userDid: string;
     private vault: VaultService
 
     public async getOwnedChannelCount(): Promise<number> {
@@ -23,7 +24,7 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
-    public queryOwnedChannelCount(): Promise<number> {
+    public async queryOwnedChannelCount(): Promise<number> {
         return new Promise<number>(async (resolve, _reject) => {
             const filter = {
             }
@@ -37,14 +38,13 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    public queryOwnedChannels(): Promise<ChannelInfo[]> {
+    public async queryOwnedChannels(): Promise<ChannelInfo[]> {
         return new Promise<Channel[]>(async (resolve, _reject) => {
             const filter = {
             }
             const result = await this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
                 this.targetDid, this.appContext.getAppDid())
-            const data = result.find_message.items
-            return data
+            return result.find_message.items
         }).then(result => {
             let channels = []
             result.forEach(item => {
@@ -69,7 +69,17 @@ export class Profile implements ProfileHandler {
     }
 
     public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-        throw new Error("Method not implemented.");
+        return new Promise(async (resolve, _reject) => {
+            const params = {
+                "channel_id": channelId,
+            }
+            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
+                this.targetDid, this.appContext.getAppDid())
+            return result.find_message.items
+        }).then(result => {
+            const channelInfo = ChannelInfo.parse(this.targetDid, result[0])
+            return channelInfo
+        })
     }
 
     public async queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
