@@ -1,5 +1,5 @@
 //import { Logger } from './utils/logger'
-import { PostA as Post } from './post'
+import { Post } from './post'
 import { ChannelInfo } from './channelinfo'
 import { Dispatcher } from './dispatcher'
 import { ChannelHandler } from './channelhandler'

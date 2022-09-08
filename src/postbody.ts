@@ -1,4 +1,4 @@
-import { PostA } from "./post";
+import { Post } from "./post";
 
 export enum MediaType {
     noMeida = 0,

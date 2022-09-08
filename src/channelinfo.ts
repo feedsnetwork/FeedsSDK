@@ -13,7 +13,7 @@ export class ChannelInfo {
     private createdAt: number;
     private updatedAt: number;
 
-    private _type: string;   // TODO:
+    private type: string;   // TODO:
     private nft: string;    // TODO:
     private memo: string;   // TODO:
     private proof: string;  // TODO:
@@ -24,10 +24,9 @@ export class ChannelInfo {
         this.name = _name;
     }
 
-    public static generateChannelId(ownerDid: string, name: string): string {
-        //eturn utils.generateChannelId(ownerDid, name)
-        return ""
-    }
+    /*public static generateChannelId(ownerDid: string, name: string): string {
+        return utils.generateChannelId(ownerDid, name)
+    }*/
 
     public static clone(channel: ChannelInfo): ChannelInfo {
         return (new ChannelInfo(channel.downerDid, channel.channelId, channel.name))
@@ -72,7 +71,7 @@ export class ChannelInfo {
     }
 
     public setType(type: string): ChannelInfo {
-        this._type = type;
+        this.type = type;
         return this;
     }
 
@@ -132,7 +131,7 @@ export class ChannelInfo {
     }
 
     public getType(): string {
-        return this._type;
+        return this.type;
     }
 
     public getNft(): string {
@@ -148,7 +147,6 @@ export class ChannelInfo {
     }
 
     static parse(targetDid: string, channel: any): ChannelInfo {
-        /*
         const channelInfo = new ChannelInfo(targetDid, channel.channel_id, channel.name)
         channelInfo.displayName = channel.display_name
         channelInfo.descritpion = channel.intro
@@ -163,7 +161,5 @@ export class ChannelInfo {
         channelInfo.memo = channel.memo
 
         return channelInfo
-        */
-        return null
     }
 }

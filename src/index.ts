@@ -8,10 +8,14 @@ import { MyProfile } from "./myprofile"
 import { PostBody } from "./postbody"
 import { Profile } from "./profile"
 import { Logger } from "./utils/logger"
+import { ChannelInfo } from "./channelinfo"
+import { Channel } from "./channel"
+import { Post } from "./post"
 
 import {
     IllegalArgumentException,
 } from "./exceptions/exceptions"
+
 Logger.setDefaultLevel(Logger.DEBUG)
 
 export type {
@@ -24,8 +28,11 @@ export {
     MyProfile,
     Profile,
     MyChannel,
+    Channel,
+    ChannelInfo,
     ChannelEntry,
-    PostBody
+    PostBody,
+    Post
 }
 /*
 interface ConfigOptions {
