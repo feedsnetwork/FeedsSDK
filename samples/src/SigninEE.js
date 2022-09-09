@@ -1,10 +1,6 @@
 
 import React, {useState} from 'react'
-<<<<<<< HEAD
-import { signin, signout, checkSign } from '@pasarprotocol/pasar-sdk-development';
-=======
 import { signin, signout, checkSign } from '@feedsnetwork/feeds-sdk-development';
->>>>>>> d3ec102 (Update a new version)
 import {
   useNavigate
 } from "react-router-dom";
