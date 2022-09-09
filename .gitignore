@@ -4,4 +4,11 @@ package-lock.json
 yarn-error.log
 typings/
 dist/
+<<<<<<< HEAD
 browser-bundle-stats.html
+=======
+
+samples/node_modules
+samples/package-lock.json
+
+>>>>>>> d3ec102 (Update a new version)

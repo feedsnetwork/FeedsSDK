@@ -48,6 +48,10 @@ export class Post {
             logger.error('Delete comment error:', error)
             throw new Error(error)
         });
+<<<<<<< HEAD
+=======
+        throw new Error("Not implemented");
+>>>>>>> d3ec102 (Update a new version)
     }
 
     public queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
@@ -70,6 +74,10 @@ export class Post {
             logger.error('fetch comments error:', error)
             throw new Error(error)
         })
+<<<<<<< HEAD
+=======
+        throw new Error("Method not implemented");
+>>>>>>> d3ec102 (Update a new version)
     }
 
     public queryAndDispatchComments(earlierThan: number, maximum: number,
@@ -102,6 +110,10 @@ export class Post {
             logger.error('fetch comments range of time error:', error)
             throw new Error(error)
         })
+<<<<<<< HEAD
+=======
+        throw new Error("NOt implemented");
+>>>>>>> d3ec102 (Update a new version)
     }
 
     public queryAndDispatchCommentsRangeOfTime(begin: number, end: number, maximum: number,
@@ -131,8 +143,14 @@ export class Post {
             return result
         }).catch(error => {
             logger.error('fetch comment by id error:', error)
+<<<<<<< HEAD
             throw new Error(error);
         })
+=======
+            throw new Error(error)
+        })
+        throw new Error("Not implemented");
+>>>>>>> d3ec102 (Update a new version)
     }
 
     public queryAndDispatchCommentById(commentId: string, dispatcher: Dispatcher<Comment>) {

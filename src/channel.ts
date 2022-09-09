@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { Logger } from './utils/logger'
+=======
+//import { Logger } from './utils/logger'
+>>>>>>> d3ec102 (Update a new version)
 import { Post } from './post'
 import { ChannelInfo } from './channelinfo'
 import { Dispatcher } from './dispatcher'

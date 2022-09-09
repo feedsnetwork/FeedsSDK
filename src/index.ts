@@ -11,6 +11,10 @@ import { Logger } from "./utils/logger"
 import { ChannelInfo } from "./channelinfo"
 import { Channel } from "./channel"
 import { Post } from "./post"
+<<<<<<< HEAD
+=======
+import { signin, signout, checkSignin } from "./signin"
+>>>>>>> d3ec102 (Update a new version)
 
 import {
     IllegalArgumentException,
@@ -24,14 +28,24 @@ export type {
 
 export {
     Logger,
+    signin,
+    signout,
+    checkSignin,
     AppContext,
     MyProfile,
     Profile,
     MyChannel,
     Channel,
+<<<<<<< HEAD
     ChannelEntry,
     Post,
     PostBody
+=======
+    ChannelInfo,
+    ChannelEntry,
+    PostBody,
+    Post
+>>>>>>> d3ec102 (Update a new version)
 }
 /*
 interface ConfigOptions {
@@ -56,5 +70,9 @@ class LibraryStarter {
     }
 }
 
+<<<<<<< HEAD
 export default LibraryStarter
 */
+=======
+export default LibraryStarter*/
+>>>>>>> d3ec102 (Update a new version)

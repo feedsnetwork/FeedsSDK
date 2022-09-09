@@ -5,7 +5,7 @@
 export class AppContext {
     //private static sInstance: AppContext = null
 
-    private readonly applicationDid: string = "FEEDS-APPDID";
+    private readonly applicationDid: string;
     private readonly network: string
     private readonly resolveCache: string // todo
     private readonly localDataDir: string // todo

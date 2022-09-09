@@ -3,6 +3,7 @@ import { AppContext } from "./appcontext";
 import { Channel } from "./channel";
 import { ChannelInfo } from "./channelinfo";
 import { Dispatcher } from "./dispatcher";
+<<<<<<< HEAD
 import { Logger } from "./utils/logger";
 import { hiveService as VaultService } from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
@@ -17,6 +18,8 @@ type SubscribedChannel = {
     targetDid: string,// 订阅channel的创建者的did
     channelId: string
 } */
+=======
+>>>>>>> d3ec102 (Update a new version)
 
 export class MyProfile {
     private appContext: AppContext;
@@ -31,12 +34,8 @@ export class MyProfile {
         throw new Error("Method not implemented.");
     }
 
-    /**
-     * Query the total number of channels created by this profile.
-     *
-     * @returns A promise object that contains the number of owned channels.
-     */
     public queryOwnedChannelCount(): Promise<number> {
+<<<<<<< HEAD
         return new Promise( (resolve, _reject) => {
             const result = this.vault.queryDBData(CollectionNames.CHANNELS, {})
             // TODO: error.
@@ -47,14 +46,13 @@ export class MyProfile {
             logger.error('fetch own channel count error: ', error)
             throw new Error(error)
         });
+=======
+        throw new Error("Method not implemented.");
+>>>>>>> d3ec102 (Update a new version)
     }
 
-     /**
-      * Query a list of all channels (less than 5 channels) created by this profile.
-      *
-      * @returns A promise object that contains an array of channels.
-      */
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
+<<<<<<< HEAD
         return new Promise( (resolve, _reject) => {
             const result = this.vault.queryDBData(CollectionNames.CHANNELS, {})
             // TODO: error
@@ -65,14 +63,11 @@ export class MyProfile {
             logger.error('query owned channel error: ', error)
             throw new Error(error)
         })
+=======
+        throw new Error("Method not implemented.");
+>>>>>>> d3ec102 (Update a new version)
     }
 
-    /**
-     * Query a list of channels created by this profile and dispatch them to a customized
-     * routine to handle one by one.
-     *
-     * @param dispatcher The disptach routine to handle a channel.
-     */
     public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannels().then (channels => {
             channels.forEach(item => {
@@ -83,13 +78,8 @@ export class MyProfile {
         })
     }
 
-    /**
-     * Query a specific channel by channelid created by this profile.
-     *
-     * @param channelId The channelId of channel to query
-     * @returns A promise object that contains the channel information.
-     */
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
+<<<<<<< HEAD
         return new Promise((resolve, _reject) => {
             const filter = { "channel_id": channelId }
             const result = this.vault.queryDBData(CollectionNames.CHANNELS, filter)
@@ -101,18 +91,16 @@ export class MyProfile {
             logger.error('fetch own channels error: ', error)
             throw new Error(error);
         })
+=======
+        throw new Error("Method not implemented.");
+>>>>>>> d3ec102 (Update a new version)
     }
 
-    /**
-     * Query a specific channel owned by this profile by channelid.
-     *
-     * @param channelId The channelid to query
-     * @param dispatcher The disaptch routine to handle channel information
-     */
     public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannnelById(channelId).then (channel => {
             dispatcher.dispatch(channel)
         }).catch (error => {
+<<<<<<< HEAD
             throw new Error(error)
         })
     }
@@ -249,65 +237,45 @@ export class MyProfile {
         }).catch (error => {
             throw new Error(error)
         })
+=======
+            throw new Error(error)
+        })
     }
 
-    /**
-     * Freeze channel when owner stop maintainning the channel.
-     * Notice: calling this method will not remove channel metadata on remote vault
-     * and also would keep all channel subscribers and all post data there. After calling
-     * this method, channel owner would be unable to make posts on this channel, and
-     * subscribers are also allowed to fetch posts but can not make comments on the posts.
-     * This is the solf way to stop maintaining channel.
-     *
-     * @param _channelId the channel to be freezed
-     * @returns
-     */
-
-    public freezeChannel(_channelId: string): Promise<void> {
-        throw new Error("Method not implemented");
+    public getSubscriptionCount(): number {
+        throw new Error("Method not implemented.");
+>>>>>>> d3ec102 (Update a new version)
     }
 
-    /**
-     * TODO:
-     *
-     * @param _channelId
-     * @returns
-     */
-    public unfreezeChannel(_channelId: string): Promise<void> {
-        throw new Error("Method not implemented");
+    public querySubscriptionCount(): Promise<number> {
+        throw new Error("Method not implemented.");
     }
 
-    /**
-     * Hard way to stop maintaining channel.
-     * Warning: calling this method would lead to irreversible consequence that all Posts
-     * on this channel and all subscribers would be removed and lost permanently.
-     *
-     * And users should unpublish (unregister) this channel from registery contract
-     * on blockchain before decide to delete this channel.
-     *
-     * @param channelId channel id of the channel to be deleted.
-     * @returns
-     */
-    public deleteChannel(channelId: string) {
-        return new Promise( (resolve, _reject) => {
-            const doc = {
-                "updated_at": new Date().getTime(),
-                "status": 1,
-            }
-            const filter = { "channel_id": channelId }
-            const update = { "$set": doc}
+    public querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
+        throw new Error("Method not implemented.");
+    }
 
+    public queryAndDispatchSubscriptions(earlierThan: number, upperLimit: number,
+        dispatcher: Dispatcher<ChannelInfo>) {
+
+<<<<<<< HEAD
             const result = this.vault.updateOneDBData(CollectionNames.CHANNELS, filter, update,
                 new UpdateOptions(false, true))
             // TODO: error.
             resolve(result)
         }).then (() => {
             // TODO: reserved
+=======
+        return this.querySubscriptions(earlierThan, upperLimit).then (channels => {
+            channels.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+>>>>>>> d3ec102 (Update a new version)
         }).catch (error => {
-            logger.error("Delete channel error: ", error)
             throw new Error(error)
         })
     }
+<<<<<<< HEAD
 
     /**
      * purge channel
@@ -392,4 +360,6 @@ export class MyProfile {
             throw new Error(error)
         })
    }
+=======
+>>>>>>> d3ec102 (Update a new version)
 }
