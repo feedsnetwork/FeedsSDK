@@ -3,7 +3,6 @@ import { AppContext } from "./appcontext";
 import { Channel } from "./channel";
 import { ChannelInfo } from "./channelinfo";
 import { Dispatcher } from "./dispatcher";
-<<<<<<< HEAD
 import { Logger } from "./utils/logger";
 import { hiveService as VaultService } from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
@@ -18,8 +17,6 @@ type SubscribedChannel = {
     targetDid: string,// 订阅channel的创建者的did
     channelId: string
 } */
-=======
->>>>>>> d3ec102 (Update a new version)
 
 export class MyProfile {
     private appContext: AppContext;
@@ -35,7 +32,6 @@ export class MyProfile {
     }
 
     public queryOwnedChannelCount(): Promise<number> {
-<<<<<<< HEAD
         return new Promise( (resolve, _reject) => {
             const result = this.vault.queryDBData(CollectionNames.CHANNELS, {})
             // TODO: error.
@@ -46,13 +42,9 @@ export class MyProfile {
             logger.error('fetch own channel count error: ', error)
             throw new Error(error)
         });
-=======
-        throw new Error("Method not implemented.");
->>>>>>> d3ec102 (Update a new version)
     }
 
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
-<<<<<<< HEAD
         return new Promise( (resolve, _reject) => {
             const result = this.vault.queryDBData(CollectionNames.CHANNELS, {})
             // TODO: error
@@ -63,9 +55,6 @@ export class MyProfile {
             logger.error('query owned channel error: ', error)
             throw new Error(error)
         })
-=======
-        throw new Error("Method not implemented.");
->>>>>>> d3ec102 (Update a new version)
     }
 
     public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
@@ -79,7 +68,6 @@ export class MyProfile {
     }
 
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-<<<<<<< HEAD
         return new Promise((resolve, _reject) => {
             const filter = { "channel_id": channelId }
             const result = this.vault.queryDBData(CollectionNames.CHANNELS, filter)
@@ -91,16 +79,12 @@ export class MyProfile {
             logger.error('fetch own channels error: ', error)
             throw new Error(error);
         })
-=======
-        throw new Error("Method not implemented.");
->>>>>>> d3ec102 (Update a new version)
     }
 
     public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannnelById(channelId).then (channel => {
             dispatcher.dispatch(channel)
         }).catch (error => {
-<<<<<<< HEAD
             throw new Error(error)
         })
     }
@@ -237,45 +221,7 @@ export class MyProfile {
         }).catch (error => {
             throw new Error(error)
         })
-=======
-            throw new Error(error)
-        })
     }
-
-    public getSubscriptionCount(): number {
-        throw new Error("Method not implemented.");
->>>>>>> d3ec102 (Update a new version)
-    }
-
-    public querySubscriptionCount(): Promise<number> {
-        throw new Error("Method not implemented.");
-    }
-
-    public querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
-        throw new Error("Method not implemented.");
-    }
-
-    public queryAndDispatchSubscriptions(earlierThan: number, upperLimit: number,
-        dispatcher: Dispatcher<ChannelInfo>) {
-
-<<<<<<< HEAD
-            const result = this.vault.updateOneDBData(CollectionNames.CHANNELS, filter, update,
-                new UpdateOptions(false, true))
-            // TODO: error.
-            resolve(result)
-        }).then (() => {
-            // TODO: reserved
-=======
-        return this.querySubscriptions(earlierThan, upperLimit).then (channels => {
-            channels.forEach(item => {
-                dispatcher.dispatch(item)
-            })
->>>>>>> d3ec102 (Update a new version)
-        }).catch (error => {
-            throw new Error(error)
-        })
-    }
-<<<<<<< HEAD
 
     /**
      * purge channel
@@ -360,6 +306,4 @@ export class MyProfile {
             throw new Error(error)
         })
    }
-=======
->>>>>>> d3ec102 (Update a new version)
 }
