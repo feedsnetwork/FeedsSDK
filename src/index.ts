@@ -11,6 +11,7 @@ import { Logger } from "./utils/logger"
 import { ChannelInfo } from "./channelinfo"
 import { Channel } from "./channel"
 import { Post } from "./post"
+import { signin, signout, checkSignin } from "./signin"
 
 import {
     IllegalArgumentException,
@@ -24,15 +25,17 @@ export type {
 
 export {
     Logger,
+    signin,
+    signout,
+    checkSignin,
     AppContext,
     MyProfile,
     Profile,
     MyChannel,
     Channel,
-    ChannelInfo,
     ChannelEntry,
-    PostBody,
-    Post
+    Post,
+    PostBody
 }
 /*
 interface ConfigOptions {
@@ -56,5 +59,4 @@ class LibraryStarter {
         };
     }
 }
-
-export default LibraryStarter*/
+*/

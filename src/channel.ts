@@ -1,4 +1,4 @@
-//import { Logger } from './utils/logger'
+import { Logger } from './utils/logger'
 import { Post } from './post'
 import { ChannelInfo } from './channelinfo'
 import { Dispatcher } from './dispatcher'
@@ -9,7 +9,7 @@ import { Profile } from './profile'
 import { AppContext } from './appcontext'
 import { ScriptingNames as scripts } from './vault/constants'
 
-//const logger = new Logger("Channel")
+const logger = new Logger("Channel")
 /**
  * This class represent the channel owned by others. Users can only read posts
  * from this channel.
@@ -48,7 +48,7 @@ class Channel {
         }).then(result => {
             return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
         }).catch(error => {
-            //logger.log('Query channel information error: ', error)
+            logger.log('Query channel information error: ', error)
             throw new Error(error)
         })
     }
@@ -62,7 +62,7 @@ class Channel {
         return this.queryChannelInfo().then( channelInfo => {
             dispatcher.dispatch(channelInfo)
         }).catch(error => {
-            //logger.log('Query channel information error: ', error);
+            logger.log('Query channel information error: ', error);
             throw new Error(error)
         })
     }
@@ -97,7 +97,7 @@ class Channel {
             })
             return posts
         }).catch(error => {
-            //logger.error('Query posts error:', error)
+            logger.error('Query posts error:', error)
             throw new Error(error)
         })
     }
@@ -118,7 +118,7 @@ class Channel {
                 dispatcher.dispatch(item)
             })
         }).catch(error => {
-            //logger.error("Query posts error")
+            logger.error("Query posts error")
             throw new Error(error)
         })
     }
@@ -151,7 +151,7 @@ class Channel {
             })
             return posts
         }).catch(error => {
-            //logger.error("Query posts error: ", error)
+            logger.error("Query posts error: ", error)
             throw new Error(error)
         })
     }
@@ -173,7 +173,7 @@ class Channel {
                 dispatcher.dispatch(item)
             })
         }).catch (error => {
-            //logger.error("Query posts error")
+            logger.error("Query posts error")
             throw new Error(error)
         })
     }
@@ -203,7 +203,7 @@ class Channel {
             })
             return posts[0]
         }).catch (error => {
-            //logger.error("Query post:", error)
+            logger.error("Query post:", error)
             throw new Error(error)
         })
     }
@@ -218,7 +218,7 @@ class Channel {
         return this.queryPost(postId).then (post => {
             dispatcher.dispatch(post)
         }).catch (error => {
-            //logger.error("Query post:", error)
+            logger.error("Query post:", error)
             throw new Error(error)
         })
     }
