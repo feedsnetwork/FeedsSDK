@@ -1,6 +1,6 @@
 {
   "name": "@feedsnetwork/feeds-sdk-development",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "FeedsNetwork social media NFT SDK",
   "main": "index.js",
   "scripts": {
