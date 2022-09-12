@@ -13,16 +13,6 @@ import { Channel } from "./channel"
 import { Post } from "./post"
 import { signin, signout, checkSignin } from "./signin"
 
-import {
-    IllegalArgumentException,
-} from "./exceptions/exceptions"
-
-Logger.setDefaultLevel(Logger.DEBUG)
-
-export type {
-    Dispatcher
-}
-
 export {
     Logger,
     signin,

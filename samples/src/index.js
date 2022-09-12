@@ -8,7 +8,7 @@ import {
 import { Web3ReactProvider } from '@web3-react/core'
 import { Web3Provider } from "@ethersproject/providers";
 import App from './App';
-import { MyProfile } from './myprofile'
+import MyProfile from './myprofile'
 
 const getLibrary = (provider) => {
   const library = new Web3Provider(provider);

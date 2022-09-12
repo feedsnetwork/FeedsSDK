@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const MintNFT = () => {
+const MyProfile = () => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     /*
@@ -43,4 +43,4 @@ const MintNFT = () => {
     );
 }
 
-export default MintNFT;
+export default MyProfile;

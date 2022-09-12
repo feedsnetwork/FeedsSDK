@@ -103,8 +103,6 @@ const signInWithEssentials = async (appContext: AppContext): Promise<MyProfile> 
         throw new Error("");
     }).catch (error => {
         throw new Error(error);
-    }).finally (()=> {
-        throw new Error("");
     })
 
     return new MyProfile();

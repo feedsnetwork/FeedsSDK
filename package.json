@@ -1,8 +1,20 @@
 {
   "name": "@feedsnetwork/feeds-sdk-development",
-  "version": "0.0.4",
+  "version": "0.0.14",
   "description": "FeedsNetwork social media NFT SDK",
-  "main": "index.js",
+  "exports": {
+    "node": "./dist/feeds-sdk.js",
+    "browser": {
+      "import": "./dist/es/feeds-sdk.browser.js"
+    }
+  },
+  "main": "./dist/feeds-sdk.js",
+  "module": "./dist/es/feeds-sdk.js",
+  "typings": "typings/",
+  "browser": {
+    "./dist/feeds-sdk.js": "./dist/feeds-sdk.browser.js",
+    "./dist/es/feeds-sdk.js": "./dist/es/feeds-sdk.browser.js"
+  },
   "scripts": {
     "prepublishOnly": "npm run build",
     "lint": "eslint",
@@ -26,6 +38,14 @@
     "type": "git",
     "url": "git+https://github.com/elastos-trinity/feeds-js-sdk.git"
   },
+  "files": [
+    "dist",
+    "typings"
+  ],
+  "include": [
+    "typings",
+    "dist"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
@@ -33,6 +53,7 @@
   },
   "homepage": "https://github.com/elastos-trinity/feeds-js-sdk#readme",
   "dependencies": {
+    "@elastosfoundation/did-js-sdk": "^2.2.9",
     "@elastosfoundation/elastos-connectivity-sdk-js": "^1.1.4",
     "@elastosfoundation/essentials-connector-client-browser": "^1.0.41",
     "@elastosfoundation/hive-js-sdk": "^2.8.1",
