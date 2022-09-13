@@ -1,6 +1,6 @@
 {
   "name": "@feedsnetwork/feeds-sdk-development",
-  "version": "0.0.14",
+  "version": "0.0.16",
   "description": "FeedsNetwork social media NFT SDK",
   "exports": {
     "node": "./dist/feeds-sdk.js",
