@@ -9,8 +9,8 @@ function SigninEE() {
   const navigate = useNavigate();
   const [login, setLogin] = useState(checkSignin());
 
-  const handleSigninEE1 = async () => {
-    let result = await signin();
+  const handleSigninEE = async () => {
+    await signin();
     setLogin(checkSignin());
   }
 
@@ -26,8 +26,7 @@ function SigninEE() {
   return (
     !login ?
     <div>
-        <button onClick={handleSigninEE1}>Sign in with EE</button>
-        {/* <button onClick={handleSigninMM}>Sign in with MM</button> */}
+        <button onClick={handleSigninEE}>Sign in with EE</button>
     </div> :
     <div>
         <button onClick={handleSignout}>Sign out</button>

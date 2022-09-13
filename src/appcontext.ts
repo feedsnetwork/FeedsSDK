@@ -1,60 +1,52 @@
-//import { Logger } from './utils/logger'
+import { DIDBackend, DefaultDIDAdapter } from '@elastosfoundation/did-js-sdk';
+import { Logger } from './utils/logger'
 
-//const logger = new Logger("AppContext")
+const logger = new Logger("AppContext")
 
 export class AppContext {
-    //private static sInstance: AppContext = null
+    private static sInstance: AppContext = null
 
-    private readonly applicationDid: string;
-    private readonly network: string
+    private applicationDid: string;
+    private networkType: string;
+
     private readonly resolveCache: string // todo
     private readonly localDataDir: string // todo
     private readonly appInstanceDIDDocument: string // todo
     private readonly userDid: string // todo
 
-    private constructor(network: string) {
-        this.network = network
-    }
+    private constructor() {}
 
     public getAppDid(): string {
-        return this.applicationDid
+        return this.applicationDid;
     }
 
     public getUserDid(): string {
-        return this.userDid
+        return this.userDid;
     }
 
-    public getApplicationDid(): string {
-        return this.applicationDid
+    public getNetwork(): string {
+        return this.networkType;
     }
 
     public getAppInstanceDIDDocument(): string {
         return this.appInstanceDIDDocument
     }
 
-    /*
-    public static initialize(currentNet: string) {
-        if (currentNet === null || currentNet === '') {
-            logger.error("currentNet is null .")
-            throw new IllegalArgumentException("currentNet cannot be empty")
-        }
-
-        this.sInstance = new AppContext(currentNet)
+    public static initialize(didResolver: string) {
+        DIDBackend.initialize(new DefaultDIDAdapter(didResolver));
+        this.sInstance = new AppContext()
+        logger.info(`Initalized DIDBackend with resolver URL: ${didResolver}`);
     }
 
     public static getInstance(): AppContext {
         if (this.sInstance == null) {
-            throw new IllegalArgumentException("The AppContext was not initialized. Please call AppContext.initialize(applicationDid, currentNet)")
+            throw new Error("The AppContext was not initialized. Please call AppContext.initialize(applicationDid, currentNet)")
         }
         return this.sInstance
     }
 
     public static isInitialized(): boolean {
         return this.sInstance !== null
-    } */
-
-    public getNetwork(): string {
-        return this.network
     }
 
     public getResolveCache(): string {
@@ -64,5 +56,4 @@ export class AppContext {
     public getLocalDataDir(): string {
         return this.localDataDir
     }
-
 }

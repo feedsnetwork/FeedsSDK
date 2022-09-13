@@ -10,7 +10,9 @@ import { CollectionNames, ScriptingNames } from "./vault/constants"
 import { MyChannel } from "./mychannel";
 import { ChannelEntry } from "./channelentry";
 
-const logger = new Logger("Channel")
+import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
+
+const logger = new Logger("MyProfile")
 
 /*
 type SubscribedChannel = {
@@ -20,8 +22,39 @@ type SubscribedChannel = {
 
 export class MyProfile {
     private appContext: AppContext;
-    private vault: VaultService;
+
     private userDid: string;
+    private nameCredenital: VerifiableCredential;
+    private descCredenital: VerifiableCredential;
+    private walletAddress: string;
+
+    private vault: VaultService;
+
+    public constructor(userDid: string, name: VerifiableCredential,
+        description: VerifiableCredential,
+        walletAddress: string) {
+
+        logger.info(`User Did: ${userDid}`);
+        logger.info(`Name credentials: ${name.toJSON()}`)
+        logger.info(`Description credential: ${description.toJSON()}`)
+
+        this.userDid = userDid;
+        this.nameCredenital = name;
+        this.descCredenital = description;
+        this.walletAddress  = walletAddress;
+    }
+
+    public getName(): string {
+        return this.nameCredenital ? this.descCredenital.getSubject().getProperty('name'): this.userDid;
+    }
+
+    public getDescription(): string {
+        return this.descCredenital ? this.descCredenital.getSubject().getProperty('bio'): '';
+    }
+
+    public getWalletAddress(): string {
+        return this.walletAddress;
+    }
 
     public getOwnedChannelCount(): number {
         throw new Error("Method not implemented.");
