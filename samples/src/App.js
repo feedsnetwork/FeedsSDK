@@ -4,12 +4,12 @@ import { useEffect } from 'react';
 
 function App() {
   useEffect(() => {
-    getNFT();
+    runFeeds();
   }, [])
 
 
-  const getNFT = async () => {
-    console.log("getNFT");
+  const runFeeds = async () => {
+    console.log("Run samples integrating Feeds SDK");
   }
 
   return (

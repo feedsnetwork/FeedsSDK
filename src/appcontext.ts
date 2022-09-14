@@ -6,7 +6,7 @@ const logger = new Logger("AppContext")
 export class AppContext {
     private static sInstance: AppContext = null
 
-    private applicationDid: string;
+    private applicationDid = "did:elastos:iXyYFboFAd2d9VmfqSvppqg1XQxBtX9ea2";
     private networkType: string;
 
     private readonly resolveCache: string // todo

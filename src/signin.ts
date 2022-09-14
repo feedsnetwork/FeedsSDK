@@ -8,7 +8,7 @@ import { AppContext } from './appcontext';
 
 import { Logger } from './utils/logger'
 
-const logger = new Logger("Authentication")
+const logger = new Logger("Signin")
 
 const essentialsConnector = new EssentialsConnector();
 let connectivityInitialized = false;
@@ -67,7 +67,7 @@ const signOutWithEssentials = async () => {
 
 const signInWithEssentials = async (appContext: AppContext): Promise<MyProfile> => {
     await initConnectivitySDK(appContext).catch(error => {
-        throw new Error("");
+        throw new Error(error);
     })
 
     const didAccess = new DID.DIDAccess();
@@ -77,7 +77,7 @@ const signInWithEssentials = async (appContext: AppContext): Promise<MyProfile> 
         DID.simpleIdClaim('Your description', 'description', false)
     ]
 
-    didAccess.requestCredentials({ claims: claims }).then (presentation => {
+    return await didAccess.requestCredentials({ claims: claims }).then (presentation => {
         const userDid = presentation.getHolder().getMethodSpecificId();
         logger.info("The holder Did of requested credential :", userDid)
 
@@ -104,8 +104,6 @@ const signInWithEssentials = async (appContext: AppContext): Promise<MyProfile> 
     }).catch (error => {
         throw new Error(error);
     })
-
-    throw new Error("Unknow error");
 }
 
 const signin = async (appContext: AppContext): Promise<MyProfile> => {

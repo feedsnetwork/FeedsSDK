@@ -1,6 +1,6 @@
 
 import React, {useState} from 'react'
-import { signin, signout, checkSignin } from '@feedsnetwork/feeds-sdk-development';
+import { signin, signout, checkSignin, AppContext } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
@@ -8,15 +8,16 @@ import {
 function SigninEE() {
   const navigate = useNavigate();
   const [login, setLogin] = useState(checkSignin());
+  const appCtx = new AppContext();
 
   const handleSigninEE = async () => {
-    await signin();
-    setLogin(checkSignin());
+    await signin(appCtx);
+    setLogin(checkSignin(appCtx));
   }
 
   const handleSignout = async () => {
-    await signout();
-    setLogin(checkSignin());
+    await signout(appCtx);
+    setLogin(checkSignin(appCtx));
   }
 
   const handleClickButton = (path) => {
