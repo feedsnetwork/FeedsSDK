@@ -38,7 +38,9 @@ export class MyProfile {
 
         logger.info(`User Did: ${userDid}`);
         logger.info(`Name credential: ${JSON.stringify(name.toJSON())}`)
-        logger.info(`Description credential: ${JSON.stringify(description.toJSON())}`)
+        if (description != null) {
+            logger.info(`Description credential: ${JSON.stringify(description.toJSON())}`)
+        }
 
         this.userDid = userDid;
         this.nameCredential = name;
