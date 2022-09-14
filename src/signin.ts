@@ -3,7 +3,7 @@ import { VerifiablePresentation} from '@elastosfoundation/did-js-sdk';
 import { DID, connectivity } from '@elastosfoundation/elastos-connectivity-sdk-js';
 import { EssentialsConnector } from '@elastosfoundation/essentials-connector-client-browser';
 
-import { RuntimeContext } from './runtimecontext';
+import { getFeedsAppDid, RuntimeContext } from './runtimecontext';
 import { MyProfile } from "./myprofile"
 import { Logger } from './utils/logger'
 
@@ -22,7 +22,7 @@ const isUsingEssentialsConnector = () => {
     return activeConnector && activeConnector.name === essentialsConnector.name;
 }
 
-const initConnectivitySDK = async (context: RuntimeContext) => {
+const initConnectivitySDK = async (appDid: string) => {
     if (connectivityInitialized) return;
 
     logger.info('Preparing the Elastos connectivity SDK');
@@ -35,7 +35,7 @@ const initConnectivitySDK = async (context: RuntimeContext) => {
     }
 
     await connectivity.registerConnector(essentialsConnector).then(async () => {
-        connectivity.setApplicationDID(context.getAppDid())
+        connectivity.setApplicationDID(appDid)
         connectivityInitialized = true;
 
         logger.info('essentialsConnector', essentialsConnector);
@@ -65,7 +65,7 @@ const signOutWithEssentials = async () => {
 };
 
 const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile> => {
-    await initConnectivitySDK(context).catch(error => {
+    await initConnectivitySDK(context.getAppDid()).catch(error => {
         throw new Error(error);
     })
 
@@ -96,7 +96,7 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
         }
 
         isSignin = true;
-        return new MyProfile(userDid, nameCredential, bioCredential, walletAddress);
+        return new MyProfile(context, userDid, nameCredential, bioCredential, walletAddress);
     }).catch (async error => {
         await essentialsConnector.getWalletConnectProvider().disconnect();
         logger.error(error);

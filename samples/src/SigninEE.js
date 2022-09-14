@@ -1,27 +1,28 @@
 
 import React, {useState} from 'react'
-import { signin, signout, checkSignin, RuntimeContext } from '@feedsnetwork/feeds-sdk-development';
+import { RuntimeContext } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
 
 function SigninEE() {
   const navigate = useNavigate();
-  const [login, setLogin] = useState(checkSignin());
   const appCtx = new RuntimeContext();
+  const [login, setLogin] = useState(appCtx.checkSignin());
+
 
   const handleSigninEE = async () => {
-    const myprofile = await signin(appCtx);
+    const myprofile = await appCtx.signin();
 
     console.log(`name: ${myprofile.getName()}`);
     console.log(`description: ${myprofile.getDescription()}`);
 
-    setLogin(checkSignin(appCtx));
+    setLogin(appCtx.checkSignin());
   }
 
   const handleSignout = async () => {
-    await signout(appCtx);
-    setLogin(checkSignin(appCtx));
+    await appCtx.signout();
+    setLogin(appCtx.checkSignin());
   }
 
   const handleClickButton = (path) => {
