@@ -3,7 +3,7 @@ import { VerifiablePresentation} from '@elastosfoundation/did-js-sdk';
 import { DID, connectivity } from '@elastosfoundation/elastos-connectivity-sdk-js';
 import { EssentialsConnector } from '@elastosfoundation/essentials-connector-client-browser';
 
-import { AppContext } from './appcontext';
+import { RuntimeContext } from './runtimecontext';
 import { MyProfile } from "./myprofile"
 import { Logger } from './utils/logger'
 
@@ -22,7 +22,7 @@ const isUsingEssentialsConnector = () => {
     return activeConnector && activeConnector.name === essentialsConnector.name;
 }
 
-const initConnectivitySDK = async (appCtx: AppContext) => {
+const initConnectivitySDK = async (context: RuntimeContext) => {
     if (connectivityInitialized) return;
 
     logger.info('Preparing the Elastos connectivity SDK');
@@ -35,7 +35,7 @@ const initConnectivitySDK = async (appCtx: AppContext) => {
     }
 
     await connectivity.registerConnector(essentialsConnector).then(async () => {
-        connectivity.setApplicationDID(appCtx.getAppDid())
+        connectivity.setApplicationDID(context.getAppDid())
         connectivityInitialized = true;
 
         logger.info('essentialsConnector', essentialsConnector);
@@ -64,8 +64,8 @@ const signOutWithEssentials = async () => {
     }
 };
 
-const signInWithEssentials = async (appContext: AppContext): Promise<MyProfile> => {
-    await initConnectivitySDK(appContext).catch(error => {
+const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile> => {
+    await initConnectivitySDK(context).catch(error => {
         throw new Error(error);
     })
 
@@ -107,7 +107,7 @@ const signInWithEssentials = async (appContext: AppContext): Promise<MyProfile> 
     })
 }
 
-const signin = async (appContext: AppContext): Promise<MyProfile> => {
+const signin = async (context: RuntimeContext): Promise<MyProfile> => {
     if (isUsingEssentialsConnector()) {
       await signOutWithEssentials();
     }
@@ -116,7 +116,7 @@ const signin = async (appContext: AppContext): Promise<MyProfile> => {
       await essentialsConnector.disconnectWalletConnect();
     }
 
-    return signInWithEssentials(appContext);
+    return signInWithEssentials(context);
 }
 
 const signout = async () => {

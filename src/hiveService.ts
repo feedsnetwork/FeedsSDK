@@ -2,7 +2,7 @@ import { Executable, InsertOptions, File as HiveFile, ScriptRunner, Vault, AppCo
 import { Claims, DIDDocument, JWTHeader, JWTParserBuilder, DID, DIDBackend, DefaultDIDAdapter, JSONObject, VerifiablePresentation } from '@elastosfoundation/did-js-sdk'
 import { connectivity, DID as ConDID, Hive } from "@elastosfoundation/elastos-connectivity-sdk-js"
 import { Logger } from './utils/logger'
-import { AppContext as FeedsAppContext } from './appcontext'
+import { RuntimeContext } from './runtimecontext'
 
 const logger = new Logger("Channel")
 export class hiveService {
@@ -24,14 +24,14 @@ export class hiveService {
         DIDBackend.initialize(new DefaultDIDAdapter(currentNet))
         try {
           console.log("setupResolver ======================== 1")
-          const resolverCatch = FeedsAppContext.getInstance().getResolveCache()
+          const resolverCatch = RuntimeContext.getInstance().getResolveCache()
           AppContext.setupResolver(currentNet, resolverCatch)
           console.log("setupResolver ======================== 2")
         } catch (error) {
           console.log("setupResolver error: ", error)
         }
-        const path = FeedsAppContext.getInstance().getLocalDataDir()
-        const applicationDID = FeedsAppContext.getInstance().getAppDid()
+        const path = RuntimeContext.getInstance().getLocalDataDir()
+        const applicationDID = RuntimeContext.getInstance().getAppDid()
         // auth
         const context = await AppContext.build({
           getLocalDataDir(): string {
@@ -73,7 +73,7 @@ export class hiveService {
       console.log('Params error')
     }
 
-    // Parse, but verify on chain that this JWT is valid first 
+    // Parse, but verify on chain that this JWT is valid first
     const JWTParser = new JWTParserBuilder().build()
     const parseResult = await JWTParser.parse(challeng)
     const claims = parseResult.getBody()
@@ -98,7 +98,7 @@ export class hiveService {
   }
 
   async issueDiplomaFor() {
-    const applicationDID = FeedsAppContext.getInstance().getAppDid()
+    const applicationDID = RuntimeContext.getInstance().getAppDid()
     connectivity.setApplicationDID(applicationDID)
     const didAccess = new ConDID.DIDAccess()
     let credential = await didAccess.getExistingAppIdentityCredential()
@@ -154,7 +154,7 @@ export class hiveService {
 
   async createVault() {
     try {
-      const userDid = FeedsAppContext.getInstance().getUserDid()
+      const userDid = RuntimeContext.getInstance().getUserDid()
       const appinstanceDocument = await this.getAppInstanceDIDDoc()
       const context = await this.creatAppContext(appinstanceDocument, userDid)
       const hiveVault = new Vault(context)
