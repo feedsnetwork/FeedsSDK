@@ -3,9 +3,8 @@ import { VerifiablePresentation} from '@elastosfoundation/did-js-sdk';
 import { DID, connectivity } from '@elastosfoundation/elastos-connectivity-sdk-js';
 import { EssentialsConnector } from '@elastosfoundation/essentials-connector-client-browser';
 
-import { MyProfile } from "./myprofile"
 import { AppContext } from './appcontext';
-
+import { MyProfile } from "./myprofile"
 import { Logger } from './utils/logger'
 
 const logger = new Logger("Signin")
@@ -26,24 +25,24 @@ const isUsingEssentialsConnector = () => {
 const initConnectivitySDK = async (appCtx: AppContext) => {
     if (connectivityInitialized) return;
 
-    console.log('Preparing the Elastos connectivity SDK');
+    logger.info('Preparing the Elastos connectivity SDK');
 
     // unregistear if already registerd
     const arrIConnectors = connectivity.getAvailableConnectors();
     if (arrIConnectors.findIndex((option) => option.name === essentialsConnector.name) !== -1) {
         await connectivity.unregisterConnector(essentialsConnector.name);
-        console.log('unregister connector succeed.');
+        logger.info('unregister connector succeed.');
     }
 
     await connectivity.registerConnector(essentialsConnector).then(async () => {
         connectivity.setApplicationDID(appCtx.getAppDid())
         connectivityInitialized = true;
 
-        console.log('essentialsConnector', essentialsConnector);
-        console.log('Wallet connect provider', essentialsConnector.getWalletConnectProvider());
+        logger.info('essentialsConnector', essentialsConnector);
+        logger.info('Wallet connect provider', essentialsConnector.getWalletConnectProvider());
 
         const hasLink = isUsingEssentialsConnector() && essentialsConnector.hasWalletConnectSession();
-        console.log('Has link to essentials?', hasLink);
+        logger.info('Has link to essentials?', hasLink);
 
         // Restore the wallet connect session - TODO: should be done by the connector itself?
         if (hasLink && !essentialsConnector.getWalletConnectProvider().connected)
@@ -54,13 +53,13 @@ const initConnectivitySDK = async (appCtx: AppContext) => {
 const signOutWithEssentials = async () => {
     if (isUsingEssentialsConnector() && essentialsConnector.hasWalletConnectSession()) {
         await essentialsConnector.disconnectWalletConnect().catch (error => {
-            console.log("Error while disconnecting the Essentials wallet", error);
+            logger.info("Error while disconnecting the Essentials wallet", error);
         })
     }
 
     if (isInAppBrowser() && (await window['elastos'].getWeb3Provider().isConnected())) {
         await window['elastos'].getWeb3Provider().disconnect().catch (error => {
-            console.log("Error while disconnecting the wallet")
+            logger.info("Error while disconnecting the wallet")
         })
     }
 };
@@ -100,8 +99,10 @@ const signInWithEssentials = async (appContext: AppContext): Promise<MyProfile> 
         return new MyProfile(userDid, nameCredential, bioCredential, walletAddress);
     }).catch (async error => {
         await essentialsConnector.getWalletConnectProvider().disconnect();
+        logger.error(error);
         throw new Error(error);
     }).catch (error => {
+        logger.error(error);
         throw new Error(error);
     })
 }
@@ -115,7 +116,7 @@ const signin = async (appContext: AppContext): Promise<MyProfile> => {
       await essentialsConnector.disconnectWalletConnect();
     }
 
-    return await signInWithEssentials(appContext);
+    return signInWithEssentials(appContext);
 }
 
 const signout = async () => {

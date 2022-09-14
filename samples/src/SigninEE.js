@@ -11,7 +11,11 @@ function SigninEE() {
   const appCtx = new AppContext();
 
   const handleSigninEE = async () => {
-    await signin(appCtx);
+    const myprofile = await signin(appCtx);
+
+    console.log(`name: ${myprofile.getName()}`);
+    console.log(`description: ${myprofile.getDescription()}`);
+
     setLogin(checkSignin(appCtx));
   }
 
@@ -33,7 +37,7 @@ function SigninEE() {
         <button onClick={handleSignout}>Sign out</button>
 
         <div>
-          <button onClick={()=> handleClickButton('/create')}>Create New Channel</button>
+          <button onClick={()=> handleClickButton('/myprofile')}>My Profile</button>
         </div>
 
     </div>
