@@ -2,7 +2,6 @@
 
 import { AppContext } from "./appcontext"
 import { ChannelEntry } from "./channelentry"
-import { Dispatcher } from "./dispatcher"
 import { MyChannel } from "./mychannel"
 import { MyProfile } from "./myprofile"
 import { PostBody } from "./postbody"

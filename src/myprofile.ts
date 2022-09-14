@@ -35,8 +35,8 @@ export class MyProfile {
         walletAddress: string) {
 
         logger.info(`User Did: ${userDid}`);
-        logger.info(`Name credentials: ${name.toJSON()}`)
-        logger.info(`Description credential: ${description.toJSON()}`)
+        logger.info(`Name credentials: ${JSON.stringify(name.toJSON())}`)
+        logger.info(`Description credential: ${JSON.stringify(description.toJSON())}`)
 
         this.userDid = userDid;
         this.nameCredenital = name;
