@@ -1,5 +1,7 @@
 import { DIDBackend, DefaultDIDAdapter } from '@elastosfoundation/did-js-sdk';
 import { Logger } from './utils/logger'
+import { signin, signout, checkSignin } from './signin';
+import { AppContext } from '@elastosfoundation/hive-js-sdk/typings';
 
 const logger = new Logger("AppContext")
 
@@ -10,9 +12,9 @@ export class RuntimeContext {
     private networkType: string;
 
     private readonly resolveCache: string
-    private readonly localDataDir: string 
+    private readonly localDataDir: string
     private readonly appInstanceDIDDocument: string // todo
-    private userDid: string 
+    private userDid: string
 
     private constructor(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
         this.applicationDid = applicationDid
@@ -65,4 +67,18 @@ export class RuntimeContext {
     public getLocalDataDir(): string {
         return this.localDataDir
     }
+
+    public signin() {
+        const runtimeContext = RuntimeContext.getInstance()
+        return signin(runtimeContext)
+    }
+
+    public signout() {
+        return signout()
+    }
+
+    public checkSignin() {
+        return checkSignin()
+    }
 }
+

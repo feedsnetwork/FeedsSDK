@@ -14,9 +14,6 @@ import { signin, signout, checkSignin } from "./signin"
 
 export {
     Logger,
-    signin,
-    signout,
-    checkSignin,
     RuntimeContext,
     MyProfile,
     Profile,

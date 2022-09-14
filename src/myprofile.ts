@@ -31,7 +31,7 @@ export class MyProfile implements ProfileHandler {
 
     private vault: VaultService;
 
-    public constructor(userDid: string, name: VerifiableCredential,
+    public constructor(context: RuntimeContext, userDid: string, name: VerifiableCredential,
         description: VerifiableCredential,
         walletAddress: string) {
 
@@ -41,6 +41,7 @@ export class MyProfile implements ProfileHandler {
             logger.info(`Description credential: ${JSON.stringify(description.toJSON())}`)
         }
 
+        this.context = context;
         this.userDid = userDid;
         this.nameCredential = name;
         this.descCredential = description;

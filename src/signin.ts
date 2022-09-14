@@ -1,5 +1,5 @@
 
-import { VerifiablePresentation} from '@elastosfoundation/did-js-sdk';
+import { VerifiablePresentation } from '@elastosfoundation/did-js-sdk';
 import { DID, connectivity } from '@elastosfoundation/elastos-connectivity-sdk-js';
 import { EssentialsConnector } from '@elastosfoundation/essentials-connector-client-browser';
 
@@ -13,8 +13,8 @@ const essentialsConnector = new EssentialsConnector();
 let connectivityInitialized = false;
 let isSignin = false;
 
-const isInAppBrowser = ():boolean => {
-    return  window['elastos'] !== undefined && window['elastos'].name === 'essentialsiab';
+const isInAppBrowser = (): boolean => {
+    return window['elastos'] !== undefined && window['elastos'].name === 'essentialsiab';
 }
 
 const isUsingEssentialsConnector = () => {
@@ -22,7 +22,8 @@ const isUsingEssentialsConnector = () => {
     return activeConnector && activeConnector.name === essentialsConnector.name;
 }
 
-const initConnectivitySDK = async (context: RuntimeContext) => {
+const initConnectivitySDK = async (appDid: string) => {
+
     if (connectivityInitialized) return;
 
     logger.info('Preparing the Elastos connectivity SDK');
@@ -35,8 +36,9 @@ const initConnectivitySDK = async (context: RuntimeContext) => {
     }
 
     await connectivity.registerConnector(essentialsConnector).then(async () => {
-        const adid = RuntimeContext.getInstance().getAppDid()
-        connectivity.setApplicationDID(adid)
+
+        const appDid = RuntimeContext.getInstance().getAppDid()
+        connectivity.setApplicationDID(appDid)
         connectivityInitialized = true;
 
         logger.info('essentialsConnector', essentialsConnector);
@@ -53,20 +55,21 @@ const initConnectivitySDK = async (context: RuntimeContext) => {
 
 const signOutWithEssentials = async () => {
     if (isUsingEssentialsConnector() && essentialsConnector.hasWalletConnectSession()) {
-        await essentialsConnector.disconnectWalletConnect().catch (error => {
+        await essentialsConnector.disconnectWalletConnect().catch(error => {
             logger.info("Error while disconnecting the Essentials wallet", error);
         })
     }
 
     if (isInAppBrowser() && (await window['elastos'].getWeb3Provider().isConnected())) {
-        await window['elastos'].getWeb3Provider().disconnect().catch (error => {
+        await window['elastos'].getWeb3Provider().disconnect().catch(error => {
             logger.info("Error while disconnecting the wallet")
         })
     }
 };
 
 const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile> => {
-    await initConnectivitySDK(context).catch(error => {
+    const appDid = RuntimeContext.getInstance().getAppDid()
+    await initConnectivitySDK(appDid).catch(error => {
         throw new Error(error);
     })
 
@@ -77,7 +80,7 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
         DID.simpleIdClaim('Your description', 'description', false)
     ]
 
-    return await didAccess.requestCredentials({ claims: claims }).then (presentation => {
+    return await didAccess.requestCredentials({ claims: claims }).then(presentation => {
         const userDid = 'did:elastos:' + presentation.getHolder().getMethodSpecificId();
         logger.info("The holder Did of requested credential :", userDid)
 
@@ -89,7 +92,7 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
         }
 
         const nameCredential = vp.getCredential(`name`);
-        const bioCredential  = vp.getCredential(`description`);
+        const bioCredential = vp.getCredential(`description`);
 
         let walletAddress = essentialsConnector.getWalletConnectProvider().wc.accounts[0]
         if (isInAppBrowser()) {
@@ -99,12 +102,13 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
         isSignin = true;
         const runContext = RuntimeContext.getInstance()
         runContext.setUserDid(userDid)
-        return new MyProfile(userDid, nameCredential, bioCredential, walletAddress);
-    }).catch (async error => {
+        return new MyProfile(context, userDid, nameCredential, bioCredential, walletAddress);
+
+    }).catch(async error => {
         await essentialsConnector.getWalletConnectProvider().disconnect();
         logger.error(error);
         throw new Error(error);
-    }).catch (error => {
+    }).catch(error => {
         logger.error(error);
         throw new Error(error);
     })
@@ -112,23 +116,23 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
 
 const signin = async (context: RuntimeContext): Promise<MyProfile> => {
     if (isUsingEssentialsConnector()) {
-      await signOutWithEssentials();
+        await signOutWithEssentials();
     }
 
     if (essentialsConnector.hasWalletConnectSession()) {
-      await essentialsConnector.disconnectWalletConnect();
+        await essentialsConnector.disconnectWalletConnect();
     }
 
     return signInWithEssentials(context);
 }
 
 const signout = async () => {
-  await signOutWithEssentials();
-  isSignin = false;
+    await signOutWithEssentials();
+    isSignin = false;
 }
 
 const checkSignin = () => {
-  return isSignin;
+    return isSignin;
 }
 
 export {

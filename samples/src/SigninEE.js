@@ -1,30 +1,32 @@
 
 import React, {useState} from 'react'
-import { signin, signout, checkSignin, RuntimeContext } from '@feedsnetwork/feeds-sdk-development';
+import {RuntimeContext } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
 
 function SigninEE() {
   const navigate = useNavigate();
-  const [login, setLogin] = useState(checkSignin());
   const applicationDid = 'did:elastos:iZvAak2SUHaKwBHmPFsgtVVMGtTpi4r2kY'
   const currentNet = "mainnet".toLowerCase()
   const localDataDir = "/data/userDir/data/store/develop"
   const resolveCache = '/data/userDir/data/store/catch'
-  const appCtx = RuntimeContext.initialize(applicationDid, currentNet, localDataDir, resolveCache)
-  const handleSigninEE = async () => {
-    const myprofile = await signin(appCtx);
+  RuntimeContext.initialize(applicationDid, currentNet, localDataDir, resolveCache)
+  const appCtx = RuntimeContext.getInstance()
+  const [login, setLogin] = useState(appCtx.checkSignin());
 
+  const handleSigninEE = async () => {
+    const myprofile = await appCtx.signin()
+    //await myprofile.queryOwnedChannelCount() // 测试登录
     console.log(`name: ${myprofile.getName()}`);
     console.log(`description: ${myprofile.getDescription()}`);
 
-    setLogin(checkSignin(appCtx));
+    setLogin(appCtx.checkSignin());
   }
 
   const handleSignout = async () => {
-    await signout(appCtx);
-    setLogin(checkSignin(appCtx));
+    await appCtx.signout();
+    setLogin(appCtx.checkSignin());
   }
 
   const handleClickButton = (path) => {
