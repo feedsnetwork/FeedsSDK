@@ -7,19 +7,19 @@ import { hiveService as VaultService} from "./hiveService"
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 import { PostBody } from './postbody';
 import { Profile } from './profile';
-import { AppContext } from './appcontext';
+import { RuntimeContext } from './runtimecontext';
 import { CollectionNames as collections, ScriptingNames as scripts } from './vault/constants';
 
 const logger = new Logger("MyChannel")
 
 export class MyChannel {
-    private appContext: AppContext;
+    private context: RuntimeContext;
     private channelInfo: ChannelInfo;
     private published: boolean;
     private vault: VaultService
 
-    public constructor(appContex: AppContext, channelInfo: ChannelInfo) {
-        this.appContext = appContex
+    public constructor(context: RuntimeContext, channelInfo: ChannelInfo) {
+        this.context = context
         this.channelInfo = channelInfo
     }
 
@@ -41,7 +41,7 @@ export class MyChannel {
                 "channel_id": this.channelInfo.getChannelId()
             }
             const result = this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
+                this.channelInfo.getOwnerDid(), this.context.getAppDid())
 
             // TODO: error
             resolve(result)

@@ -1,4 +1,4 @@
-import { AppContext } from "./appcontext";
+import { RuntimeContext } from "./runtimecontext";
 import { Channel } from "./channel";
 import { ChannelInfo } from "./channelinfo";
 import { Dispatcher } from "./dispatcher";
@@ -9,8 +9,8 @@ import { Logger } from './utils/logger'
 
 const logger = new Logger("Profile")
 
-export class Profile {
-    private appContext: AppContext;
+export class Profile implements ProfileHandler {
+    private context: RuntimeContext;
     private readonly targetDid: string;
     private readonly userDid: string;
     private vault: VaultService
@@ -29,7 +29,7 @@ export class Profile {
             const filter = {
             }
             const result = this.vault.callScript(collections.CHANNELS, filter,
-                this.targetDid, this.appContext.getAppDid())
+                this.targetDid, this.context.getAppDid())
             //const channels = result.find_message.items
             //resolve(channels.length)
             resolve(result)
@@ -44,7 +44,7 @@ export class Profile {
             const filter = {
             }
             const result = this.vault.callScript(collections.CHANNELS, filter,
-                this.targetDid, this.appContext.getAppDid())
+                this.targetDid, this.context.getAppDid())
             //return result.find_message.items
             resolve(result)
         }).then(result => {
@@ -76,7 +76,7 @@ export class Profile {
                 "channel_id": channelId,
             }
             const result = this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.targetDid, this.appContext.getAppDid())
+                this.targetDid, this.context.getAppDid())
             //return result.find_message.items
             resolve(result)
         }).then(result => {
@@ -106,7 +106,7 @@ export class Profile {
             const filter = {
             }
             const result = this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
-                this.targetDid, this.appContext.getAppDid())
+                this.targetDid, this.context.getAppDid())
             //const channels = result.find_message.items
             //resolve(channels.length)
             resolve(result)
@@ -124,7 +124,7 @@ export class Profile {
             const filter = {
             }
             const result = this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
-                this.targetDid, this.appContext.getAppDid())
+                this.targetDid, this.context.getAppDid())
             //return result.find_message.items
             resolve(result)
         }).then(result => {

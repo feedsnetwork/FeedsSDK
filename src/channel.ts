@@ -6,7 +6,7 @@ import { ChannelHandler } from './channelhandler'
 import { PostBody } from './postbody'
 import { hiveService as VaultService } from "./hiveService"
 import { Profile } from './profile'
-import { AppContext } from './appcontext'
+import { RuntimeContext } from './runtimecontext'
 import { ScriptingNames as scripts } from './vault/constants'
 
 const logger = new Logger("Channel")
@@ -14,8 +14,8 @@ const logger = new Logger("Channel")
  * This class represent the channel owned by others. Users can only read posts
  * from this channel.
  */
-class Channel {
-    private appContext: AppContext;
+class Channel implements ChannelHandler {
+    private context: RuntimeContext;
     private channelInfo: ChannelInfo;
     private vault: VaultService
 
@@ -41,7 +41,7 @@ class Channel {
                 "channel_id": this.getChannelInfo().getChannelId()
             }
             const result = this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid());
+                this.getChannelInfo().getOwnerDid(), this.context.getAppDid());
 
             // TODO error.
             resolve(result)
@@ -84,7 +84,7 @@ class Channel {
                 "created": { "$gt": earilerThan }
             }
             const result = this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
-                this.getChannelInfo().getOwnerDid(), this.appContext.getAppDid());
+                this.getChannelInfo().getOwnerDid(), this.context.getAppDid());
 
             // TODO: error.
             resolve(result)
@@ -138,7 +138,7 @@ class Channel {
                 "end": end
             }
             const result = this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
-                this.channelInfo.getOwnerDid(), this.appContext.getAppDid())
+                this.channelInfo.getOwnerDid(), this.context.getAppDid())
 
             // TOOD: error
             resolve(result)
@@ -191,7 +191,7 @@ class Channel {
                 "post_id": postId
             }
             const result = this.vault.callScript(scripts.SCRIPT_SPECIFIED_POST, params,
-                this.channelInfo.getOwnerDid(), this.appContext.getAppDid());
+                this.channelInfo.getOwnerDid(), this.context.getAppDid());
 
             // TODO: error.
             resolve(result)

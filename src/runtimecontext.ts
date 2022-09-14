@@ -3,8 +3,8 @@ import { Logger } from './utils/logger'
 
 const logger = new Logger("AppContext")
 
-export class AppContext {
-    private static sInstance: AppContext = null
+export class RuntimeContext {
+    private static sInstance: RuntimeContext = null
 
     private applicationDid = "did:elastos:iXyYFboFAd2d9VmfqSvppqg1XQxBtX9ea2";
     private networkType: string;
@@ -34,11 +34,11 @@ export class AppContext {
 
     public static initialize(didResolver: string) {
         DIDBackend.initialize(new DefaultDIDAdapter(didResolver));
-        this.sInstance = new AppContext()
+        this.sInstance = new RuntimeContext()
         logger.info(`Initalized DIDBackend with resolver URL: ${didResolver}`);
     }
 
-    public static getInstance(): AppContext {
+    public static getInstance(): RuntimeContext {
         if (this.sInstance == null) {
             throw new Error("The AppContext was not initialized. Please call AppContext.initialize(applicationDid, currentNet)")
         }

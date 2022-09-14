@@ -1,15 +1,16 @@
+import { RuntimeContext } from './runtimecontext';
 import { Logger } from './utils/logger'
 import { PostBody } from './postbody'
 import { Dispatcher } from './dispatcher';
 import { Comment } from './comment'
 import { hiveService } from "./hiveService"
-import { AppContext } from './appcontext';
+
 import { ScriptingNames as scripts } from './vault/constants';
 
 const logger = new Logger("Post")
 
 export class Post {
-    private appContext: AppContext;
+    private runtime: RuntimeContext;
     private body: PostBody;
     private vault: hiveService
 
@@ -39,7 +40,7 @@ export class Post {
             const targetDid = this.getBody().getTargetDid()
 
             const result = this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
-                targetDid, this.appContext.getAppDid())
+                targetDid, this.runtime.getAppDid())
             // TODO: error.
             resolve(result)
         }).then( result => {
@@ -59,7 +60,7 @@ export class Post {
                 "created": { "$gt": earlierThan }
             }
             const result = this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
-                this.getBody().getTargetDid(), this.appContext.getAppDid())
+                this.getBody().getTargetDid(), this.runtime.getAppDid())
 
             // TODO: error
             resolve(result)
@@ -92,7 +93,7 @@ export class Post {
                 "end": end
             }
             const result = this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
-                this.getBody().getTargetDid(), this.appContext.getAppDid())
+                this.getBody().getTargetDid(), this.runtime.getAppDid())
             // TODO: error.
             resolve(result)
         }).then(result => {
@@ -123,7 +124,7 @@ export class Post {
                 "comment_id": commentId
             }
             const result = this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
-                this.getBody().getTargetDid(), this.appContext.getAppDid())
+                this.getBody().getTargetDid(), this.runtime.getAppDid())
             //TODO:
             resolve(result)
         }).then(result => {

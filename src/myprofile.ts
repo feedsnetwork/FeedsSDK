@@ -2,7 +2,7 @@
 import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
 import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 
-import { AppContext } from "./appcontext";
+import { RuntimeContext } from "./runtimecontext";
 import { Channel } from "./channel";
 import { ChannelInfo } from "./channelinfo";
 import { Dispatcher } from "./dispatcher";
@@ -11,8 +11,7 @@ import { hiveService as VaultService } from "./hiveService"
 import { CollectionNames, ScriptingNames } from "./vault/constants"
 import { MyChannel } from "./mychannel";
 import { ChannelEntry } from "./channelentry";
-
-
+import { ProfileHandler } from "./profilehandler";
 
 const logger = new Logger("MyProfile")
 
@@ -22,8 +21,8 @@ type SubscribedChannel = {
     channelId: string
 } */
 
-export class MyProfile {
-    private appContext: AppContext;
+export class MyProfile implements ProfileHandler {
+    private context: RuntimeContext;
 
     private userDid: string;
     private nameCredential: VerifiableCredential;
@@ -301,7 +300,7 @@ export class MyProfile {
      * @returns
      */
     public subscribeChannel(channelEntry: ChannelEntry) {
-        return new Promise( (resolve, _reject) => {
+        return new Promise<any>( (resolve, _reject) => {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
                 "created_at": channelEntry.getCreatedAt(),
@@ -311,7 +310,7 @@ export class MyProfile {
             }
 
             const result = this.vault.callScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, params,
-                channelEntry.getTargetDid(), this.appContext.getAppDid())
+                channelEntry.getTargetDid(), this.context.getAppDid())
 
             // TODO: error.
             resolve(result)
@@ -337,7 +336,7 @@ export class MyProfile {
                 "status": channelEntry.getStatus()
             }
             const result = this.vault.callScript(ScriptingNames.SCRIPT_UPDATE_SUBSCRIPTION, params,
-                    channelEntry.getTargetDid(), this.appContext.getAppDid())
+                    channelEntry.getTargetDid(), this.context.getAppDid())
             // TODO: error
             resolve(result)
         }).then (_result => {

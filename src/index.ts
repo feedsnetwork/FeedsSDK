@@ -1,6 +1,6 @@
 'use strict'
 
-import { AppContext } from "./appcontext"
+import { RuntimeContext } from "./runtimecontext"
 import { ChannelEntry } from "./channelentry"
 import { MyChannel } from "./mychannel"
 import { MyProfile } from "./myprofile"
@@ -17,7 +17,7 @@ export {
     signin,
     signout,
     checkSignin,
-    AppContext,
+    RuntimeContext,
     MyProfile,
     Profile,
     MyChannel,
