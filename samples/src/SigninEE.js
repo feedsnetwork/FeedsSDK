@@ -8,8 +8,11 @@ import {
 function SigninEE() {
   const navigate = useNavigate();
   const [login, setLogin] = useState(checkSignin());
-  const appCtx = new RuntimeContext();
-
+  const applicationDid = 'did:elastos:iZvAak2SUHaKwBHmPFsgtVVMGtTpi4r2kY'
+  const currentNet = "mainnet".toLowerCase()
+  const localDataDir = "/data/userDir/data/store/develop"
+  const resolveCache = '/data/userDir/data/store/catch'
+  const appCtx = RuntimeContext.initialize(applicationDid, currentNet, localDataDir, resolveCache)
   const handleSigninEE = async () => {
     const myprofile = await signin(appCtx);
 

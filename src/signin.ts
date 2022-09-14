@@ -35,7 +35,8 @@ const initConnectivitySDK = async (context: RuntimeContext) => {
     }
 
     await connectivity.registerConnector(essentialsConnector).then(async () => {
-        connectivity.setApplicationDID(context.getAppDid())
+        const adid = RuntimeContext.getInstance().getAppDid()
+        connectivity.setApplicationDID(adid)
         connectivityInitialized = true;
 
         logger.info('essentialsConnector', essentialsConnector);
@@ -77,7 +78,7 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
     ]
 
     return await didAccess.requestCredentials({ claims: claims }).then (presentation => {
-        const userDid = presentation.getHolder().getMethodSpecificId();
+        const userDid = 'did:elastos:' + presentation.getHolder().getMethodSpecificId();
         logger.info("The holder Did of requested credential :", userDid)
 
         const vp = VerifiablePresentation.parse(JSON.stringify(presentation.toJSON()));
@@ -96,6 +97,8 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
         }
 
         isSignin = true;
+        const runContext = RuntimeContext.getInstance()
+        runContext.setUserDid(userDid)
         return new MyProfile(userDid, nameCredential, bioCredential, walletAddress);
     }).catch (async error => {
         await essentialsConnector.getWalletConnectProvider().disconnect();

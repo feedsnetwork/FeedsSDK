@@ -12,7 +12,7 @@ export class hiveService {
 
   constructor() { }
 
-  public async creatAppContext(appInstanceDocument, userDidString: string): Promise<AppContext> {
+  public async creatAppContext(appInstanceDocument: DIDDocument, userDidString: string): Promise<AppContext> {
     return new Promise(async (resolve, reject) => {
       try {
         const currentNet = "mainnet".toLowerCase();
@@ -33,6 +33,7 @@ export class hiveService {
         const path = RuntimeContext.getInstance().getLocalDataDir()
         const applicationDID = RuntimeContext.getInstance().getAppDid()
         // auth
+        let self = this
         const context = await AppContext.build({
           getLocalDataDir(): string {
             return path
@@ -49,7 +50,7 @@ export class hiveService {
           getAuthorization(jwtToken: string): Promise<string> {
             return new Promise(async (resolve, reject) => {
               try {
-                const authToken = this.generateHiveAuthPresentationJWT(jwtToken)
+                const authToken = await self.generateHiveAuthPresentationJWT(jwtToken)
                 resolve(authToken)
               } catch (error) {
                 console.log("get Authorization Error: ", error)
@@ -66,27 +67,6 @@ export class hiveService {
         reject(error)
       }
     })
-  }
-
-  generateHiveAuthPresentationJWT = async (challeng) => {
-    if (challeng === null || challeng === undefined || challeng === '') {
-      console.log('Params error')
-    }
-
-    // Parse, but verify on chain that this JWT is valid first
-    const JWTParser = new JWTParserBuilder().build()
-    const parseResult = await JWTParser.parse(challeng)
-    const claims = parseResult.getBody()
-    if (claims === undefined) {
-      return // 抛出error
-    }
-    const payload = claims.getJWTPayload()
-    const nonce = payload['nonce'] as string
-    const hiveDid = claims.getIssuer()
-    const appIdCredential = await this.issueDiplomaFor()
-    const presentation = await this.createPresentation(appIdCredential, hiveDid, nonce)
-    const token = await this.createChallengeResponse(presentation, hiveDid)
-    return token
   }
 
   async getAppInstanceDIDDoc() {
@@ -120,6 +100,31 @@ export class hiveService {
     const vpb = await VerifiablePresentation.createFor(info.did, null, info.didStore)
     const vp = await vpb.credentials(vc).realm(hiveDid).nonce(nonce).seal(info2.storePassword)
     return vp
+  }
+
+  async generateHiveAuthPresentationJWT(challeng: string) {
+
+    if (challeng === null || challeng === undefined || challeng === '') {
+      console.log('Params error')
+      // throw error // todo
+    }
+
+    // Parse, but verify on chain that this JWT is valid first
+    const JWTParser = new JWTParserBuilder().build()
+    const parseResult = await JWTParser.parse(challeng)
+    const claims = parseResult.getBody()
+    if (claims === undefined) {
+      return // 抛出error
+    }
+    const payload = claims.getJWTPayload()
+    const nonce = payload['nonce'] as string
+    const hiveDid = claims.getIssuer()
+    const appIdCredential = await this.issueDiplomaFor()
+    const presentation = await this.createPresentation(appIdCredential, hiveDid, nonce)
+
+    const token = await this.createChallengeResponse(presentation, hiveDid)
+
+    return token
   }
 
   async createChallengeResponse(vp, hiveDid) {

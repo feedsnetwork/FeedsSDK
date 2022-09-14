@@ -9,15 +9,24 @@ export class RuntimeContext {
     private applicationDid = "did:elastos:iXyYFboFAd2d9VmfqSvppqg1XQxBtX9ea2";
     private networkType: string;
 
-    private readonly resolveCache: string // todo
-    private readonly localDataDir: string // todo
+    private readonly resolveCache: string
+    private readonly localDataDir: string 
     private readonly appInstanceDIDDocument: string // todo
-    private readonly userDid: string // todo
+    private userDid: string 
 
-    private constructor() {}
+    private constructor(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
+        this.applicationDid = applicationDid
+        this.networkType = networkType
+        this.localDataDir = localDataDir
+        this.resolveCache = resolveCache
+    }
 
     public getAppDid(): string {
         return this.applicationDid;
+    }
+
+    public setUserDid(userDid: string) {
+        this.userDid = userDid
     }
 
     public getUserDid(): string {
@@ -32,10 +41,10 @@ export class RuntimeContext {
         return this.appInstanceDIDDocument
     }
 
-    public static initialize(didResolver: string) {
-        DIDBackend.initialize(new DefaultDIDAdapter(didResolver));
-        this.sInstance = new RuntimeContext()
-        logger.info(`Initalized DIDBackend with resolver URL: ${didResolver}`);
+    public static initialize(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
+        // DIDBackend.initialize(new DefaultDIDAdapter(didResolver));
+        this.sInstance = new RuntimeContext(applicationDid, networkType, localDataDir, resolveCache)
+        logger.info(`Initalized DIDBackend with resolver URL: ${networkType}`);
     }
 
     public static getInstance(): RuntimeContext {

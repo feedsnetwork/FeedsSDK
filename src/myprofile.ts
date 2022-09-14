@@ -45,6 +45,7 @@ export class MyProfile implements ProfileHandler {
         this.nameCredential = name;
         this.descCredential = description;
         this.walletAddress  = walletAddress;
+        this.vault = new VaultService()
     }
 
     public getUserDid(): string {
