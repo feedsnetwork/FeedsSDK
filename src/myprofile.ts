@@ -1,16 +1,18 @@
 
+import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
+import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
+
 import { AppContext } from "./appcontext";
 import { Channel } from "./channel";
 import { ChannelInfo } from "./channelinfo";
 import { Dispatcher } from "./dispatcher";
 import { Logger } from "./utils/logger";
 import { hiveService as VaultService } from "./hiveService"
-import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 import { CollectionNames, ScriptingNames } from "./vault/constants"
 import { MyChannel } from "./mychannel";
 import { ChannelEntry } from "./channelentry";
 
-import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
+
 
 const logger = new Logger("MyProfile")
 
@@ -24,8 +26,8 @@ export class MyProfile {
     private appContext: AppContext;
 
     private userDid: string;
-    private nameCredenital: VerifiableCredential;
-    private descCredenital: VerifiableCredential;
+    private nameCredential: VerifiableCredential;
+    private descCredential: VerifiableCredential;
     private walletAddress: string;
 
     private vault: VaultService;
@@ -35,21 +37,25 @@ export class MyProfile {
         walletAddress: string) {
 
         logger.info(`User Did: ${userDid}`);
-        logger.info(`Name credentials: ${JSON.stringify(name.toJSON())}`)
+        logger.info(`Name credential: ${JSON.stringify(name.toJSON())}`)
         logger.info(`Description credential: ${JSON.stringify(description.toJSON())}`)
 
         this.userDid = userDid;
-        this.nameCredenital = name;
-        this.descCredenital = description;
+        this.nameCredential = name;
+        this.descCredential = description;
         this.walletAddress  = walletAddress;
     }
 
+    public getUserDid(): string {
+        return this.userDid;
+    }
+
     public getName(): string {
-        return this.nameCredenital ? this.descCredenital.getSubject().getProperty('name'): this.userDid;
+        return this.nameCredential ? this.nameCredential.getSubject().getProperty('name'): this.userDid;
     }
 
     public getDescription(): string {
-        return this.descCredenital ? this.descCredenital.getSubject().getProperty('bio'): '';
+        return this.descCredential ? this.descCredential.getSubject().getProperty('description'): '';
     }
 
     public getWalletAddress(): string {
