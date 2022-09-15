@@ -113,6 +113,8 @@ export default command => {
         // fsevents is a dependency of chokidar that cannot be bundled as it contains binary code
         external: [
             'ipfs-http-client',
+            '@elastosfoundation/did-js-sdk',
+            '@elastosfoundation/hive-js-sdk'
         ],
         treeshake,
         strictDeprecations: true,
@@ -150,6 +152,8 @@ export default command => {
         ],
         external: [
             'ipfs-http-client',
+            '@elastosfoundation/did-js-sdk',
+            '@elastosfoundation/hive-js-sdk'
         ],
         output: {
             ...commonJSBuild.output,
