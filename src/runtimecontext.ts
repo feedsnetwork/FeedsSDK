@@ -3,12 +3,13 @@ import { Logger } from './utils/logger'
 import { signin, signout, checkSignin } from './signin'
 import { Vault, AppContext, ScriptRunner } from '@elastosfoundation/hive-js-sdk/typings'
 import { connectivity, DID as ConDID, Hive } from "@elastosfoundation/elastos-connectivity-sdk-js"
-
+import { Register } from './register'
 const logger = new Logger("AppContext")
 
 export class RuntimeContext {
     private static sInstance: RuntimeContext = null
     private scriptRunners: { [key: string]: ScriptRunner } = {}
+    private register: Register
 
     private applicationDid = "did:elastos:iXyYFboFAd2d9VmfqSvppqg1XQxBtX9ea2"
     private networkType: string
@@ -86,6 +87,17 @@ export class RuntimeContext {
 
     public checkSignin() {
         return checkSignin()
+    }
+    
+    public signHive(): Promise<boolean> {
+        return this.register.prepareConnectHive().then(_ => {
+            return this.register.checkCreateAndRregiste(true) // 注册 创建
+        }).then(_ => {
+            return true
+        }).catch((error) => {
+            logger.error("Sign hive error: ", error)
+            throw error
+        })
     }
 
     public signIntoVault(userDid: string, appInstanceDIDDocument: DIDDocument): Promise<AppContext> {

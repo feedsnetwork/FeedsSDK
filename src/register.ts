@@ -5,54 +5,57 @@ import { UpdateOptions, UpdateExecutable, FindExecutable, QueryHasResultConditio
 import { RuntimeContext } from './runtimecontext'
 
 const logger = new Logger("register")
-export class register {
+export class Register {
     private vault: hiveService
 
     constructor() { }
 
     // isForce TODO:
-    async createAndRregiste(isForce: boolean) {
-        let remoteVersion = ''
-        const userDid = RuntimeContext.getInstance().getUserDid()
+    checkCreateAndRregiste(isForce: boolean): Promise<void> {
+        return new Promise<any>(async (resolve, reject) => {
+            let remoteVersion = ''
+            const userDid = RuntimeContext.getInstance().getUserDid()
 
-        const key = userDid + 'localScriptVersion'
-        let localStorageVersion = localStorage.getItem(key) || ''
-        if (localStorageVersion == "" && isForce === false) {
-            return
-        }
-        if (localStorageVersion != FeedsLocalScriptVersion) {
-            try {
-                if (localStorageVersion === '') {
-                    let result = await this.queryRemoteFeedsScriptingVersion()
-                    remoteVersion = result[0]["laster_version"]
-                }
-                else {
-                }
+            const key = userDid + 'localScriptVersion'
+            let localStorageVersion = localStorage.getItem(key) || ''
+            if (localStorageVersion == "" && isForce === false) {
+                resolve()
             }
+            if (localStorageVersion != FeedsLocalScriptVersion) {
+                try {
+                    if (localStorageVersion === '') {
+                        let result = await this.queryRemoteFeedsScriptingVersion()
+                        remoteVersion = result[0]["laster_version"]
+                    }
+                    else { }
+                }
             catch (error) {
-                if (error["code"] === 404) {
+                    if (error["code"] === 404) {
+                    }
                 }
             }
-        }
-        else {
-            // 不需要注册 return
-            return
-        }
-        if (FeedsLocalScriptVersion !== remoteVersion) {
-            try {
-                await this.createCollectionAndRregisteScript()
-                remoteVersion = FeedsLocalScriptVersion
-                localStorageVersion = remoteVersion
-                //update
-                await this.updateRemoteFeedsScriptingVersion(remoteVersion)
-                localStorage.setItem(key, localStorageVersion)
-            } catch (error) {
-                console.log(error)
+            else {
+                // 不需要注册 return
+                resolve()
             }
-        } else if (localStorageVersion === '' && FeedsLocalScriptVersion === remoteVersion) {
-            localStorageVersion = FeedsLocalScriptVersion
-            localStorage.setItem(key, localStorageVersion)
-        }
+            if (FeedsLocalScriptVersion !== remoteVersion) {
+                try {
+                    await this.createCollectionAndRregisteScript()
+                    remoteVersion = FeedsLocalScriptVersion
+                    localStorageVersion = remoteVersion
+                    //update
+                    await this.updateRemoteFeedsScriptingVersion(remoteVersion)
+                    localStorage.setItem(key, localStorageVersion)
+                } catch (error) {
+                    logger.log("create and registe error: ", error)
+                    reject(error)
+                }
+            } else if (localStorageVersion === '' && FeedsLocalScriptVersion === remoteVersion) {
+                localStorageVersion = FeedsLocalScriptVersion
+                localStorage.setItem(key, localStorageVersion)
+            }
+            resolve()
+        })
     }
 
     private async createCollectionAndRregisteScript() {
@@ -144,6 +147,10 @@ export class register {
         })
     }
 
+    prepareConnectHive(): Promise<string> {
+        return this.registerQueryChannelInfoScripting()
+    }
+
     private createCollection(collectName: string): Promise<void> {
         return this.vault.createCollection(collectName)
     }
@@ -182,7 +189,7 @@ export class register {
         })
     }
 
-    private registerQueryChannelInfoScripting(forceCreate: boolean = false): Promise<string> {
+    private registerQueryChannelInfoScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
                 let executablefilter = { "channel_id": "$params.channel_id", "type": "public" }

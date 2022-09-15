@@ -36,11 +36,11 @@ class Channel implements ChannelHandler {
      * @returns An promise object that contains channel information.
      */
     public queryChannelInfo(): Promise<ChannelInfo> {
-        return new Promise<any>( (resolve, _reject) => {
+        return new Promise<any>(async (resolve, _reject) => {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId()
             }
-            const result = this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
+            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
                 this.getChannelInfo().getOwnerDid(), this.context.getAppDid());
 
             // TODO error.
