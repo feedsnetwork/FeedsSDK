@@ -176,7 +176,7 @@ export class register {
                 const result = this.vault.queryDBData(CollectionNames.FEEDS_SCRIPTING, filter)
                 resolve(result)
             } catch (error) {
-                logger.error('Query Feeds scripting from DB', error)
+                logger.error('Query remote feeds scripting version error: ', error)
                 reject(error)
             }
         })
