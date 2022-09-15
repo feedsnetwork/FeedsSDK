@@ -11,7 +11,7 @@ export class Register {
     constructor() { }
 
     // isForce TODO:
-    checkCreateAndRregiste(isForce: boolean): Promise<void> {
+    checkCreateAndRregiste(isForce: boolean): Promise<boolean> {
         return new Promise<any>(async (resolve, reject) => {
             let remoteVersion = ''
             const userDid = RuntimeContext.getInstance().getUserDid()
@@ -19,7 +19,7 @@ export class Register {
             const key = userDid + 'localScriptVersion'
             let localStorageVersion = localStorage.getItem(key) || ''
             if (localStorageVersion == "" && isForce === false) {
-                resolve()
+                resolve(true)
             }
             if (localStorageVersion != FeedsLocalScriptVersion) {
                 try {
@@ -36,7 +36,7 @@ export class Register {
             }
             else {
                 // 不需要注册 return
-                resolve()
+                resolve(true)
             }
             if (FeedsLocalScriptVersion !== remoteVersion) {
                 try {
@@ -54,7 +54,7 @@ export class Register {
                 localStorageVersion = FeedsLocalScriptVersion
                 localStorage.setItem(key, localStorageVersion)
             }
-            resolve()
+            resolve(true)
         })
     }
 
