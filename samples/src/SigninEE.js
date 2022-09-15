@@ -9,15 +9,14 @@ function SigninEE() {
   const navigate = useNavigate();
   const applicationDid = 'did:elastos:iZvAak2SUHaKwBHmPFsgtVVMGtTpi4r2kY'
   const currentNet = "mainnet".toLowerCase()
-  const localDataDir = "/data/userDir/data/store/develop"
-  const resolveCache = '/data/userDir/data/store/catch'
+  const localDataDir = "/data/store/develop1"
+  const resolveCache = '/data/store/catch1'
   RuntimeContext.initialize(applicationDid, currentNet, localDataDir, resolveCache)
   const appCtx = RuntimeContext.getInstance()
   const [login, setLogin] = useState(appCtx.checkSignin());
 
   const handleSigninEE = async () => {
     const myprofile = await appCtx.signin()
-    //await myprofile.queryOwnedChannelCount() // 测试登录
     console.log(`name: ${myprofile.getName()}`);
     console.log(`description: ${myprofile.getDescription()}`);
 

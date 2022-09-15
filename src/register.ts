@@ -8,7 +8,9 @@ const logger = new Logger("register")
 export class Register {
     private vault: hiveService
 
-    constructor() { }
+    constructor() {
+        this.vault = new hiveService()
+    }
 
     // isForce TODO:
     checkCreateAndRregiste(isForce: boolean): Promise<boolean> {

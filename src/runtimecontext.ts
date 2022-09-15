@@ -1,9 +1,10 @@
 import { JWTHeader, JWTParserBuilder, Logger as HiveLogger, DIDDocument, DIDBackend, DefaultDIDAdapter, VerifiablePresentation } from '@elastosfoundation/did-js-sdk'
 import { Logger } from './utils/logger'
 import { signin, signout, checkSignin } from './signin'
-import { Vault, AppContext, ScriptRunner } from '@elastosfoundation/hive-js-sdk/typings'
+import { Vault, AppContext, ScriptRunner } from '@elastosfoundation/hive-js-sdk'
 import { connectivity, DID as ConDID, Hive } from "@elastosfoundation/elastos-connectivity-sdk-js"
 import { Register } from './register'
+import { MyProfile } from './myprofile'
 const logger = new Logger("AppContext")
 
 export class RuntimeContext {
@@ -24,6 +25,7 @@ export class RuntimeContext {
         this.networkType = networkType
         this.localDataDir = localDataDir
         this.resolveCache = resolveCache
+        this.register = new Register()
     }
 
     public getAppDid(): string {
@@ -51,10 +53,15 @@ export class RuntimeContext {
     }
 
     public static initialize(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
-        DIDBackend.initialize(new DefaultDIDAdapter(networkType))
-        AppContext.setupResolver(networkType, resolveCache)
-        HiveLogger.setLevel(HiveLogger.DEBUG)
         this.sInstance = new RuntimeContext(applicationDid, networkType, localDataDir, resolveCache)
+        HiveLogger.setLevel(HiveLogger.TRACE)
+        try {
+            console.log("resolver ============= ", networkType)
+            console.log("resolveCache ============= ", resolveCache)
+            AppContext.setupResolver(networkType, resolveCache)
+        } catch (error) {
+            console.log("AppContext.setupResolver error ====== ", error)
+        }
         logger.info(`Initalized DIDBackend with resolver URL: ${networkType}`)
     }
 
@@ -77,8 +84,17 @@ export class RuntimeContext {
         return this.localDataDir
     }
 
-    public signin() {
-        return signin(this)
+    public async signin() {
+        let myProfile: MyProfile
+        let self = this
+        return signin(this).then(profile => {
+            myProfile = profile
+            return self.signHive()
+        }).then(_ => {
+            return myProfile
+        }).catch(error => {
+            throw error
+        })
     }
 
     public signout() {
@@ -89,14 +105,10 @@ export class RuntimeContext {
         return checkSignin()
     }
     
-    public signHive(): Promise<boolean> {
-        return this.register.prepareConnectHive().then(_ => {
-            return this.register.checkCreateAndRregiste(true) // 注册 创建
-        }).then(_ => {
-            return true
-        }).catch((error) => {
-            logger.error("Sign hive error: ", error)
-            throw error
+    public async signHive(): Promise<boolean> {
+        let self = this
+        return self.register.prepareConnectHive().then(_ => {
+            return self.register.checkCreateAndRregiste(true) // 注册 创建
         })
     }
 
