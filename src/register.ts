@@ -1,13 +1,186 @@
 import { Logger } from './utils/logger'
 import { hiveService } from "./hiveService"
-import { ScriptingNames, CollectionNames } from './vault/constants'
-import { UpdateExecutable, FindExecutable, QueryHasResultCondition, AndCondition, InsertExecutable, DeleteExecutable } from "@elastosfoundation/hive-js-sdk"
+import { ScriptingNames, CollectionNames, FeedsLocalScriptVersion } from './vault/constants'
+import { UpdateOptions, UpdateExecutable, FindExecutable, QueryHasResultCondition, AndCondition, InsertExecutable, DeleteExecutable } from "@elastosfoundation/hive-js-sdk"
+import { RuntimeContext } from './runtimecontext'
 
 const logger = new Logger("register")
 export class register {
     private vault: hiveService
 
     constructor() { }
+
+    // isForce TODO:
+    async createAndRregiste(isForce: boolean) {
+        let remoteVersion = ''
+        const userDid = RuntimeContext.getInstance().getUserDid()
+
+        const key = userDid + 'localScriptVersion'
+        let localStorageVersion = localStorage.getItem(key) || ''
+        if (localStorageVersion == "" && isForce === false) {
+            return
+        }
+        if (localStorageVersion != FeedsLocalScriptVersion) {
+            try {
+                if (localStorageVersion === '') {
+                    let result = await this.queryRemoteFeedsScriptingVersion()
+                    remoteVersion = result[0]["laster_version"]
+                }
+                else {
+                }
+            }
+            catch (error) {
+                if (error["code"] === 404) {
+                }
+            }
+        }
+        else {
+            // 不需要注册 return
+            return
+        }
+        if (FeedsLocalScriptVersion !== remoteVersion) {
+            try {
+                await this.createCollectionAndRregisteScript()
+                remoteVersion = FeedsLocalScriptVersion
+                localStorageVersion = remoteVersion
+                //update
+                await this.updateRemoteFeedsScriptingVersion(remoteVersion)
+                localStorage.setItem(key, localStorageVersion)
+            } catch (error) {
+                console.log(error)
+            }
+        } else if (localStorageVersion === '' && FeedsLocalScriptVersion === remoteVersion) {
+            localStorageVersion = FeedsLocalScriptVersion
+            localStorage.setItem(key, localStorageVersion)
+        }
+    }
+
+    private async createCollectionAndRregisteScript() {
+        try {
+            await this.createAllCollections()
+        } catch (error) {
+            // ignore
+        }
+        await this.registeAllScripting()
+    }
+
+    private registeAllScripting(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                //channel
+                const p1 = this.registerQueryChannelInfoScripting()
+
+                //post
+                const p2 = this.registerQueryPostByChannelIdScripting()
+                const p3 = this.registerQueryPostRangeOfTimeScripting()
+                const p4 = this.registerQueryPostByIdScripting()
+
+                //subscription
+                const p5 = this.registerSubscribeScripting()
+                const p6 = this.registerQuerySubscriptionInfoByChannelIdScripting()
+                const p7 = this.registerQuerySubscriptionInfoByUserDidScripting()
+                const p8 = this.registerUnsubscribeScripting()
+                const p9 = this.registerUpdateSubscription()
+
+                //comment
+                const p10 = this.registerCreateCommentScripting()
+                const p11 = this.registerFindCommentByIdScripting()
+                const p12 = this.registerQueryCommentByPostIdScripting()
+                const p13 = this.registerUpdateCommentScripting()
+                const p14 = this.registerDeleteCommentScripting()
+                const p15 = this.registerQueryCommentByChannelScripting()
+                const p16 = this.registerQueryCommentsFromPostsScripting()
+
+                //like
+                const p17 = this.registerCreateLikeScripting()
+                const p18 = this.registerQueryLikeByIdScripting()
+                const p19 = this.registerRemoveLikeScripting()
+                const p20 = this.registerQueryLikeByChannelScripting()
+                const p21 = this.registerQueryLikeByPostScripting()
+                const p22 = this.registerUpdateLike()
+                const p23 = this.registerQuerySelfLikeByIdScripting()
+
+                //DisplayName
+                const p24 = this.registerQueryDisplayNameScripting()
+
+                //Public post
+                const p25 = this.registerQueryPublicPostByIdScripting()
+                const p26 = this.registerQueryPublicPostByChannelIdScripting()
+                const p27 = this.registerQueryPublicPostRangeOfTimeScripting()
+
+                const p28 = this.registerQuerySubscriptionInfoByUserDIDAndChannelIdScripting()
+                const array = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28] as const
+                Promise.all(array).then(values => {
+                    logger.debug('Registe all scripting success: ', values)
+                    resolve('SUCCESS')
+                }, reason => {
+                    reject(reason)
+                })
+            } catch (error) {
+                logger.error("Registe all scripting error: ", error)
+                reject(error)
+            }
+        })
+    }
+
+    private createAllCollections(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            const p1 = this.createCollection(CollectionNames.FEEDS_SCRIPTING)
+            const p2 = this.createCollection(CollectionNames.CHANNELS)
+            const p3 = this.createCollection(CollectionNames.POSTS)
+            const p4 = this.createCollection(CollectionNames.SUBSCRIPTION)
+            const p5 = this.createCollection(CollectionNames.COMMENTS)
+            const p6 = this.createCollection(CollectionNames.LIKES)
+            const p7 = this.createCollection(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS)
+
+            const array = [p1, p2, p3, p4, p5, p6, p7] as const
+            Promise.all(array).then(values => {
+                logger.debug('Create all collections success: ', values)
+                resolve('SUCCESS')
+            }, async reason => {
+                logger.error('Create all collections error: ', reason)
+                reject(reason)
+            })
+        })
+    }
+
+    private createCollection(collectName: string): Promise<void> {
+        return this.vault.createCollection(collectName)
+    }
+
+    private updateRemoteFeedsScriptingVersion(lasterVersion: string): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc =
+                {
+                    "laster_version": lasterVersion,
+                }
+                const option = new UpdateOptions(false, true)
+                let filter = { "laster_version": lasterVersion }
+                let update = { "$set": doc }
+
+                const updateResult = await this.vault.updateOneDBData(CollectionNames.FEEDS_SCRIPTING, filter, update, option)
+                logger.log('update remote feeds scripting version: ', updateResult)
+                resolve(true)
+            } catch (error) {
+                logger.error('update remote feeds scripting version error: ', error)
+                reject(error)
+            }
+        })
+    }
+
+    private queryRemoteFeedsScriptingVersion(): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const filter = {}
+                const result = this.vault.queryDBData(CollectionNames.FEEDS_SCRIPTING, filter)
+                resolve(result)
+            } catch (error) {
+                logger.error('Query Feeds scripting from DB', error)
+                reject(error)
+            }
+        })
+    }
 
     private registerQueryChannelInfoScripting(forceCreate: boolean = false): Promise<string> {
         return new Promise(async (resolve, reject) => {

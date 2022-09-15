@@ -59,3 +59,5 @@ export {
     CollectionNames,
     ScriptingNames
 }
+
+export const FeedsLocalScriptVersion = '1.0.0'
