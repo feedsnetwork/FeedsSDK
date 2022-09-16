@@ -80,15 +80,8 @@ export class MyProfile implements ProfileHandler {
     }
 
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
-        return new Promise( (resolve, _reject) => {
-            const result = this.vault.queryDBData(CollectionNames.CHANNELS, {})
-            // TODO: error
-            resolve(result)
-        }).then (result => {
-            return MyChannel.parse(this.userDid, result);
-        }).catch (error => {
-            logger.error('query owned channel error: ', error)
-            throw new Error(error)
+        return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
+            return MyChannel.parse(this.userDid, result)
         })
     }
 
