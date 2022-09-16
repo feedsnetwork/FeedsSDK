@@ -18,7 +18,9 @@ function SigninEE() {
     const myprofile = await appCtx.signin()
     console.log(`name: ${myprofile.getName()}`);
     console.log(`description: ${myprofile.getDescription()}`);
-    await myprofile.queryOwnedChannelCount()
+    const result = await myprofile.queryOwnedChannelCount()
+    console.log(`myprofile result: `, result);
+
     setLogin(appCtx.checkSignin());
   }
 

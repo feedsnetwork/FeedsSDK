@@ -74,15 +74,8 @@ export class MyProfile implements ProfileHandler {
     }
 
     public queryOwnedChannelCount(): Promise<number> {
-        return new Promise( (resolve, _reject) => {
-            const result = this.vault.queryDBData(CollectionNames.CHANNELS, {})
-            console.log("queryOwnedChannelCount result ==== ", result)
-            resolve(result)
-        }).then (result => {
+        return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
             return MyChannel.parse(this.userDid, result).length
-        }).catch (error => {
-            logger.error('fetch own channel count error: ', error)
-            throw new Error(error)
         })
     }
 
