@@ -12,7 +12,7 @@ export class RuntimeContext {
     private scriptRunners: { [key: string]: ScriptRunner } = {}
     private register: Register
 
-    private applicationDid = "did:elastos:iXyYFboFAd2d9VmfqSvppqg1XQxBtX9ea2"
+    private applicationDid = ""
     private networkType: string
 
     private readonly resolveCache: string

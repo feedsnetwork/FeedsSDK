@@ -3,8 +3,7 @@ import { Dispatcher } from './dispatcher'
 import { ChannelInfo } from './channelinfo'
 import { Post } from './post';
 import { ChannelHandler } from './channelhandler';
-import { hiveService as VaultService} from "./hiveService"
-import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
+import { hiveService as VaultService } from "./hiveService"
 import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { RuntimeContext } from './runtimecontext';
@@ -337,6 +336,7 @@ export class MyChannel {
             const channelInfo = ChannelInfo.parse(targetDid, item)
             parseResult.push(channelInfo)
         })
+        console.log("parse parseResult ==== ", parseResult)
 
         return parseResult
     }

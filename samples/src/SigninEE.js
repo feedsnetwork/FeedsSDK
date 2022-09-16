@@ -1,4 +1,3 @@
-
 import React, {useState} from 'react'
 import {RuntimeContext } from '@feedsnetwork/feeds-sdk-development';
 import {
@@ -7,7 +6,7 @@ import {
 
 function SigninEE() {
   const navigate = useNavigate();
-  const applicationDid = 'did:elastos:iZvAak2SUHaKwBHmPFsgtVVMGtTpi4r2kY'
+  const applicationDid = 'did:elastos:iqtWRVjz7gsYhyuQEb1hYNNmWQt1Z9geXg'
   const currentNet = "mainnet".toLowerCase()
   const localDataDir = "/data/store/develop1"
   const resolveCache = '/data/store/catch1'
@@ -19,7 +18,7 @@ function SigninEE() {
     const myprofile = await appCtx.signin()
     console.log(`name: ${myprofile.getName()}`);
     console.log(`description: ${myprofile.getDescription()}`);
-
+    await myprofile.queryOwnedChannelCount()
     setLogin(appCtx.checkSignin());
   }
 
