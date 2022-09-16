@@ -22,16 +22,19 @@ export class Register {
             let localStorageVersion = localStorage.getItem(key) || ''
             if (localStorageVersion == "" && isForce === false) {
                 resolve(true)
+                return
             }
             if (localStorageVersion != FeedsLocalScriptVersion) {
                 try {
-                    if (localStorageVersion === '') {
+                    if (localStorageVersion === '' || localStorageVersion == null) {
                         let result = await this.queryRemoteFeedsScriptingVersion()
                         remoteVersion = result[0]["laster_version"]
                     }
-                    else { }
+                    else {
+                        console.log("5.  ====== ")
+                    }
                 }
-            catch (error) {
+                catch (error) {
                     if (error["code"] === 404) {
                     }
                 }
@@ -39,6 +42,7 @@ export class Register {
             else {
                 // 不需要注册 return
                 resolve(true)
+                return
             }
             if (FeedsLocalScriptVersion !== remoteVersion) {
                 try {
@@ -48,8 +52,8 @@ export class Register {
                     //update
                     await this.updateRemoteFeedsScriptingVersion(remoteVersion)
                     localStorage.setItem(key, localStorageVersion)
+
                 } catch (error) {
-                    logger.log("create and registe error: ", error)
                     reject(error)
                 }
             } else if (localStorageVersion === '' && FeedsLocalScriptVersion === remoteVersion) {
