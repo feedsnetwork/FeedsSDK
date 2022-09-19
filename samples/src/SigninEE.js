@@ -22,8 +22,13 @@ function SigninEE() {
     console.log(`myprofile resultCount: `, resultCount);
     const resultChannels = await myprofile.queryOwnedChannels()
     console.log(`myprofile resultChannels: `, resultChannels);
+    resultChannels.forEach(async item => {
+      const channelId = item.getChannelId()
+      console.log("channelId ==== ", channelId)
+      const channelInfo = await myprofile.queryOwnedChannnelById()
+      console.log("channelInfo ==== ", channelInfo)
+    })
 
-    
     setLogin(appCtx.checkSignin());
   }
 

@@ -96,16 +96,9 @@ export class MyProfile implements ProfileHandler {
     }
 
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-        return new Promise((resolve, _reject) => {
-            const filter = { "channel_id": channelId }
-            const result = this.vault.queryDBData(CollectionNames.CHANNELS, filter)
-            // TODO: error.
-            resolve(result)
-        }).then (result => {
+        const filter = { "channel_id": channelId }
+        return this.vault.queryDBData(CollectionNames.CHANNELS, filter).then(result => {
             return MyChannel.parseOne(this.userDid, result)
-        }).catch (error => {
-            logger.error('fetch own channels error: ', error)
-            throw new Error(error);
         })
     }
 
