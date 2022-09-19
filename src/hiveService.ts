@@ -58,7 +58,7 @@ export class hiveService {
   }
 
   async callScript(scriptName: string, document: any, targetDid: string, appid: string): Promise<any> {
-    return this.scriptRunner.callScript<any>(scriptName, document, targetDid, appid)
+    return (await this.getScriptRunner(targetDid)).callScript<any>(scriptName, document, targetDid, appid)
   }
 
   uploadScriting(transactionId: string, data: string): Promise<void> {
@@ -103,5 +103,9 @@ export class hiveService {
 
   async queryDBData(collectionName: string, filter: any): Promise<JSONObject[]> {
     return (await this.getDatabaseService()).findMany(collectionName, filter)
+  }
+
+  async queryDBDataWithOptions(collectionName: string, filter: any, options: any): Promise<JSONObject[]> {
+    return (await this.getDatabaseService()).findMany(collectionName, filter, options)
   }
 }

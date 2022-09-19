@@ -31,6 +31,11 @@ function SigninEE() {
     const subscriptionCount = await myprofile.querySubscriptionCount()
     console.log("subscriptionCount ==== ", subscriptionCount)
 
+    // 1970年： 1663569
+    // 现在： 1663569965
+    const subscriptions = await myprofile.querySubscriptions(1663569965, 100)
+    console.log("subscriptions ======================================== ", subscriptions)
+
     setLogin(appCtx.checkSignin());
   }
 

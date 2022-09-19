@@ -1,6 +1,6 @@
 
 import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
-import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
+import { FindOptions, QueryOptions } from "@elastosfoundation/hive-js-sdk"
 
 import { RuntimeContext } from "./runtimecontext";
 import { Channel } from "./channel";
@@ -124,61 +124,36 @@ export class MyProfile implements ProfileHandler {
             return result.length
         })
     }
-    parseSubscribedChannels(result: any) {
-        return
-    }
-/*
-    parseBackupSubscribedChannel(result: any): SubscribedChannel[] {
-        const subscribedChannels = result
-        let parseResult: SubscribedChannel[] = []
-        if (!subscribedChannels || subscribedChannels.length == 0) {
-            return []
-        }
-        subscribedChannels.forEach(item => {
-            const subscribed: SubscribedChannel = {
-                targetDid: item.target_did,
-                channelId: item.channel_id,
-            }
-            parseResult.push(subscribed)
-        })
-        return parseResult
-    }*/
 
     /**
       * Query a list of channels subscribed by this profile.
       *
-      * @param earlierThan
+      * @param earlierThan // 旧的：（这个时间点之前的数据，比如earlierThan = 9月19号，拿到的就是9月19号之前的，比如能拿到9月10号的数据）
       * @param maximum
       * @param upperLimit
       */
-    public querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
-        return new Promise<any>( (resolve, _reject) => {
-            const filter = {
-                "limit" : { "$lt": maximum },
-                "created": { "$gt": earlierThan }
-            }
-            const result = this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter)
-            // const parseResult = this.parseBackupSubscribedChannel(result)
-            // TODO: error.
-            resolve(result)
-        }).then ((result: ChannelInfo[]) => {
-            /*
-            parseResult.forEach(async item => {
+    public async querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
+        const filter = {
+            "created": { "$lt": earlierThan } // $gt: 之后, $lt: 之前 
+        }
+        const queryOptions = new FindOptions()
+        queryOptions.limit = maximum
+
+        return this.vault.queryDBDataWithOptions(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter, queryOptions).then(async result => {
+            let results = []
+            await result.forEach(async (item) => {
+                const channel_id = item.channel_id;
+                const target_did = item.target_did.toString();
                 const params = {
-                    "channel_id": item.channelId,
+                    "channel_id": channel_id,
                 }
-                const appid = config.ApplicationDID
-                const scriptName = config.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID
-                logger.log('Call script, targetDid:', item.targetDid, 'scriptName:', scriptName, 'params:', params)
-                let detailResult = await this.vault.callScript(scriptName, params, item.targetDid, appid, this.userDid)
-                logger.log('Call script success, result is', detailResult)
-                return Channel.parse(item.targetDid, detailResult.find_message.items)
+                const callScriptResult = await this.vault.callScript(ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO, params, target_did, this.context.getAppDid())
+                const channelInfo = ChannelInfo.parse(target_did, callScriptResult.find_message.items[0])
+                console.log("channelInfo >>>>>>>>>>>>>>>>>> ", channelInfo)
+                results.push(channelInfo)
             })
-             */
-            return result
-        }).catch (error => {
-            logger.error('fetch subscription count error: ', error)
-            throw new Error(error);
+            console.log("results >>>>>>>>>>>>>>>>>> ", results)
+            return results
         })
     }
 
