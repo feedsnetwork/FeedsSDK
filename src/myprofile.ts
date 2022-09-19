@@ -1,6 +1,6 @@
 
 import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
-import { FindOptions, QueryOptions } from "@elastosfoundation/hive-js-sdk"
+import { FindOptions, InsertResult, UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 
 import { RuntimeContext } from "./runtimecontext";
 import { Channel } from "./channel";
@@ -211,6 +211,12 @@ export class MyProfile implements ProfileHandler {
         })
     }
 
+    // 为了测试：除测试channel 
+    public deleteChannel(channelId: string): Promise<void> {
+        let filter = { "channel_id": channelId }
+        return this.vault.deleateOneDBData(CollectionNames.CHANNELS, filter)
+    }
+
     /**
      * purge channel
      *
@@ -261,13 +267,13 @@ export class MyProfile implements ProfileHandler {
         console.log("subscribeChannel targetDid ====================== ", targetDid)
         console.log("subscribeChannel appDid ====================== ", appDid)
         return this.vault.callScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, params,
-            targetDid, appDid).then(result => {
-                return Channel.parseChannel(result)
+            targetDid, appDid).then(_ => {
+                return this.subscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
             }).catch(error => {
                 logger.error("Sbuscribe channel error:", error)
                 throw error
         })
-}
+    }
 
     /**
      * TODO:
@@ -278,14 +284,37 @@ export class MyProfile implements ProfileHandler {
     public unsubscribeChannel(channelEntry: ChannelEntry): Promise<void> {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
-                "updated_at": channelEntry.getUpdatedAt(),
-                "status": channelEntry.getStatus()
             }
-        return this.vault.callScript(ScriptingNames.SCRIPT_UPDATE_SUBSCRIPTION, params,
-            channelEntry.getTargetDid(), this.context.getAppDid()).then(_result => {
-        }).catch (error => {
-            logger.error("Unsbuscribe channel error:", error)
+        return this.vault.callScript(ScriptingNames.SCRIPT_UNSUBSCRIBE_CHANNEL, params,
+            channelEntry.getTargetDid(), this.context.getAppDid()).then(result => {
+            }).then(_ => {
+                return this.unsubscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
+            }).catch(error => {
+                logger.error("Unsbuscribe channel error:", error)
+                throw error
+            })
+    }
+
+    private subscribeChannelBackup(targetDid: string, channelId: string): Promise<InsertResult> {
+        const doc = {
+            "target_did": targetDid,
+            "channel_id": channelId
+        }
+        return this.vault.insertDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc).catch(error => {
+            logger.error("Subscribe channel backup error:", error)
             throw error
         })
-   }
+    }
+
+    private unsubscribeChannelBackup(targetDid: string, channelId: string): Promise<void> {
+        const doc = {
+            "target_did": targetDid,
+            "channel_id": channelId
+        }
+        return this.vault.deleateOneDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
+            .catch(error => {
+                logger.error("Unsubscribe channel backup error:", error)
+                throw error
+            })
+    }
 }

@@ -29,12 +29,12 @@ function SigninEE() {
       console.log("queryOwnedChannnelById ==== ", channelInfo)
     })
     const subscriptionCount = await myprofile.querySubscriptionCount()
-    console.log("subscriptionCount ==== ", subscriptionCount)
+    console.log("查看订阅channle个数 结束：subscriptionCount ==== ", subscriptionCount)
 
     // 1970年： 1663569
     // 现在： 1663569965
-    // const subscriptions = await myprofile.querySubscriptions(1663569965, 100)
-    // console.log("subscriptions ======================================== ", subscriptions)
+    const subscriptions0 = await myprofile.querySubscriptions((new Date()).getTime(), 100)
+    console.log("subscriptions0 ======================================== ", subscriptions0)
 
     // console.log("开始 create Channel ============================================== ")
     // const name = 'New channel test for feeds js sdk - 5'
@@ -58,11 +58,9 @@ function SigninEE() {
     // const createNewChannel = await myprofile.createChannel(newChannelInfo)
     // console.log("createNewChannel 结束============================================== ", createNewChannel)
 
-    console.log("开始订阅 subscribeChannel ============================================== ")
+    // console.log("开始订阅 subscribeChannel ============================================== ")
     const targetDid = 'did:elastos:iUDbUWUFKjzNrnEfK8T2g61M77rbAQpAMj'
-    const subChannelId = "149982ed40313750bd044697e74c954ff0af4989274dbfcb53d0ca630095bfbe"
-    // const targetDid = myprofile.getUserDid()
-    // const subChannelId = channelId
+    const subChannelId = "34093f2a77e5649451153cb0f825be831896570a082165f29a78198a6928b217"
     const subDisplayName = myprofile.getName()
     const status = 0
     const subTime = (new Date()).getTime()
@@ -71,6 +69,22 @@ function SigninEE() {
     chnnelEntry.setUpdatedAt(subTime)
     const subscribeNewChannel = await myprofile.subscribeChannel(chnnelEntry)
     console.log("订阅结束 subscribeNewChannel ============================================== ", subscribeNewChannel)
+    const subscriptionCount1 = await myprofile.querySubscriptionCount()
+    console.log("查看订阅channle个数 subscriptionCount1 ==== ", subscriptionCount1)
+
+    const subscriptions1 = await myprofile.querySubscriptions((new Date()).getTime(), 100)
+    console.log("subscriptions1 ======================================== ", subscriptions1)
+
+    console.log("取消订阅 开始 subscribeNewChannel ============================================== ")
+    const status1 = 1
+    const chnnelEntry1 = new ChannelEntry(targetDid, subChannelId, subDisplayName, status1)
+    const unsubscribeNewChannel = await myprofile.unsubscribeChannel(chnnelEntry1)
+    console.log("取消订阅 结束 unsubscribeNewChannel ============================================== ", unsubscribeNewChannel)
+    
+    const subscriptionCount2 = await myprofile.querySubscriptionCount()
+    console.log("查看订阅channle个数 subscriptionCount2 ==== ", subscriptionCount2)
+    const subscriptions2 = await myprofile.querySubscriptions((new Date()).getTime(), 100)
+    console.log("subscriptions2 ======================================== ", subscriptions2)
 
     setLogin(appCtx.checkSignin());
   }
