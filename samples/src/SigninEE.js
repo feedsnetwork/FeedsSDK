@@ -37,9 +37,9 @@ function SigninEE() {
     // console.log("subscriptions ======================================== ", subscriptions)
 
     // console.log("开始 create Channel ============================================== ")
-    // const name = 'New channel test for feeds js sdk - 4'
-    // const displayName = 'New channel test for feeds js sdk - 4'
-    // const description = "this is channel's Description - 4"
+    // const name = 'New channel test for feeds js sdk - 5'
+    // const displayName = 'New channel test for feeds js sdk - 5'
+    // const description = "this is channel's Description - 5"
 
     // const channelId = ChannelInfo.generateChannelId(myprofile.getUserDid(), name)
     // const newChannelInfo = new ChannelInfo(myprofile.getUserDid(), channelId, name)
@@ -51,7 +51,7 @@ function SigninEE() {
     // const time = (new Date()).getTime()
     // newChannelInfo.setCreatedAt(time)
     // newChannelInfo.setUpdatedAt(time)
-    // newChannelInfo.setType("")
+    // newChannelInfo.setType("public")
     // newChannelInfo.setNft("")
     // newChannelInfo.setProof("")
     // newChannelInfo.setMemo("")
@@ -60,7 +60,9 @@ function SigninEE() {
 
     console.log("开始订阅 subscribeChannel ============================================== ")
     const targetDid = 'did:elastos:iUDbUWUFKjzNrnEfK8T2g61M77rbAQpAMj'
-    const subChannelId = "a8849682d392e589bdf856400d5ce8dc44d3911e57007520e6e6ad909849868a"
+    const subChannelId = "149982ed40313750bd044697e74c954ff0af4989274dbfcb53d0ca630095bfbe"
+    // const targetDid = myprofile.getUserDid()
+    // const subChannelId = channelId
     const subDisplayName = myprofile.getName()
     const status = 0
     const subTime = (new Date()).getTime()
