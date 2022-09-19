@@ -10,7 +10,6 @@ import { Logger } from "./utils/logger"
 import { ChannelInfo } from "./channelinfo"
 import { Channel } from "./channel"
 import { Post } from "./post"
-import { signin, signout, checkSignin } from "./signin"
 
 export {
     Logger,
@@ -20,6 +19,7 @@ export {
     MyChannel,
     Channel,
     ChannelEntry,
+    ChannelInfo,
     Post,
     PostBody
 }

@@ -206,8 +206,8 @@ export class MyProfile implements ProfileHandler {
                 "proof"     : channelInfo.getProof()
             }
 
-        return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(result => {
-            return MyChannel.parse(this.userDid, this.context, [result])
+        return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(_ => {
+            return MyChannel.parse(this.userDid, this.context, [doc])
         })
     }
 
@@ -248,7 +248,6 @@ export class MyProfile implements ProfileHandler {
      * @returns
      */
     public subscribeChannel(channelEntry: ChannelEntry) {
-        return new Promise<any>( (resolve, _reject) => {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
                 "created_at": channelEntry.getCreatedAt(),
@@ -256,17 +255,17 @@ export class MyProfile implements ProfileHandler {
                 "updated_at": channelEntry.getUpdatedAt(),
                 "status"    : channelEntry.getStatus()
             }
-
-            const result = this.vault.callScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, params,
-                channelEntry.getTargetDid(), this.context.getAppDid())
-
-            // TODO: error.
-            resolve(result)
-        }).then (result => {
-            return Channel.parseChannel(result)
-        }).catch (error => {
-            logger.error('Subscribe channel error:', error)
-            throw new Error(error)
+        const targetDid = channelEntry.getTargetDid()
+        const appDid = this.context.getAppDid()
+        console.log("subscribeChannel params ====================== ", params)
+        console.log("subscribeChannel targetDid ====================== ", targetDid)
+        console.log("subscribeChannel appDid ====================== ", appDid)
+        return this.vault.callScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, params,
+            targetDid, appDid).then(result => {
+                return Channel.parseChannel(result)
+            }).catch(error => {
+                logger.error("Sbuscribe channel error:", error)
+                throw error
         })
 }
 
@@ -277,21 +276,16 @@ export class MyProfile implements ProfileHandler {
      * @returns
      */
     public unsubscribeChannel(channelEntry: ChannelEntry): Promise<void> {
-        return new Promise((resolve, _reject) => {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
                 "updated_at": channelEntry.getUpdatedAt(),
                 "status": channelEntry.getStatus()
             }
-            const result = this.vault.callScript(ScriptingNames.SCRIPT_UPDATE_SUBSCRIPTION, params,
-                    channelEntry.getTargetDid(), this.context.getAppDid())
-            // TODO: error
-            resolve(result)
-        }).then (_result => {
-            // TODO
+        return this.vault.callScript(ScriptingNames.SCRIPT_UPDATE_SUBSCRIPTION, params,
+            channelEntry.getTargetDid(), this.context.getAppDid()).then(_result => {
         }).catch (error => {
             logger.error("Unsbuscribe channel error:", error)
-            throw new Error(error)
+            throw error
         })
    }
 }

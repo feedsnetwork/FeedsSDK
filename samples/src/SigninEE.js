@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {RuntimeContext } from '@feedsnetwork/feeds-sdk-development';
+import {RuntimeContext, ChannelInfo, ChannelEntry } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
@@ -22,7 +22,7 @@ function SigninEE() {
     console.log(`myprofile resultCount: `, resultCount);
     const resultChannels = await myprofile.queryOwnedChannels()
     console.log(`myprofile resultChannels: `, resultChannels);
-    resultChannels.forEach(async item => {
+    await resultChannels.forEach(async (item) => {
       const channelId = item.getChannelId()
       console.log("channelId ==== ", channelId)
       const channelInfo = await myprofile.queryOwnedChannnelById()
@@ -33,8 +33,42 @@ function SigninEE() {
 
     // 1970年： 1663569
     // 现在： 1663569965
-    const subscriptions = await myprofile.querySubscriptions(1663569965, 100)
-    console.log("subscriptions ======================================== ", subscriptions)
+    // const subscriptions = await myprofile.querySubscriptions(1663569965, 100)
+    // console.log("subscriptions ======================================== ", subscriptions)
+
+    // console.log("开始 create Channel ============================================== ")
+    // const name = 'New channel test for feeds js sdk - 4'
+    // const displayName = 'New channel test for feeds js sdk - 4'
+    // const description = "this is channel's Description - 4"
+
+    // const channelId = ChannelInfo.generateChannelId(myprofile.getUserDid(), name)
+    // const newChannelInfo = new ChannelInfo(myprofile.getUserDid(), channelId, name)
+    // newChannelInfo.setDisplayName(displayName)
+    // newChannelInfo.setDescription(description)
+    // newChannelInfo.setReceivingAddress("")
+    // newChannelInfo.setAvatar("26eac3c4bfb87d9f027c4810316e56d0@feeds/data/26eac3c4bfb87d9f027c4810316e56d0")
+    // newChannelInfo.setCategory("")
+    // const time = (new Date()).getTime()
+    // newChannelInfo.setCreatedAt(time)
+    // newChannelInfo.setUpdatedAt(time)
+    // newChannelInfo.setType("")
+    // newChannelInfo.setNft("")
+    // newChannelInfo.setProof("")
+    // newChannelInfo.setMemo("")
+    // const createNewChannel = await myprofile.createChannel(newChannelInfo)
+    // console.log("createNewChannel 结束============================================== ", createNewChannel)
+
+    console.log("开始订阅 subscribeChannel ============================================== ")
+    const targetDid = 'did:elastos:iUDbUWUFKjzNrnEfK8T2g61M77rbAQpAMj'
+    const subChannelId = "a8849682d392e589bdf856400d5ce8dc44d3911e57007520e6e6ad909849868a"
+    const subDisplayName = myprofile.getName()
+    const status = 0
+    const subTime = (new Date()).getTime()
+    const chnnelEntry = new ChannelEntry(targetDid, subChannelId, subDisplayName, status)
+    chnnelEntry.setCreatedAt(subTime)
+    chnnelEntry.setUpdatedAt(subTime)
+    const subscribeNewChannel = await myprofile.subscribeChannel(chnnelEntry)
+    console.log("订阅结束 subscribeNewChannel ============================================== ", subscribeNewChannel)
 
     setLogin(appCtx.checkSignin());
   }

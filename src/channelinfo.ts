@@ -1,4 +1,4 @@
-//import { utils } from "./utils/utils";
+import { utils } from "./utils/utils"
 
 export class ChannelInfo {
     private ownerDid: string;
@@ -24,9 +24,9 @@ export class ChannelInfo {
         this.name = _name;
     }
 
-    /*public static generateChannelId(ownerDid: string, name: string): string {
+    public static generateChannelId(ownerDid: string, name: string): string {
         return utils.generateChannelId(ownerDid, name)
-    }*/
+    }
 
     public static clone(channel: ChannelInfo): ChannelInfo {
         return (new ChannelInfo(channel.ownerDid, channel.channelId, channel.name))
