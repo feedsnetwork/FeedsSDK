@@ -120,17 +120,12 @@ export class MyProfile implements ProfileHandler {
      * @returns A promise object that contains the number of subscribed channels.
      */
     public querySubscriptionCount(): Promise<number> {
-        return new Promise( (resolve, _reject) => {
-            const result = this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {})
-            // TODO:
-            resolve(result)
-        }).then (_result => {
-            // return this.parseBackupSubscribedChannel(result).length
-            return 0
-        }).catch (error => {
-            logger.error('fetch subscription count error: ', error)
-            throw new Error(error)
+        return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {}).then(result => {
+            return result.length
         })
+    }
+    parseSubscribedChannels(result: any) {
+        return
     }
 /*
     parseBackupSubscribedChannel(result: any): SubscribedChannel[] {

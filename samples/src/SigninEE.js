@@ -28,6 +28,8 @@ function SigninEE() {
       const channelInfo = await myprofile.queryOwnedChannnelById()
       console.log("channelInfo ==== ", channelInfo)
     })
+    const subscriptionCount = await myprofile.querySubscriptionCount()
+    console.log("subscriptionCount ==== ", subscriptionCount)
 
     setLogin(appCtx.checkSignin());
   }
