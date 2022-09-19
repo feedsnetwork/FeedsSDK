@@ -75,13 +75,18 @@ export class MyProfile implements ProfileHandler {
 
     public queryOwnedChannelCount(): Promise<number> {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
-            return MyChannel.parse(this.userDid, result).length
+            return result.length
         })
     }
 
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
-            return MyChannel.parse(this.userDid, result)
+            let myChannels = []
+            result.forEach(item => {
+                const myChannel = MyChannel.parse(this.userDid, this.context, result)
+                myChannels.push(myChannel)
+            })
+            return myChannels
         })
     }
 
@@ -98,7 +103,7 @@ export class MyProfile implements ProfileHandler {
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         const filter = { "channel_id": channelId }
         return this.vault.queryDBData(CollectionNames.CHANNELS, filter).then(result => {
-            return MyChannel.parseOne(this.userDid, result)
+            return ChannelInfo.parse(this.userDid, result[0])
         })
     }
 
@@ -132,7 +137,7 @@ export class MyProfile implements ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-    public async querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
+    public querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
         const filter = {
             "created": { "$lt": earlierThan } // $gt: 之后, $lt: 之前 
         }
@@ -141,7 +146,7 @@ export class MyProfile implements ProfileHandler {
 
         return this.vault.queryDBDataWithOptions(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter, queryOptions).then(async result => {
             let results = []
-            await result.forEach(async (item) => {
+            result.forEach(async (item) => {
                 const channel_id = item.channel_id;
                 const target_did = item.target_did.toString();
                 const params = {
@@ -184,8 +189,7 @@ export class MyProfile implements ProfileHandler {
      * @param category channel category
      * @param proof [option] sigature to the channel metadata
      */
-    public createChannel(channelInfo: ChannelInfo) {
-        return new Promise((resolve, _reject) => {
+    public createChannel(channelInfo: ChannelInfo): Promise<MyChannel> {
             const doc = {
                 "channel_id": channelInfo.getChannelId(),
                 "name"      : channelInfo.getName(),
@@ -202,15 +206,8 @@ export class MyProfile implements ProfileHandler {
                 "proof"     : channelInfo.getProof()
             }
 
-            const result = this.vault.insertDBData(CollectionNames.CHANNELS, doc)
-            // TODO:
-            resolve(result)
-        }).then( result => {
-            // TODO:
-            const channelInfos = MyChannel.parse(this.userDid, [result])
-            return channelInfos[0]
-        }).catch (error => {
-            throw new Error(error)
+        return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(result => {
+            return MyChannel.parse(this.userDid, this.context, [result])
         })
     }
 

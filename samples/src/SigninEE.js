@@ -26,7 +26,7 @@ function SigninEE() {
       const channelId = item.getChannelId()
       console.log("channelId ==== ", channelId)
       const channelInfo = await myprofile.queryOwnedChannnelById()
-      console.log("channelInfo ==== ", channelInfo)
+      console.log("queryOwnedChannnelById ==== ", channelInfo)
     })
     const subscriptionCount = await myprofile.querySubscriptionCount()
     console.log("subscriptionCount ==== ", subscriptionCount)
