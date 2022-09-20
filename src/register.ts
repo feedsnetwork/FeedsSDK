@@ -84,7 +84,7 @@ export class Register {
                 const p3 = this.registerQueryPostRangeOfTimeScripting()
                 const p4 = this.registerQueryPostByIdScripting()
                 const p40 = this.registerQueryPostByStartTimeAndLimitScripting()
-                
+
                 //subscription
                 const p5 = this.registerSubscribeScripting()
                 const p6 = this.registerQuerySubscriptionInfoByChannelIdScripting()
@@ -196,53 +196,65 @@ export class Register {
         })
     }
 
-    private registerQueryChannelInfoScripting(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let executablefilter = { "channel_id": "$params.channel_id", "type": "public" }
-                let options = { "projection": { "_id": false }, "limit": 100 }
-                const executable = new FindExecutable("find_message", CollectionNames.CHANNELS, executablefilter, options).setOutput(true)
-                await this.vault.registerScript(ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO, executable, null, false)
-                resolve("SUCCESS")
-            } catch (error) {
-                logger.error("Register query channel info scripting error: ", error)
-                reject(error)
-            }
+    private registerQueryChannelInfoScripting(): Promise<void> {
+        let filter = {
+            "channel_id": "$params.channel_id",
+            "type": "public"
+        }
+        let options = {
+            "projection": { "_id": false },
+            "limit": 100
+        }
+
+        const executable = new FindExecutable("find_message", CollectionNames.CHANNELS, filter, options).setOutput(true);
+        return this.vault.registerScript(ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO, executable, null, false).catch( error => {
+            logger.error("Register query channel info scripting error: ", error);
+            throw new Error(error);
         })
     }
     // 新增 查询条件为limit和startTime
-    private registerQueryPostByStartTimeAndLimitScripting(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let executablefilter =
-                    { "channel_id": "$params.channel_id", "updated_at": { $gt: "$params.start" } }
-                let options = { "projection": { "_id": false }, "limit": "$params.limit", "sort": { "updated_at": -1 } }
-                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
-                let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-                let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
-                await this.vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST, findExe, queryCondition, false, false)
-                resolve("SUCCESS")
-            } catch (error) {
-                logger.error("registerQueryPostByStartTimeAndLimitScripting error", error)
-                reject(error)
-            }
+    private registerQueryPostByStartTimeAndLimitScripting(): Promise<void> {
+        let executablefilter = {
+            "channel_id": "$params.channel_id",
+            "updated_at": { $gt: "$params.start" }
+        }
+        let options = {
+            "projection": { "_id": false },
+            "limit": "$params.limit",
+            "sort": { "updated_at": -1 }
+        }
+        let conditionfilter = {
+            "channel_id": "$params.channel_id",
+            "user_did": "$caller_did"
+        }
+
+        let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
+        let findExecutable = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
+        return this.vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST, findExecutable, queryCondition, false, false).catch(error => {
+            logger.error("registerQueryPostByStartTimeAndLimitScripting error", error)
+            throw new Error(error);
         })
     }
 
-    private registerQueryPostByChannelIdScripting(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let executablefilter = { "channel_id": "$params.channel_id" }
-                let options = { "projection": { "_id": false }, "limit": 100 }
-                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
-                let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-                let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
-                await this.vault.registerScript(ScriptingNames.SCRIPT_QUERY_POST_BY_CHANNEL, findExe, queryCondition, false, false)
-                resolve("SUCCESS")
-            } catch (error) {
-                logger.error("Register query post by channelId scripting error: ", error)
-                reject(error)
-            }
+    private registerQueryPostByChannelIdScripting(): Promise<void> {
+        let executablefilter = {
+            "channel_id": "$params.channel_id"
+        }
+        let options = {
+            "projection": { "_id": false },
+            "limit": 100
+        }
+        let conditionfilter = {
+            "channel_id": "$params.channel_id",
+            "user_did": "$caller_did"
+        }
+
+        let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
+        let findExecutable = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
+
+        return this.vault.registerScript(ScriptingNames.SCRIPT_QUERY_POST_BY_CHANNEL, findExecutable, queryCondition, false, false).catch( error => {
+            logger.error("Register query post by channelId scripting error: ", error)
+            throw new Error(error);
         })
     }
 
@@ -617,7 +629,7 @@ export class Register {
             }
         })
     }
-    
+
     private registerQueryLikeByIdScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -644,7 +656,7 @@ export class Register {
             }
         })
     }
-    
+
     private registerRemoveLikeScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -670,7 +682,7 @@ export class Register {
             }
         })
     }
-    
+
     private registerQueryLikeByChannelScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -695,7 +707,7 @@ export class Register {
             }
         })
     }
-    
+
     private registerQueryLikeByPostScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -768,7 +780,7 @@ export class Register {
             }
         })
     }
-    
+
     private registerQueryCommentsFromPostsScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -792,7 +804,7 @@ export class Register {
             }
         })
     }
-  
+
     private registerQuerySelfLikeByIdScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -838,7 +850,7 @@ export class Register {
             }
         })
     }
-    
+
     private registerQueryPublicPostByChannelIdScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -859,7 +871,7 @@ export class Register {
             }
         })
     }
-    
+
     private registerQueryPublicPostRangeOfTimeScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -880,7 +892,7 @@ export class Register {
             }
         })
     }
-    
+
     private registerQuerySubscriptionInfoByUserDIDAndChannelIdScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
