@@ -76,19 +76,16 @@ class Channel implements ChannelHandler {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns An promise object that contains a list of posts.
      */
-     public queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
-        return new Promise( (resolve, _reject) => {
+    public queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "limit": { "$lt": upperLimit },
                 "created": { "$gt": earilerThan }
             }
-            const result = this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
-                this.getChannelInfo().getOwnerDid(), this.context.getAppDid());
-
-            // TODO: error.
-            resolve(result)
-        }).then((result: any) => {
+        return this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
+            .then((result: any) => {
+                console.log("callScript result ========= ")
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
             result.find_message.items.array.forEach(item => {

@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {RuntimeContext, ChannelInfo, ChannelEntry, MyProfile, MyChannel } from '@feedsnetwork/feeds-sdk-development';
+import {RuntimeContext, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
@@ -16,12 +16,35 @@ function SigninEE() {
 
   const handleSigninEE = async () => {
     const myprofile = await appCtx.signin()
-    console.log(`name: ${myprofile.getName()}`);
-    console.log(`description: ${myprofile.getDescription()}`);
-    const resultCount = await myprofile.queryOwnedChannelCount()
-    console.log(`myprofile resultCount: `, resultCount);
+
+    const currentTime = new Date().getTime()
     const resultChannelInfos = await myprofile.queryOwnedChannels()
-    console.log(`myprofile resultChannelInfos: `, resultChannelInfos);
+    const myChannel = new MyChannel(appCtx, resultChannelInfos[0])
+    console.log("myChannel ======================================== ", myChannel)
+    const posts = await myChannel.queryPosts(currentTime, 100)
+    console.log("posts ======================================== ", posts)
+
+    //     // 1970年： 1663569
+    // // 现在： 1663569965
+    // const currentTime = new Date().getTime()
+    // const subscriptions = await myprofile.querySubscriptions(currentTime, 100)
+    // console.log("subscriptions ======================================== ", subscriptions)
+    // const subChannel = new Channel(appCtx, subscriptions[0])
+
+    // console.log(`name: ${myprofile.getName()}`);
+    // console.log(`description: ${myprofile.getDescription()}`);
+    // const resultCount = await myprofile.queryOwnedChannelCount()
+    // console.log(`myprofile resultCount: `, resultCount);
+    // const resultChannelInfos = await myprofile.queryOwnedChannels()
+    // console.log(`myprofile resultChannelInfos: `, resultChannelInfos);
+    // const targetDid = 'did:elastos:ipkhCHvuxepfEoDffkZqWWfy9YM9AX4bw2'
+    // const subChannelId = "f84d291671fa706522703a94e0c017c5dbde913b93aae45fa5174f255c9f4ebe"
+    // const subDisplayName = myprofile.getName()
+    // const status = 0
+    // const chnnelEntry = new ChannelEntry(targetDid, subChannelId, subDisplayName, status)
+    // const unsubscribeNewChannel = await myprofile.subscribeChannel(chnnelEntry)
+    // console.log("unsubscribeNewChannel ============================================ ", unsubscribeNewChannel)
+
     // await resultChannelInfos.forEach(async (item) => {
     //   // const channelId = item.getChannelId()
     // //   console.log("channelId ============================================ ", channelId)
@@ -33,19 +56,25 @@ function SigninEE() {
     //  console.log("mychannelInfo ==== ", mychannelInfo)
     // })
 
-    const item0 = resultChannelInfos[0]
-    const myChannel0 = new MyChannel(appCtx, item0)
-    let mychannelInfo0 = await myChannel0.queryChannelInfo()
-    console.log("mychannelInfo0 ============================================ ", mychannelInfo0)
-    const disName = mychannelInfo0.getDisplayName()
-    mychannelInfo0 = mychannelInfo0.setDisplayName("大雁南飞")
-    mychannelInfo0 = mychannelInfo0.setDescription("this is new description, the old displayname is: " + disName)
-    const result = await myChannel0.updateChannelInfo(mychannelInfo0)
-    console.log("updateChannelInfo result ============================================ ", result)
+    // const channelInfoItem = resultChannelInfos[0]
+    // const myChannel = new MyChannel(appCtx, channelInfoItem)
+    // let mychannelInfo = await myChannel.queryChannelInfo()
+    // console.log("mychannelInfo ============================================ ", mychannelInfo)
+    // const disName = mychannelInfo.getDisplayName()
+    // mychannelInfo = mychannelInfo.setDisplayName("大雁南飞")
+    // mychannelInfo = mychannelInfo.setDescription("this is new description, the old displayname is: " + disName)
+    // const result = await myChannel.updateChannelInfo(mychannelInfo)
+    // console.log("updateChannelInfo result ============================================ ", result)
      
-    const channelId = mychannelInfo0.getChannelId()
-    const channelInfo = await myprofile.queryOwnedChannnelById(channelId)
-    console.log("更新后：queryOwnedChannnelById channelInfo ============================================ ", channelInfo)
+    // const channelId = mychannelInfo.getChannelId()
+    // const channelInfo = await myprofile.queryOwnedChannnelById(channelId)
+    // console.log("更新后：queryOwnedChannnelById channelInfo ============================================ ", channelInfo)
+
+    // const time = (new Date()).getTime()
+    // const posts = await myChannel.queryPosts(time, 100)
+    // console.log("posts queryPosts ============================================ ", posts)
+
+
 
   /*
     const item0 = resultChannelInfos[0]

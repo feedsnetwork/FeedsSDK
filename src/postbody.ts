@@ -5,27 +5,139 @@ export enum MediaType {
     containsImg = 1,
     containsVideo = 2,
 }
-/*
-export type PostContent = {
-    version: string,
-    content: string,
-    mediaData: MediaData[],// 已经上传的到hive(size/type/scriptName@path)
-    mediaType: MediaType
+
+export class MediaData {
+    private kind: string           //"image/video/audio"
+    private originMediaPath: string
+    private type: string           //"image/jpg",
+    private size: number           //origin file size
+    private thumbnailPath: string    //"thumbnailCid"
+    private duration: number
+    private imageIndex: number
+    private additionalInfo: any
+    private memo: any
+
+    private constructor() {
+    }
+
+    private setKind(kind: string) {
+        this.kind = kind
+    }
+
+    public getKind() {
+        return this.kind
+    }
+
+    private setOriginMediaPath(originMediaPath: string) {
+        this.originMediaPath = originMediaPath
+    }
+
+    public getOriginMediaPath() {
+        return this.originMediaPath
+    }
+
+    private setType(type: string) {
+        this.type = type
+    }
+
+    public getType() {
+        return this.type
+    }
+
+    private setSize(size: number) {
+        this.size = size
+    }
+
+    public getSize() {
+        return this.size
+    }
+
+    private setThumbnailPath(thumbnailPath: string) {
+        this.thumbnailPath = thumbnailPath
+    }
+
+    public getThumbnailPath() {
+        return this.thumbnailPath
+    }
+
+    private setDuration(duration: number) {
+        this.duration = duration
+    }
+
+    public getDuration() {
+        return this.duration
+    }
+
+    private setImageIndex(imageIndex: number) {
+        this.imageIndex = imageIndex
+    }
+
+    public getImageIndex() {
+        return this.imageIndex
+    }
+
+    private setAdditionalInfo(additionalInfo: any) {
+        this.additionalInfo = additionalInfo
+    }
+
+    public getAdditionalInfo() {
+        return this.additionalInfo
+    }
+
+    private setMemo(memo: string) {
+        this.memo = memo
+    }
+
+    public getMemo() {
+        return this.memo
+    }
+
+    static parse(data: any): MediaData {
+
+        const mediaData = new MediaData()
+        mediaData.setKind(data.kind)
+        mediaData.setOriginMediaPath(data.originMediaPath)
+        mediaData.setType(data.type)
+        mediaData.setSize(data.size)
+        mediaData.setThumbnailPath(data.thumbnailPath)
+        mediaData.setDuration(data.duration)
+        mediaData.setImageIndex(data.imageIndex)
+        mediaData.setAdditionalInfo(data.additionalInfo)
+        mediaData.setMemo(data.memo)
+
+        return mediaData
+    }
 }
 
-type MediaData = {
-    kind: string,           //"image/video/audio"
-    originMediaPath: string,
-    type: string,           //"image/jpg",
-    size: number,           //origin file size
-    thumbnailPath: string    //"thumbnailCid"
-    duration: number,
-    imageIndex: number,
-    additionalInfo: any,
-    memo: any
+export class PostContent {
+    private version: string
+    private content: string
+    private mediaData: MediaData[]// 已经上传的到hive(size/type/scriptName@path)
+    private mediaType: MediaType
+
+    constructor(version: string, content: string, mediaData: MediaData[], mediaType: MediaType) {
+        this.version = version
+        this.content = content
+        this.mediaData = mediaData
+        this.mediaType = mediaType
+    }
+
+    public getVersion() {
+        return this.version
+    }
+
+    public getContent() {
+        return this.content
+    }
+
+    public getMediaData() {
+        return this.mediaData
+    }
+
+    public getMediaType() {
+        return this.mediaType
+    }
 }
-*/
-export class PostContent {}
 
 export class PostBody {
 
@@ -130,60 +242,31 @@ export class PostBody {
         return this.memo;
     }
 
-    public static parse(targetDid: string, result: any): PostBody {
-        let contents = null
-        let postContent: PostContent = {
-            version: '',
-            content: '',
-            mediaData: [],
-            mediaType: MediaType.noMeida
-        }
-        /*
-        try {
-            contents = JSON.parse(result['content'])
-        } catch (error) {
-            throw error
-        } */
-/*
-        if (contents) {
-            let mDatas = contents['mediaData']
-            let mData = {}
-            for (let index = 0; index < mDatas.length; index++) {
-                mData = mDatas[index]
-            }
-            const mediaData: MediaData = {
-                kind: mData['kind'],
-                originMediaPath: mData['originMediaPath'],
-                type: mData['type'],
-                size: mData['size'],
-                thumbnailPath: mData['thumbnailPath'],
-                duration: mData['duration'],
-                imageIndex: mData['imageIndex'],
-                additionalInfo: mData['additionalInfo'],
-                memo: mData['memo']
-            }
-            let mediaDatas = []
+    public static parse(targetDid: string, post: any): PostBody {
+        console.log("parse =================== ", post)
+        const contents = JSON.parse(post.content)
+        const _mediaDatas = contents.mediaData
+        let mediaDatas = []
+        for (let index = 0; index < _mediaDatas.length; index++) {
+            const item = mediaDatas[index]
+            const mediaData = MediaData.parse(item)
             mediaDatas.push(mediaData)
-
-            // postContent
-            postContent = {
-                version: contents['version'],
-                content: contents['content'],
-                mediaData: mediaDatas,
-                mediaType: contents['mediaType']
-            }
         }
-*/
-        const postChunk = new PostBody(targetDid, result.post_id, result.channel_id)
-        postChunk.setCreatedAt(result.created_at)
-        postChunk.setUpdatedAt(result.updated_at)
-        //postChunk.content(postContent)
-        postChunk.setStatus(result.status)
-        postChunk.setType(result.type)
-        postChunk.setTag(result.tag)
-        postChunk.setProof(result.proof)
-        postChunk.setMemo(result.memo)
 
-        return postChunk
+        const postContent = new PostContent(contents.version, contents.content, mediaDatas, contents.mediaType)
+        const postId = post.post_id
+        const channelId = post.channel_id
+        const postBody = new PostBody(targetDid, postId, channelId)
+        postBody.setCreatedAt(post.created_at)
+        postBody.setUpdatedAt(post.updated_at)
+        postBody.setContent(postContent)
+        postBody.setStatus(post.status)
+        postBody.setType(post.type)
+        postBody.setTag(post.tag)
+        postBody.setProof(post.proof)
+        postBody.setMemo(post.memo)
+        // postBody.setPinStatus()//TODO:
+
+        return postBody
     }
 }

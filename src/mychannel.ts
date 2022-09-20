@@ -8,7 +8,7 @@ import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { RuntimeContext } from './runtimecontext';
 import { CollectionNames, CollectionNames as collections, ScriptingNames as scripts } from './vault/constants';
-import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
+import { UpdateOptions, FindOptions } from "@elastosfoundation/hive-js-sdk"
 
 const logger = new Logger("MyChannel")
 
@@ -109,24 +109,26 @@ export class MyChannel {
      * @returns
      */
     public queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
-        return new Promise( (resolve, _reject) => {
             const filter = {
-                "limit": { "$lt": upperLimit },
-                "created": { "$gt": earilerThan }
+                "channel_id": this.channelInfo.getChannelId(),
+                "updated_at": { "$lte": earilerThan }
             }
-            const result = this.vault.queryDBData(scripts.SCRIPT_SOMETIME_POST, filter)
-            // TODO:
-            resolve(result)
-        }).then ((result: any) => {
+        const queryOptions = new FindOptions()
+        queryOptions.limit = upperLimit
+        console.log("queryPosts filter ============================== ", filter)
+        return this.vault.queryDBDataWithOptions(CollectionNames.POSTS, filter, queryOptions)
+            .then((result: any) => {
+                console.log("queryPosts result ==============================", result)
             let posts = []
             result.forEach(item => {
-                Post.parse(this.channelInfo.getOwnerDid(), item)
-                // posts.push()
+                console.log("queryPosts item ==============================", item)
+                const post = Post.parse(this.channelInfo.getOwnerDid(), item)
+                posts.push(post)
             })
             return posts
         }).catch (error => {
             logger.error('Query posts error:', error)
-            throw new Error(error)
+            throw error
         })
     }
 

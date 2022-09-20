@@ -83,7 +83,8 @@ export class Register {
                 const p2 = this.registerQueryPostByChannelIdScripting()
                 const p3 = this.registerQueryPostRangeOfTimeScripting()
                 const p4 = this.registerQueryPostByIdScripting()
-
+                const p40 = this.registerQueryPostByStartTimeAndLimitScripting()
+                
                 //subscription
                 const p5 = this.registerSubscribeScripting()
                 const p6 = this.registerQuerySubscriptionInfoByChannelIdScripting()
@@ -118,7 +119,7 @@ export class Register {
                 const p27 = this.registerQueryPublicPostRangeOfTimeScripting()
 
                 const p28 = this.registerQuerySubscriptionInfoByUserDIDAndChannelIdScripting()
-                const array = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28] as const
+                const array = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p40] as const
                 Promise.all(array).then(values => {
                     logger.debug('Registe all scripting success: ', values)
                     resolve('SUCCESS')
@@ -209,12 +210,30 @@ export class Register {
             }
         })
     }
+    // 新增 查询条件为limit和startTime
+    private registerQueryPostByStartTimeAndLimitScripting(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let executablefilter =
+                    { "channel_id": "$params.channel_id", "updated_at": { $gt: "$params.start" } }
+                let options = { "projection": { "_id": false }, "limit": "$params.limit", "sort": { "updated_at": -1 } }
+                let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+                let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
+                let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
+                await this.vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST, findExe, queryCondition, false, false)
+                resolve("SUCCESS")
+            } catch (error) {
+                logger.error("registerQueryPostByStartTimeAndLimitScripting error", error)
+                reject(error)
+            }
+        })
+    }
 
     private registerQueryPostByChannelIdScripting(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
                 let executablefilter = { "channel_id": "$params.channel_id" }
-                let options = { "projection": { "_id": false }, "limit": 100 }
+                let options = { "projection": { "_id": false }, "limit": "$params.limit" }
                 let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
                 let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
                 let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)

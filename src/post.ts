@@ -145,7 +145,7 @@ export class Post {
     }
 
     public static parse(targetDid: string, result: any): Post {
-        /*
+
         try {
             const postChun = PostBody.parse(targetDid, result)
             const post = new Post(postChun)
@@ -153,7 +153,7 @@ export class Post {
         } catch (error) {
             //logger.error('Parse post result error: ', error)
             throw error
-        }*/
+        }
         return null;
     }
 }
