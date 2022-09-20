@@ -21,7 +21,9 @@ function SigninEE() {
     const resultChannelInfos = await myprofile.queryOwnedChannels()
     const myChannel = new MyChannel(appCtx, resultChannelInfos[0])
     console.log("myChannel ======================================== ", myChannel)
-    const posts = await myChannel.queryPosts(currentTime, 100)
+    // const posts = await myChannel.queryPosts(currentTime, 100)
+    // console.log("posts ======================================== ", posts)
+    const posts = await myChannel.queryPostsByRangeOfTime(1663569, currentTime)
     console.log("posts ======================================== ", posts)
 
     //     // 1970年： 1663569

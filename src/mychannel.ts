@@ -115,13 +115,10 @@ export class MyChannel {
             }
         const queryOptions = new FindOptions()
         queryOptions.limit = upperLimit
-        console.log("queryPosts filter ============================== ", filter)
         return this.vault.queryDBDataWithOptions(CollectionNames.POSTS, filter, queryOptions)
             .then((result: any) => {
-                console.log("queryPosts result ==============================", result)
             let posts = []
-            result.forEach(item => {
-                console.log("queryPosts item ==============================", item)
+                result.forEach(item => {
                 const post = Post.parse(this.channelInfo.getOwnerDid(), item)
                 posts.push(post)
             })
@@ -158,25 +155,24 @@ export class MyChannel {
      * @returns An promise object that contains a list of posts.
      */
     public queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
-        return new Promise( (resolve, _reject) => {
-            const channelId = this.channelInfo.getChannelId()
-            const filter = {
-                "channel_id": channelId,
-                "created": { $gt: start, $lt: end }
-            }
-            const result = this.vault.queryDBData(scripts.SCRIPT_SOMETIME_POST, filter)
-            // TODO:
-            resolve(result)
-        }).then ((data: any) => {
+        const channelId = this.channelInfo.getChannelId()
+        const filter = {
+            "channel_id": channelId,
+            "updated_at": { $gte: start, $lte: end }
+        }
+        return this.vault.queryDBData(CollectionNames.POSTS, filter)
+            .then((data: any) => {
+                console.log("queryPostsByRangeOfTime data ==============================", data)
             let posts = []
             data.forEach(item => {
-                Post.parse(this.channelInfo.getOwnerDid(), item)
-                // posts.push()
+                console.log("queryPostsByRangeOfTime item ==============================", item)
+                const post = Post.parse(this.channelInfo.getOwnerDid(), item)
+                posts.push(post)
             })
             return posts
         }).catch (error => {
             logger.error("Query posts by range of time error:", error)
-            throw new Error(error)
+            throw error
         })
     }
 
