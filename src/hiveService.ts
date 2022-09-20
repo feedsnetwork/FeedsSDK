@@ -10,27 +10,30 @@ export class hiveService {
 
   constructor() { }
 
-  async getScriptRunner(userDid: string): Promise<ScriptRunner> {
-    try {
-      const appContext = RuntimeContext.getInstance()
-      this.scriptRunner = appContext.getScriptRunners[userDid]
+  async getScriptRunner(targetDid: string): Promise<ScriptRunner> {
+    const appContext = RuntimeContext.getInstance()
+    return appContext.getScriptRunner(targetDid)
+    // try {
 
-      if (this.scriptRunner === undefined || this.scriptRunner === null) {
-        this.scriptRunner = await appContext.creatScriptRunner(userDid)
-      }
-      return this.scriptRunner
-    } catch (error) {
-      throw error
-    }
+      // const appContext = RuntimeContext.getInstance()
+      // this.scriptRunner = appContext.getScriptRunners[userDid]
+
+      // if (this.scriptRunner === undefined || this.scriptRunner === null) {
+      //   this.scriptRunner = await appContext.creatScriptRunner(userDid)
+      // }
+      // return this.scriptRunner
+    // } catch (error) {
+    //   throw error
+    // }
   }
 
   async getVault(): Promise<Vault> {
     const appContext = RuntimeContext.getInstance()
-    this.vault = appContext.getHiveVault()
-    if (this.vault === undefined || this.vault === null) {
-      this.vault = await appContext.createVault()
-    }
-    return this.vault
+    return appContext.getVault()
+    // if (this.vault === undefined || this.vault === null) {
+    //   this.vault = await appContext.createVault()
+    // }
+    // return this.vault
   }
 
   async getDatabaseService() {
