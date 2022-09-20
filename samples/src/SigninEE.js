@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {RuntimeContext, ChannelInfo, ChannelEntry } from '@feedsnetwork/feeds-sdk-development';
+import {RuntimeContext, ChannelInfo, ChannelEntry, MyProfile } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
@@ -20,20 +20,22 @@ function SigninEE() {
     console.log(`description: ${myprofile.getDescription()}`);
     const resultCount = await myprofile.queryOwnedChannelCount()
     console.log(`myprofile resultCount: `, resultCount);
-    const resultChannels = await myprofile.queryOwnedChannels()
-    console.log(`myprofile resultChannels: `, resultChannels);
-    await resultChannels.forEach(async (item) => {
+    const resultChannelInfos = await myprofile.queryOwnedChannels()
+    console.log(`myprofile resultChannelInfos: `, resultChannelInfos);
+    resultChannelInfos.forEach((item) => {
+       console.log("item ====================== ", item)
       const channelId = item.getChannelId()
-      console.log("channelId ==== ", channelId)
-      const channelInfo = await myprofile.queryOwnedChannnelById()
-      console.log("queryOwnedChannnelById ==== ", channelInfo)
+      console.log("channelId ====================== ", channelId)
+      const channelInfo = myprofile.queryOwnedChannnelById()
+      console.log("queryOwnedChannnelById ====================== ", channelInfo)
     })
     const subscriptionCount = await myprofile.querySubscriptionCount()
     console.log("查看订阅channle个数 结束：subscriptionCount ==== ", subscriptionCount)
 
     // 1970年： 1663569
     // 现在： 1663569965
-    const subscriptions0 = await myprofile.querySubscriptions((new Date()).getTime(), 100)
+    const currentTime = new Date().getTime()
+    const subscriptions0 = await myprofile.querySubscriptions(currentTime, 100)
     console.log("subscriptions0 ======================================== ", subscriptions0)
 
     // console.log("开始 create Channel ============================================== ")
@@ -87,6 +89,10 @@ function SigninEE() {
     console.log("subscriptions2 ======================================== ", subscriptions2)
 
     setLogin(appCtx.checkSignin());
+  }
+
+  const creatChannel = async (myProfile) => {
+
   }
 
   const handleSignout = async () => {

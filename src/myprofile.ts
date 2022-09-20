@@ -21,6 +21,7 @@ type SubscribedChannel = {
     channelId: string
 } */
 
+// TODO: 优化去重
 export class MyProfile implements ProfileHandler {
     private context: RuntimeContext;
 
@@ -81,12 +82,12 @@ export class MyProfile implements ProfileHandler {
 
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
-            let myChannels = []
+            let myChannelInfos = []
             result.forEach(item => {
-                const myChannel = MyChannel.parse(this.userDid, this.context, result)
-                myChannels.push(myChannel)
+                const channelInfo = ChannelInfo.parse(this.userDid, item)
+                myChannelInfos.push(channelInfo)
             })
-            return myChannels
+            return myChannelInfos
         })
     }
 
@@ -138,8 +139,16 @@ export class MyProfile implements ProfileHandler {
       * @param upperLimit
       */
     public querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
+        const formeTime = new Date(earlierThan).toISOString()
+        // const filter = {
+        //     "created.$date": { "$lt": formeTime } // $gt: 大于, $lt: 小于
+        // }
+        console.log("formeTime >>>>>>>>>>>>>>>>>>>>>>>>> ", formeTime)
         const filter = {
-            "created": { "$lt": earlierThan } // $gt: 之后, $lt: 之前 
+            "$or": [
+                { "created": { "$lt": earlierThan } }, // $gt: 大于, $lt: 小于
+                { "created": { "$lt": formeTime } }
+            ]
         }
         const queryOptions = new FindOptions()
         queryOptions.limit = maximum

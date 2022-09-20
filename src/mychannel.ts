@@ -330,13 +330,9 @@ export class MyChannel {
         })
     }
 
-    static parse(targetDid: string, context: RuntimeContext, channels: any): MyChannel {
-        let parseResult: ChannelInfo[] = []
-        channels.forEach(item => {
-            const channelInfo = ChannelInfo.parse(targetDid, item)
-            parseResult.push(channelInfo)
-        })
-        const myChannel = new MyChannel(context, parseResult[0])
+    static parse(targetDid: string, context: RuntimeContext, channel: any): MyChannel {
+        const channelInfo = ChannelInfo.parse(targetDid, channel)
+        const myChannel = new MyChannel(context, channelInfo)
 
         return myChannel
     }
