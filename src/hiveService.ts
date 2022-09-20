@@ -25,8 +25,9 @@ export class hiveService {
   }
 
   async getVault(): Promise<Vault> {
+    const appContext = RuntimeContext.getInstance()
+    this.vault = appContext.getHiveVault()
     if (this.vault === undefined || this.vault === null) {
-      const appContext = RuntimeContext.getInstance()
       this.vault = await appContext.createVault()
     }
     return this.vault

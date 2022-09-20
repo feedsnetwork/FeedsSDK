@@ -62,7 +62,7 @@ class Channel implements ChannelHandler {
         return this.queryChannelInfo().then( channelInfo => {
             dispatcher.dispatch(channelInfo)
         }).catch(error => {
-            logger.log('Query channel information error: ', error);
+            logger.log('query and dispatch channel information error: ', error);
             throw new Error(error)
         })
     }

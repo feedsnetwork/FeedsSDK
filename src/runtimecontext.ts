@@ -10,6 +10,7 @@ const logger = new Logger("AppContext")
 export class RuntimeContext {
     private static sInstance: RuntimeContext = null
     private scriptRunners: { [key: string]: ScriptRunner } = {}
+    private hiveVault: Vault
     private register: Register
 
     private applicationDid = ""
@@ -42,6 +43,10 @@ export class RuntimeContext {
 
     public getNetwork(): string {
         return this.networkType
+    }
+
+    getHiveVault(): Vault {
+        return this.hiveVault
     }
 
     public getAppInstanceDIDDocument(): string {
@@ -225,11 +230,11 @@ export class RuntimeContext {
             const userDid = RuntimeContext.getInstance().getUserDid()
             const appinstanceDocument = await this.getAppInstanceDIDDoc()
             const context = await this.signIntoVault(userDid, appinstanceDocument)
-            const hiveVault = new Vault(context)
+            this.hiveVault = new Vault(context)
             const scriptRunner = await this.creatScriptRunner(userDid)
             this.scriptRunners[userDid] = scriptRunner
 
-            return hiveVault
+            return this.hiveVault
         }
         catch (error) {
             logger.error('Create vault error:', error)

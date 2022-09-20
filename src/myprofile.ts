@@ -77,6 +77,8 @@ export class MyProfile implements ProfileHandler {
     public queryOwnedChannelCount(): Promise<number> {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
             return result.length
+        }).catch(error => {
+            throw new error
         })
     }
 
@@ -88,6 +90,8 @@ export class MyProfile implements ProfileHandler {
                 myChannelInfos.push(channelInfo)
             })
             return myChannelInfos
+        }).catch(error => {
+            throw new error
         })
     }
 
@@ -97,7 +101,7 @@ export class MyProfile implements ProfileHandler {
                 dispatcher.dispatch(item)
             })
         }).catch (error => {
-            throw new Error(error)
+            throw new error
         })
     }
 
@@ -105,6 +109,8 @@ export class MyProfile implements ProfileHandler {
         const filter = { "channel_id": channelId }
         return this.vault.queryDBData(CollectionNames.CHANNELS, filter).then(result => {
             return ChannelInfo.parse(this.userDid, result[0])
+        }).catch(error => {
+            throw error
         })
     }
 
@@ -128,6 +134,8 @@ export class MyProfile implements ProfileHandler {
     public querySubscriptionCount(): Promise<number> {
         return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {}).then(result => {
             return result.length
+        }).catch(error => {
+            throw new error
         })
     }
 
@@ -168,6 +176,8 @@ export class MyProfile implements ProfileHandler {
             })
             console.log("results >>>>>>>>>>>>>>>>>> ", results)
             return results
+        }).catch(error => {
+            throw new error
         })
     }
 
@@ -186,6 +196,8 @@ export class MyProfile implements ProfileHandler {
             channels.forEach(item => {
                 dispatcher.dispatch(item)
             })
+        }).catch(error => {
+            throw new error
         })
     }
 
@@ -217,13 +229,15 @@ export class MyProfile implements ProfileHandler {
 
         return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(_ => {
             return MyChannel.parse(this.userDid, this.context, [doc])
+        }).catch(error => {
+            throw new error
         })
     }
 
     // 为了测试：除测试channel 
-    public deleteChannel(channelId: string): Promise<void> {
+    public async deleteChannel(channelId: string): Promise<void> {
         let filter = { "channel_id": channelId }
-        return this.vault.deleateOneDBData(CollectionNames.CHANNELS, filter)
+        return await this.vault.deleateOneDBData(CollectionNames.CHANNELS, filter)
     }
 
     /**
@@ -309,7 +323,8 @@ export class MyProfile implements ProfileHandler {
             "target_did": targetDid,
             "channel_id": channelId
         }
-        return this.vault.insertDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc).catch(error => {
+        return this.vault.insertDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
+            .catch(error => {
             logger.error("Subscribe channel backup error:", error)
             throw error
         })

@@ -7,7 +7,7 @@ import { hiveService as VaultService } from "./hiveService"
 import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { RuntimeContext } from './runtimecontext';
-import { CollectionNames as collections, ScriptingNames as scripts } from './vault/constants';
+import { CollectionNames, CollectionNames as collections, ScriptingNames as scripts } from './vault/constants';
 
 const logger = new Logger("MyChannel")
 
@@ -20,6 +20,7 @@ export class MyChannel {
     public constructor(context: RuntimeContext, channelInfo: ChannelInfo) {
         this.context = context
         this.channelInfo = channelInfo
+        this.vault = new VaultService()
     }
 
     /**
@@ -35,21 +36,25 @@ export class MyChannel {
      * @returns The promise object containing the channel information
      */
     public queryChannelInfo(): Promise<ChannelInfo> {
-        return new Promise<any>( (resolve, _reject) => {
-            const params = {
-                "channel_id": this.channelInfo.getChannelId()
-            }
-            const result = this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.channelInfo.getOwnerDid(), this.context.getAppDid())
+        const channelId = this.channelInfo.getChannelId()
+        console.log("queryChannelInfo channelId ============================================ ", channelId)
+        const filter = {
+            "channel_id": channelId
+        }
+        const ownerDid = this.channelInfo.getOwnerDid()
+        const appDid = this.context.getAppDid()
+        console.log("queryChannelInfo filter ============================================ ", filter)
+        console.log("queryChannelInfo ownerDid ============================================ ", ownerDid)
+        console.log("queryChannelInfo appDid ============================================ ", appDid)
 
-            // TODO: error
-            resolve(result)
-        }).then (result => {
-            return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result)
-        }).catch (error => {
-            logger.log('Query channel information error: ', error)
-            throw new Error(error)
-        })
+        return this.vault.queryDBData(CollectionNames.CHANNELS, filter)
+            .then(result => {
+                console.log("queryChannelInfo result ============================================ ", result)
+                return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result[0])
+            }).catch(error => {
+                logger.log('Query channel information error: ', error)
+                throw new error
+            })
     }
 
     /**

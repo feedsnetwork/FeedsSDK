@@ -91,7 +91,7 @@ export class ChannelInfo {
     }
 
     public getOwnerDid(): string {
-        return this.channelId;
+        return this.ownerDid;
     }
 
     public getChannelId(): string {
