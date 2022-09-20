@@ -10,6 +10,7 @@ const logger = new Logger("AppContext")
 export class RuntimeContext {
     private static sInstance: RuntimeContext = null
     private scriptRunners: { [key: string]: ScriptRunner } = {}
+    private vault: Vault = null;
     private hiveVault: Vault
     private register: Register
 
@@ -109,7 +110,7 @@ export class RuntimeContext {
     public checkSignin() {
         return checkSignin()
     }
-    
+
     public async signHive(): Promise<boolean> {
         let self = this
         return self.register.prepareConnectHive().then(_ => {
@@ -216,30 +217,36 @@ export class RuntimeContext {
         return token
     }
 
-    async creatScriptRunner(targetDid: string) {
-        const appinstanceDocument = await this.getAppInstanceDIDDoc()
-        const context = await this.signIntoVault(targetDid, appinstanceDocument)
-        const scriptRunner = new ScriptRunner(context)
-        this.scriptRunners[targetDid] = scriptRunner
+    public getScriptRunner(targetDid: string): Promise<ScriptRunner> {
+        if (this.scriptRunners[targetDid] != null)
+            return Promise.resolve(this.scriptRunners[targetDid]);
 
-        return scriptRunner
+        return this.getAppInstanceDIDDoc().then(async (appInstanceDIDDoc) => {
+            return await this.signIntoVault(targetDid, appInstanceDIDDoc);
+        }).then(context => {
+            this.scriptRunners[targetDid] = new ScriptRunner(context);
+            return this.scriptRunners[targetDid];
+        }).catch (error => {
+            logger.error(`Create a scriptRunner object for ${targetDid} failed`);
+            throw new Error(error);
+        })
     }
 
-    async createVault() {
-        try {
-            const userDid = RuntimeContext.getInstance().getUserDid()
-            const appinstanceDocument = await this.getAppInstanceDIDDoc()
-            const context = await this.signIntoVault(userDid, appinstanceDocument)
-            this.hiveVault = new Vault(context)
-            const scriptRunner = await this.creatScriptRunner(userDid)
-            this.scriptRunners[userDid] = scriptRunner
+    public getVault(): Promise<Vault> {
+        if (this.vault != null)
+            return Promise.resolve(this.vault);
 
-            return this.hiveVault
-        }
-        catch (error) {
-            logger.error('Create vault error:', error)
-            throw error
-        }
+        const userDid = RuntimeContext.getInstance().getUserDid();
+        return this.getAppInstanceDIDDoc().then(async (appInstanceDIDDoc) => {
+            return await this.signIntoVault(userDid, appInstanceDIDDoc);
+        }).then(context => {
+            this.scriptRunners[userDid] = new ScriptRunner(context);
+            this.vault = new Vault(context);
+            return this.vault;
+        }).catch (error => {
+            logger.error(`Create a vault object for ${userDid} failed`);
+            throw new Error(error);
+        })
     }
 }
 
