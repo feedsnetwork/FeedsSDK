@@ -8,6 +8,7 @@ import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { RuntimeContext } from './runtimecontext';
 import { CollectionNames, CollectionNames as collections, ScriptingNames as scripts } from './vault/constants';
+import { UpdateOptions } from "@elastosfoundation/hive-js-sdk"
 
 const logger = new Logger("MyChannel")
 
@@ -76,11 +77,11 @@ export class MyChannel {
      * @param channelInfo new channel information to be updated.
      * @returns The promise of whether updated in success or failure
      */
-    public updateChannelInfo(channelInfo: ChannelInfo) {
-        return new Promise<void>( (resolve, _reject) => {
+    public updateChannelInfo(channelInfo: ChannelInfo): Promise<boolean> {
+
             const filter = { "channel_id": channelInfo.getChannelId() }
             const doc = {
-                "name"  : channelInfo.getName(),
+                "display_name": channelInfo.getDisplayName(),
                 "intro" : channelInfo.getDescription(),
                 "avatar": channelInfo.getAvatar(),
                 "updated_at": channelInfo.getUpdatedAt(),
@@ -90,12 +91,8 @@ export class MyChannel {
                 "memo"  : channelInfo.getMmemo(),
             }
             const update = { "$set": doc }
-
-            //this.vault.updateOneDBData(collections.CHANNELS, filter, null,
-            //    new UpdateOptions(false, true))
-
-            // TODO: error
-            resolve()
+        return this.vault.updateOneDBData(collections.CHANNELS, filter, update, new UpdateOptions(false, true)).then(result => {
+            return true
         }).catch (error => {
             logger.error('update channel information error', error)
             throw new Error(error)

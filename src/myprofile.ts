@@ -108,6 +108,7 @@ export class MyProfile implements ProfileHandler {
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         const filter = { "channel_id": channelId }
         return this.vault.queryDBData(CollectionNames.CHANNELS, filter).then(result => {
+            console.log("queryOwnedChannnelById result ==== ", result)
             return ChannelInfo.parse(this.userDid, result[0])
         }).catch(error => {
             throw error
@@ -323,8 +324,7 @@ export class MyProfile implements ProfileHandler {
             "target_did": targetDid,
             "channel_id": channelId
         }
-        return this.vault.insertDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
-            .catch(error => {
+        return this.vault.insertDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc).catch(error => {
             logger.error("Subscribe channel backup error:", error)
             throw error
         })

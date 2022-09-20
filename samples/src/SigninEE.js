@@ -34,17 +34,31 @@ function SigninEE() {
     // })
 
     const item0 = resultChannelInfos[0]
+    const myChannel0 = new MyChannel(appCtx, item0)
+    let mychannelInfo0 = await myChannel0.queryChannelInfo()
+    console.log("mychannelInfo0 ============================================ ", mychannelInfo0)
+    const disName = mychannelInfo0.getDisplayName()
+    mychannelInfo0 = mychannelInfo0.setDisplayName("大雁南飞")
+    mychannelInfo0 = mychannelInfo0.setDescription("this is new description, the old displayname is: " + disName)
+    const result = await myChannel0.updateChannelInfo(mychannelInfo0)
+    console.log("updateChannelInfo result ============================================ ", result)
+     
+    const channelId = mychannelInfo0.getChannelId()
+    const channelInfo = await myprofile.queryOwnedChannnelById(channelId)
+    console.log("更新后：queryOwnedChannnelById channelInfo ============================================ ", channelInfo)
+
+  /*
+    const item0 = resultChannelInfos[0]
     console.log("item0 ============================================ ", item0)
     const channelId0 = item0.getChannelId()
     console.log("channelId0 ============================================ ", channelId0)
-   const channelInfo0 = await myprofile.queryOwnedChannnelById(channelId0)
-   console.log("channelInfo0 ============================================ ", channelInfo0)
+    const channelInfo0 = await myprofile.queryOwnedChannnelById(channelId0)
+    console.log("channelInfo0 ============================================ ", channelInfo0)
 
     const myChannel0 = new MyChannel(appCtx, item0)
-   const mychannelInfo0 = await myChannel0.queryChannelInfo()
-   console.log("mychannelInfo0 ==== ", mychannelInfo0)
+    const mychannelInfo0 = await myChannel0.queryChannelInfo()
+    console.log("mychannelInfo0 ==== ", mychannelInfo0)
 
-  /*
      const item1 = resultChannelInfos[1]
      console.log("item1 ============================================ ", item1)
      const channelId1 = item1.getChannelId()
