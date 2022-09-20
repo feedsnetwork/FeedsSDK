@@ -233,7 +233,7 @@ export class Register {
         return new Promise(async (resolve, reject) => {
             try {
                 let executablefilter = { "channel_id": "$params.channel_id" }
-                let options = { "projection": { "_id": false }, "limit": "$params.limit" }
+                let options = { "projection": { "_id": false }, "limit": 100 }
                 let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
                 let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
                 let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
