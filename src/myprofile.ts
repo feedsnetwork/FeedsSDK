@@ -156,7 +156,7 @@ export class MyProfile implements ProfileHandler {
         const filter = {
             "$or": [
                 { "created": { "$lt": earlierThan } }, // $gt: 大于, $lt: 小于
-                { "created.$date": { "$lt": formeTime } }
+                // { "created.$date": { "$lt": formeTime } }
             ]
         }
         const queryOptions = new FindOptions()
