@@ -200,24 +200,22 @@ export class MyChannel {
      * @param postId
      */
     public queryPost(postId: string): Promise<PostBody> {
-        return new Promise<any>( (resolve, _reject) => {
-            const filter = {
-                "channel_id": this.channelInfo.getChannelId(),
-                "postId": postId
-            }
-            const result = this.vault.queryDBData(scripts.SCRIPT_SOMETIME_POST, filter)
-            // TODO:
-            resolve(result)
-        }).then ((data) => {
+        const filter = {
+            "channel_id": this.channelInfo.getChannelId(),
+            "post_id": postId
+        }
+        console.log("filter ====== ", filter)
+        return this.vault.queryDBData(collections.POSTS, filter)
+            .then((data) => {
             let posts = []
             data.forEach(item => {
-                Post.parse(this.channelInfo.getOwnerDid(), item)
-                // posts.push()
+                const post = Post.parse(this.channelInfo.getOwnerDid(), item)
+                posts.push(post)
             })
             return posts[0]
         }).catch (error => {
             logger.error("Query post:", error)
-            throw new Error(error)
+            throw error
         })
     }
 

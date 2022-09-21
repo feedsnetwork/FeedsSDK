@@ -4,7 +4,7 @@ import { RuntimeContext } from "./runtimecontext"
 import { ChannelEntry } from "./channelentry"
 import { MyChannel } from "./mychannel"
 import { MyProfile } from "./myprofile"
-import { PostBody } from "./postbody"
+import { PostBody, PostContent, MediaData, MediaType } from "./postbody"
 import { Profile } from "./profile"
 import { Logger } from "./utils/logger"
 import { ChannelInfo } from "./channelinfo"
@@ -21,7 +21,10 @@ export {
     ChannelEntry,
     ChannelInfo,
     Post,
-    PostBody
+    PostBody,
+    PostContent,
+    MediaData,
+    MediaType
 }
 /*
 interface ConfigOptions {

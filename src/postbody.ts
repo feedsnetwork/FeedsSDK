@@ -1,5 +1,3 @@
-import { Post } from "./post";
-
 export enum MediaType {
     noMeida = 0,
     containsImg = 1,

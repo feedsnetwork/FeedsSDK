@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {RuntimeContext, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel } from '@feedsnetwork/feeds-sdk-development';
+import {RuntimeContext, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
@@ -25,6 +25,22 @@ function SigninEE() {
     // console.log("posts ======================================== ", posts)
     const posts = await myChannel.queryPostsByRangeOfTime(1663569, currentTime)
     console.log("posts ======================================== ", posts)
+    const post = posts[0]
+    const postId0 = "ec25653b298621cf0e1023d7d9ee9f0d6e58b61a36859a1b5d73ba30de5678dd"
+    const post0 = await myChannel.queryPost(postId0)
+    console.log("post0 ======================================== ", post0)
+
+    // const postId1 = posts[1].getPostId()
+    // const post1 = await myChannel.queryPost(postId1)
+    // console.log("post1 ======================================== ", post1)
+
+    // const postId2 = posts[2].getPostId()
+    // const post2 = await myChannel.queryPost(postId2)
+    // console.log("post2 ======================================== ", post2)
+
+    // const postId3 = posts[3].getPostId()
+    // const post3 = await myChannel.queryPost(postId3)
+    // console.log("post3 ======================================== ", post3)
 
     //     // 1970年： 1663569
     // // 现在： 1663569965
