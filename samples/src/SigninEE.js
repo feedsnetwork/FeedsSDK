@@ -21,6 +21,14 @@ function SigninEE() {
     const resultChannelInfos = await myprofile.queryOwnedChannels()
     const myChannel = new MyChannel(appCtx, resultChannelInfos[0])
     console.log("myChannel ======================================== ", myChannel)
+    // const pId0 = 'b40c35292d2ae711289aed4e2bf2da847075af724604bdb0fae4150f85897774'
+    // const PId1 = 'bdd113d5e7f368996a51cf2960398ec6709f9ee7ade6ed59ec9682fad73a6245'
+    // const PId2 = "bdd113d5e7f368996a51cf2960398ec6709f9ee7ade6ed59ec9682fad73a6245"
+    // const re = await myChannel.removePost(pId0)
+    // const re0 = await myChannel.removePost(PId1)
+    // const re1 = await myChannel.removePost(PId2)
+
+  // console.log("re ========================================", re)
     // const posts = await myChannel.queryPosts(currentTime, 100)
     // console.log("posts ======================================== ", posts)
     // const posts = await myChannel.queryPostsByRangeOfTime(1663569, currentTime)
@@ -30,36 +38,36 @@ function SigninEE() {
     // const subscriberCount = await myChannel.querySubscribers(currentTime, 100)
     // console.log("subscriberCount ======================================== ", subscriberCount)
     // {"version":"3.0","content":"测试发送图片","mediaData":[{"kind":"image","originMediaPath":"68eacbf862f696300cba2efe5fa3a162@feeds/data/68eacbf862f696300cba2efe5fa3a162","type":"image/jpeg","size":8014599,"imageIndex":0,"thumbnailPath":"7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24","duration":0,"additionalInfo":{},"memo":{}}],"mediaType":1}
-    const contentJson = {
-      "version": "3.0",
-      "content": "复制过来的图片，为了测试",
-      "mediaData": [{
-        "kind": "image",
-        "originMediaPath": "68eacbf862f696300cba2efe5fa3a162@feeds/data/68eacbf862f696300cba2efe5fa3a162",
-        "type": "image/jpeg",
-        "size": 8014599,
-        "imageIndex": 0,
-        "thumbnailPath": "7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24",
-        "duration": 0,
-        "additionalInfo": {},
-        "memo": {}
-      }],
-      "mediaType": 1
-    }
-    const userDid = myChannel.getChannelInfo().getOwnerDid()
-    const channelId = myChannel.getChannelInfo().getChannelId()
-    const content = JSON.stringify(contentJson)
-    const postId = PostBody.generatePostId(userDid, channelId, content)
-    let postBody = new PostBody(userDid, postId, channelId)
-    postBody.setContentWithJson(contentJson)
-    postBody.setStatus(0)
-    postBody.setType("public")
-    postBody.setTag('')
-    postBody.setProof('')
-    postBody.setMemo('')
-    const sendPost = new Post(postBody)
-    const result = await myChannel.post(sendPost)
-    console.log("result ======================================== ", result)
+    // const contentJson = {
+    //   "version": "3.0",
+    //   "content": "复制-4过来的图片，为了测试",
+    //   "mediaData": [{
+    //     "kind": "image",
+    //     "originMediaPath": "68eacbf862f696300cba2efe5fa3a162@feeds/data/68eacbf862f696300cba2efe5fa3a162",
+    //     "type": "image/jpeg",
+    //     "size": 8014599,
+    //     "imageIndex": 0,
+    //     "thumbnailPath": "7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24",
+    //     "duration": 0,
+    //     "additionalInfo": {},
+    //     "memo": {}
+    //   }],
+    //   "mediaType": 1
+    // }
+    // const userDid = myChannel.getChannelInfo().getOwnerDid()
+    // const channelId = myChannel.getChannelInfo().getChannelId()
+    // const content = JSON.stringify(contentJson)
+    // const postId = PostBody.generatePostId(userDid, channelId, content)
+    // let postBody = new PostBody(userDid, postId, channelId)
+    // postBody.setContentWithJson(contentJson)
+    // postBody.setStatus(0)
+    // postBody.setType("public")
+    // postBody.setTag('')
+    // postBody.setProof('')
+    // postBody.setMemo('')
+    // const sendPost = new Post(postBody)
+    // const result = await myChannel.post(sendPost)
+    // console.log("result ======================================== ", result)
     // const postId1 = posts[1].getPostId()
     // const post1 = await myChannel.queryPost(postId1)
     // console.log("post1 ======================================== ", post1)

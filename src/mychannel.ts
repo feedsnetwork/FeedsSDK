@@ -351,6 +351,22 @@ export class MyChannel {
         })
     }
 
+    // 为了测试提供： 硬删除
+    public removePost(postId: string): Promise<boolean> {
+        const filter = {
+            "channel_id": this.channelInfo.getChannelId(),
+            "post_id": postId
+        }
+        return this.vault.deleateOneDBData(collections.POSTS, filter)
+            .then(result => {
+                console.log("result ====== ", result)
+                return true
+            }).catch(error => {
+                logger.error('Remove data from postDB error: ', error)
+                throw error
+            })
+    }
+
     static parse(targetDid: string, context: RuntimeContext, channel: any): MyChannel {
         const channelInfo = ChannelInfo.parse(targetDid, channel)
         const myChannel = new MyChannel(context, channelInfo)
