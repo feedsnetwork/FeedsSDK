@@ -78,7 +78,7 @@ export class MyProfile implements ProfileHandler {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
             return result.length
         }).catch(error => {
-            throw new error
+            throw new Error(error)
         })
     }
 
@@ -91,7 +91,7 @@ export class MyProfile implements ProfileHandler {
             })
             return myChannelInfos
         }).catch(error => {
-            throw new error
+            throw new Error(error)
         })
     }
 
@@ -101,7 +101,7 @@ export class MyProfile implements ProfileHandler {
                 dispatcher.dispatch(item)
             })
         }).catch (error => {
-            throw new error
+            throw new Error(error)
         })
     }
 
@@ -111,7 +111,7 @@ export class MyProfile implements ProfileHandler {
             console.log("queryOwnedChannnelById result ==== ", result)
             return ChannelInfo.parse(this.userDid, result[0])
         }).catch(error => {
-            throw error
+            throw new Error(error)
         })
     }
 
@@ -136,7 +136,7 @@ export class MyProfile implements ProfileHandler {
         return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {}).then(result => {
             return result.length
         }).catch(error => {
-            throw new error
+            throw new Error(error)
         })
     }
 
@@ -178,7 +178,7 @@ export class MyProfile implements ProfileHandler {
             console.log("results >>>>>>>>>>>>>>>>>> ", results)
             return results
         }).catch(error => {
-            throw new error
+            throw new Error(error)
         })
     }
 
@@ -198,7 +198,7 @@ export class MyProfile implements ProfileHandler {
                 dispatcher.dispatch(item)
             })
         }).catch(error => {
-            throw new error
+            throw new Error(error)
         })
     }
 
@@ -231,11 +231,11 @@ export class MyProfile implements ProfileHandler {
         return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(_ => {
             return MyChannel.parse(this.userDid, this.context, [doc])
         }).catch(error => {
-            throw new error
+            throw new Error(error)
         })
     }
 
-    // 为了测试：除测试channel 
+    // 为了测试：除测试channel
     public async deleteChannel(channelId: string): Promise<void> {
         let filter = { "channel_id": channelId }
         return await this.vault.deleateOneDBData(CollectionNames.CHANNELS, filter)

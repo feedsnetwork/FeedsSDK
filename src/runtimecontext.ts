@@ -111,9 +111,9 @@ export class RuntimeContext {
         return checkSignin()
     }
 
-    public async signHive(): Promise<boolean> {
+    public signHive(): Promise<void> {
         let self = this
-        return self.register.prepareConnectHive().then(_ => {
+        return self.register.prepareConnectHive().then(()=> {
             return self.register.checkCreateAndRregiste(true) // 注册 创建
         })
     }
