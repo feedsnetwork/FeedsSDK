@@ -25,8 +25,8 @@ function SigninEE() {
     const subscribers = await myChannel.querySubscribers(currentTime, 100)
     console.log("subscribers ========================================", subscribers)
     const subProfile = subscribers[1]
-    const subscribersOwnedChannelCount = await subProfile.queryOwnedChannelCount()
-    console.log("subscribersOwnedChannelCount ========================================", subscribersOwnedChannelCount)
+    const subscribersOwnedChannels = await subProfile.queryOwnedChannels()
+    console.log("subscribersOwnedChannels ========================================", subscribersOwnedChannels)
 
     // const pId0 = 'b40c35292d2ae711289aed4e2bf2da847075af724604bdb0fae4150f85897774'
     // const PId1 = 'bdd113d5e7f368996a51cf2960398ec6709f9ee7ade6ed59ec9682fad73a6245'

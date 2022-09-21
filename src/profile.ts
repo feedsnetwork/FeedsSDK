@@ -57,20 +57,16 @@ export class Profile implements ProfileHandler {
     }
 
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
-        return new Promise<Channel[]>((resolve, _reject) => {
-            const filter = {
-            }
-            const result = this.vault.callScript(collections.CHANNELS, filter,
-                this.targetDid, this.context.getAppDid())
-            //return result.find_message.items
-            resolve(result)
+        const filter = { "limit": 100 }
+        return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+            return result.find_message.items
         }).then(result => {
-            let channels = []
+            let channelInfos = []
             result.forEach(item => {
-                const channel = Channel.parseOne(this.targetDid, item)
-                channels.push(channel)
+                const channelInfo = ChannelInfo.parse(this.targetDid, item)
+                channelInfos.push(channelInfo)
             })
-            return channels
+            return channelInfos
         }).catch(error => {
             logger.error('get owned channels error: ', error)
             throw new Error(error)
