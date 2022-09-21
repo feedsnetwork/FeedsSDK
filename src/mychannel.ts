@@ -284,8 +284,15 @@ export class MyChannel {
      * @param upperLimit
      * @param dispatcher
      */
-    public queryAndDispatchSubscribers(until: number, upperLimit: number, dispatcher: Dispatcher<Profile>): Promise<void> {
-        throw new Error('Method not implemented.');
+    public queryAndDispatchSubscribers(earilerThan: number, upperLimit: number, dispatcher: Dispatcher<Profile>): Promise<void> {
+        return this.querySubscribers(earilerThan, upperLimit).then(profiles => {
+            profiles.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch(error => {
+            logger.log('query and dispatch subscribers error: ', error)
+            throw new Error(error)
+        })
     }
 
     /**
