@@ -257,7 +257,25 @@ export class MyChannel {
      * @param upperlimit
      */
     public querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
-        throw new Error('Method not implemented.');
+        const filter = {
+            "channel_id": this.channelInfo.getChannelId(),
+            "updated_at": { "$lte": earilerThan }
+        }
+        const findOptions = new FindOptions()
+        findOptions.limit = upperlimit
+        // let self = this
+        return this.vault.queryDBDataWithOptions(collections.SUBSCRIPTION, filter, findOptions)
+            .then((result: any) => {
+                let profiles = []
+                result.forEach(item => {
+                    const profile = Profile.parse(this.context, this.channelInfo.getOwnerDid(), item)
+                    profiles.push(profile)
+                })
+                return profiles
+            }).catch(error => {
+                logger.error("Query script error: ", error)
+                throw error
+            })
     }
 
     /**

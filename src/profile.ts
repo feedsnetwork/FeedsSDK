@@ -13,7 +13,28 @@ export class Profile implements ProfileHandler {
     private context: RuntimeContext;
     private readonly targetDid: string;
     private readonly userDid: string;
+    private readonly displayName: string
     private vault: VaultService
+
+    public constructor(context: RuntimeContext, userDid: string, targetDid: string, displayName: string) {
+        this.context = context;
+        this.userDid = userDid;
+        this.targetDid = targetDid
+        this.displayName = displayName
+        this.vault = new VaultService()
+    }
+
+    public getUserDid(): string {
+        return this.userDid
+    }
+
+    public getTargetDid(): string {
+        return this.targetDid
+    }
+
+    public getDisplayName(): string {
+        return this.displayName
+    }
 
     public getOwnedChannelCount(): Promise<number> {
         throw new Error("Method not implemented.");
@@ -150,5 +171,13 @@ export class Profile implements ProfileHandler {
         }).catch (error => {
             throw new Error(error)
         })
+    }
+
+    public static parse(context: RuntimeContext, userDid: string, result: any): Profile {
+        const targetDid = result.user_did
+        const displayName = result.display_name
+        const profile = new Profile(context, userDid, targetDid, displayName)
+
+        return profile
     }
 }

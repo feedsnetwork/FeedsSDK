@@ -27,7 +27,7 @@ function SigninEE() {
     console.log("posts ======================================== ", posts)
     const post = posts[0]
     const postId0 = "ec25653b298621cf0e1023d7d9ee9f0d6e58b61a36859a1b5d73ba30de5678dd"
-    const subscriberCount = await myChannel.querySubscriberCount()
+    const subscriberCount = await myChannel.querySubscribers(currentTime, 100)
     console.log("subscriberCount ======================================== ", subscriberCount)
 
     // const postId1 = posts[1].getPostId()
