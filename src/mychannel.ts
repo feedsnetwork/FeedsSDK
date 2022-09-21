@@ -238,18 +238,16 @@ export class MyChannel {
      * @returns
      */
     public querySubscriberCount(): Promise<number> {
-        return new Promise( (resolve, _reject) => {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId()
             }
-            const result = this.vault.queryDBData(collections.SUBSCRIPTION, filter)
-            // TODO:
-            resolve(result)
-        }).then ((result: any) => {
+        return this.vault.queryDBData(collections.SUBSCRIPTION, filter)
+            .then((result: any) => {
+                console.log("querySubscriberCount result ========== ", result)
             return result.length
         }).catch ( error => {
             logger.error("Query script error: ", error)
-            throw new Error(error)
+            throw error
         })
     }
 
