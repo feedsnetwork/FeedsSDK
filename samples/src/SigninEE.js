@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {RuntimeContext, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody } from '@feedsnetwork/feeds-sdk-development';
+import {RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
@@ -23,13 +23,43 @@ function SigninEE() {
     console.log("myChannel ======================================== ", myChannel)
     // const posts = await myChannel.queryPosts(currentTime, 100)
     // console.log("posts ======================================== ", posts)
-    const posts = await myChannel.queryPostsByRangeOfTime(1663569, currentTime)
-    console.log("posts ======================================== ", posts)
-    const post = posts[0]
-    const postId0 = "ec25653b298621cf0e1023d7d9ee9f0d6e58b61a36859a1b5d73ba30de5678dd"
-    const subscriberCount = await myChannel.querySubscribers(currentTime, 100)
-    console.log("subscriberCount ======================================== ", subscriberCount)
-
+    // const posts = await myChannel.queryPostsByRangeOfTime(1663569, currentTime)
+    // console.log("posts ======================================== ", posts)
+    // const post = posts[0]
+    // const postId0 = "ec25653b298621cf0e1023d7d9ee9f0d6e58b61a36859a1b5d73ba30de5678dd"
+    // const subscriberCount = await myChannel.querySubscribers(currentTime, 100)
+    // console.log("subscriberCount ======================================== ", subscriberCount)
+    // {"version":"3.0","content":"测试发送图片","mediaData":[{"kind":"image","originMediaPath":"68eacbf862f696300cba2efe5fa3a162@feeds/data/68eacbf862f696300cba2efe5fa3a162","type":"image/jpeg","size":8014599,"imageIndex":0,"thumbnailPath":"7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24","duration":0,"additionalInfo":{},"memo":{}}],"mediaType":1}
+    const contentJson = {
+      "version": "3.0",
+      "content": "复制过来的图片，为了测试",
+      "mediaData": [{
+        "kind": "image",
+        "originMediaPath": "68eacbf862f696300cba2efe5fa3a162@feeds/data/68eacbf862f696300cba2efe5fa3a162",
+        "type": "image/jpeg",
+        "size": 8014599,
+        "imageIndex": 0,
+        "thumbnailPath": "7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24",
+        "duration": 0,
+        "additionalInfo": {},
+        "memo": {}
+      }],
+      "mediaType": 1
+    }
+    const userDid = myChannel.getChannelInfo().getOwnerDid()
+    const channelId = myChannel.getChannelInfo().getChannelId()
+    const content = JSON.stringify(contentJson)
+    const postId = PostBody.generatePostId(userDid, channelId, content)
+    let postBody = new PostBody(userDid, postId, channelId)
+    postBody.setContentWithJson(contentJson)
+    postBody.setStatus(0)
+    postBody.setType("public")
+    postBody.setTag('')
+    postBody.setProof('')
+    postBody.setMemo('')
+    const sendPost = new Post(postBody)
+    const result = await myChannel.post(sendPost)
+    console.log("result ======================================== ", result)
     // const postId1 = posts[1].getPostId()
     // const post1 = await myChannel.queryPost(postId1)
     // console.log("post1 ======================================== ", post1)

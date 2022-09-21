@@ -24,6 +24,9 @@ export class MyChannel {
         this.vault = new VaultService()
     }
 
+    public getChannelInfo() {
+        return this.channelInfo
+    }
     /**
      * Check whether this channel is published on the registry contract or not.
      * @returns The boolean state of being published or not.
@@ -166,8 +169,8 @@ export class MyChannel {
             let posts = []
             data.forEach(item => {
                 console.log("queryPostsByRangeOfTime item ==============================", item)
-                const post = Post.parse(this.channelInfo.getOwnerDid(), item)
-                posts.push(post)
+                const postBody = PostBody.parse(this.channelInfo.getOwnerDid(), item)
+                posts.push(postBody)
             })
             return posts
         }).catch (error => {
@@ -299,55 +302,52 @@ export class MyChannel {
      *
      * @param postBody
      */
-    public post(postBody: Post) {
-        return new Promise<void>( (resolve, _reject) => {
-            const body = postBody.getBody()
-            const doc = {
-                "channel_id": body.getChannelId(),
-                "post_id"   : body.getPostId(),
-                "created_at": body.getCreatedAt(),
-                "updated_at": body.getUpdatedAt(),
-                "content"   : body.getContent().toString(),
-                "status"    : body.getStatus(),
-                "memo"  : body.getMemo(),
-                "type"  : body.getType(),
-                "tag"   : body.getTag(),
-                "proof" : body.getProof()
-            }
-            const result = this.vault.insertDBData(collections.POSTS, doc)
-            // TODO:
-            resolve()
-        }).then(result => {
-            // TODO: deal with result.
-        }).catch(error => {
-            logger.error('Post data error: ', error)
-            throw new Error(error)
-        })
+    public post(post: Post) {
+        const body = post.getBody()
+        const doc = {
+            "channel_id": body.getChannelId(),
+            "post_id"   : body.getPostId(),
+            "created_at": body.getCreatedAt(),
+            "updated_at": body.getUpdatedAt(),
+            "content": body.getContent().toString(),
+            "status"    : body.getStatus(),
+            "memo"  : body.getMemo(),
+            "type"  : body.getType(),
+            "tag"   : body.getTag(),
+            "proof" : body.getProof()
+        }
+        console.log("post doc =============================== ", doc)
+        return this.vault.insertDBData(collections.POSTS, doc)
+            .then(result => {
+                console.log("result ====== ", result)
+                return true
+            }).catch(error => {
+                logger.error('Post data error: ', error)
+                throw error
+            })
     }
 
     /**
      *
      * @param postId
      */
-    public deletePost(postId: string) : Promise<void> {
-        return new Promise<void>( (resolve, _reject) => {
-            const doc = {
-                "updated_at": new Date().getTime(),
-                "status": 1,
-            }
-            const filter = {
-                "channel_id": this.channelInfo.getChannelId(),
-                "post_id": postId
-            }
-            const update = { "$set": doc }
-            //this.vault.updateOneDBData(collections.POSTS, filter, update, new UpdateOptions(false, true))
-            // TODO: error
-            resolve()
-        }).then( result => {
-            // TODO: deal with result.
+    public deletePost(postId: string): Promise<boolean> {
+        const doc = {
+            "updated_at": new Date().getTime(),
+            "status": 1,
+        }
+        const filter = {
+            "channel_id": this.channelInfo.getChannelId(),
+            "post_id": postId
+        }
+        const update = { "$set": doc }
+        return this.vault.updateOneDBData(collections.POSTS, filter, update, new UpdateOptions(false, true))
+            .then(result => {
+                console.log("result ====== ", result)
+                return true
         }).catch (error => {
             logger.error('Delete data from postDB error: ', error)
-            throw new Error(error)
+            throw error
         })
     }
 

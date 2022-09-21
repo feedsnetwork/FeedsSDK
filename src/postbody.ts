@@ -1,3 +1,6 @@
+import { JSONObject } from "@elastosfoundation/did-js-sdk"
+import { utils } from "./utils/utils"
+
 export enum MediaType {
     noMeida = 0,
     containsImg = 1,
@@ -105,6 +108,22 @@ export class MediaData {
 
         return mediaData
     }
+
+    public toJons() {
+        const mediaData = {
+            "kind": this.getKind(),
+            "originMediaPath": this.getOriginMediaPath(),
+            "type": this.getType(),
+            "size": this.getSize(),
+            "imageIndex": this.getImageIndex(),
+            "thumbnailPath": this.getThumbnailPath(),
+            "duration": this.getDuration(),
+            "additionalInfo": this.getAdditionalInfo(),
+            "memo": this.getMemo()
+        }
+
+        return mediaData
+    }
 }
 
 export class PostContent {
@@ -135,6 +154,20 @@ export class PostContent {
     public getMediaType() {
         return this.mediaType
     }
+
+    public toString() {
+        const mediaDatas = []
+        this.mediaData.forEach(item => {
+            mediaDatas.push(item.toJons())
+        })
+        const contentJson = {
+            "version": this.version,
+            "content": this.content,
+            "mediaData": mediaDatas,
+            "mediaType": this.mediaType
+        }
+        return JSON.stringify(contentJson)
+    }
 }
 
 export class PostBody {
@@ -155,6 +188,17 @@ export class PostBody {
         this.targetDid = targetDid;
         this.postId = postId;
         this.channelId = channelId;
+        const time = (new Date()).getTime()
+        this.createdAt = time // 默认
+        this.updatedAt = time
+        this.tag = ''
+        this.proof = ''
+        this.memo = ''
+
+    }
+
+    static generatePostId(did: string, channelId: string, postContent: string) {
+        return utils.generatePostId(did, channelId, postContent)
     }
 
     public setCreatedAt(createdAt: number): PostBody {
@@ -170,6 +214,19 @@ export class PostBody {
     public setContent(content: PostContent): PostBody {
         this.content = content;
         return this;
+    }
+
+
+    public setContentWithJson(content: any): PostBody {
+        const mediaDataJson = content.mediaData
+        let mediaDatas = []
+        mediaDataJson.forEach(item => {
+            const mediaData = MediaData.parse(item)
+            mediaDatas.push(mediaData)
+        });
+        const postContent = new PostContent(content.version, content.content, mediaDatas, content.mediaType)
+        this.content = postContent
+        return this
     }
 
     public setStatus(status: number): PostBody {
@@ -244,12 +301,13 @@ export class PostBody {
         console.log("parse =================== ", post)
         const contents = JSON.parse(post.content)
         const _mediaDatas = contents.mediaData
+        console.log("parse  _mediaDatas =================== ", _mediaDatas)
+
         let mediaDatas = []
-        for (let index = 0; index < _mediaDatas.length; index++) {
-            const item = mediaDatas[index]
+        _mediaDatas.forEach(item => {
             const mediaData = MediaData.parse(item)
             mediaDatas.push(mediaData)
-        }
+        })
 
         const postContent = new PostContent(contents.version, contents.content, mediaDatas, contents.mediaType)
         const postId = post.post_id
