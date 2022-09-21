@@ -266,7 +266,6 @@ export class MyChannel {
         }
         const findOptions = new FindOptions()
         findOptions.limit = upperlimit
-        // let self = this
         return this.vault.queryDBDataWithOptions(collections.SUBSCRIPTION, filter, findOptions)
             .then((result: any) => {
                 let profiles = []

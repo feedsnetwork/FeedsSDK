@@ -46,14 +46,10 @@ export class Profile implements ProfileHandler {
     }
 
     public queryOwnedChannelCount(): Promise<number> {
-        return new Promise<number>( (resolve, _reject) => {
-            const filter = {
-            }
-            const result = this.vault.callScript(collections.CHANNELS, filter,
-                this.targetDid, this.context.getAppDid())
-            //const channels = result.find_message.items
-            //resolve(channels.length)
-            resolve(result)
+        const filter = { "limit": 100 }
+        return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+            console.log("queryOwnedChannelCount ================================ ", result)
+            return result.find_message.items.length
         }).catch(error => {
             logger.error('get owned channels count error: ', error)
             throw new Error(error)

@@ -81,6 +81,8 @@ export class Register {
 
     private installScripts(): Promise<void> {
         return Promise.all([
+            // Profile
+            installScriptToQueryProfileChannels(this.vault),
             // post related
             installScriptToQueryPostsByChannelId(this.vault),
             installScriptToQueryPostsByRangeOfTime(this.vault),
@@ -190,6 +192,29 @@ const registerQueryChannelInfoScripting = (vault: hiveService): Promise<void> =>
     const executable = new FindExecutable("find_message", CollectionNames.CHANNELS, filter, options).setOutput(true);
     return vault.registerScript(ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO, executable, null, false).catch( error => {
         logger.error("Register query channel info scripting error: ", error);
+        throw new Error(error);
+    })
+}
+
+// 新增，查询Profile 创建的channle
+const installScriptToQueryProfileChannels = (vault: hiveService): Promise<void> => {
+    let conditionfilter = {
+        "type": "public"
+    }
+
+    let options = {
+        "projection": { "_id": false },
+        "limit": "$params.limit",
+    }
+
+    let executablefilter = {
+        "type": "public"
+    }
+
+    let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.CHANNELS, conditionfilter, null)
+    let findExecutable = new FindExecutable("find_message", CollectionNames.CHANNELS, executablefilter, options).setOutput(true)
+    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_CHANNELS, findExecutable, queryCondition, false, false).catch(error => {
+        logger.error("Register a script to query posts by startTime and limit error", error)
         throw new Error(error);
     })
 }

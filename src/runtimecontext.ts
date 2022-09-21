@@ -115,6 +115,8 @@ export class RuntimeContext {
         let self = this
         return self.register.prepareConnectHive().then(()=> {
             return self.register.checkCreateAndRregiste(true) // 注册 创建
+        }).catch(error => {
+            //ignore
         })
     }
 
@@ -124,9 +126,9 @@ export class RuntimeContext {
             getLocalDataDir: (): string => this.getLocalDataDir(),
             getAppInstanceDocument: (): Promise<DIDDocument> => Promise.resolve(appInstanceDIDDocument),
             getAuthorization: (jwtToken: string): Promise<string> => {
-                return new Promise((resolve, reject) => {
+                return new Promise(async (resolve, reject) => {
                     try {
-                        const authToken = self.generateHiveAuthPresentationJWT(jwtToken)
+                        const authToken = await self.generateHiveAuthPresentationJWT(jwtToken)
                         resolve(authToken)
                     } catch (error) {
                         logger.error("Generate hive auth presentation JWT error: ", error)
@@ -218,11 +220,11 @@ export class RuntimeContext {
     }
 
     public getScriptRunner(targetDid: string): Promise<ScriptRunner> {
-        if (this.scriptRunners[targetDid] != null)
+        if (this.scriptRunners[targetDid] != null && this.scriptRunners[targetDid] != undefined)
             return Promise.resolve(this.scriptRunners[targetDid]);
 
-        return this.getAppInstanceDIDDoc().then(async (appInstanceDIDDoc) => {
-            return await this.signIntoVault(targetDid, appInstanceDIDDoc);
+        return this.getAppInstanceDIDDoc().then((appInstanceDIDDoc) => {
+            return this.signIntoVault(targetDid, appInstanceDIDDoc);
         }).then(context => {
             this.scriptRunners[targetDid] = new ScriptRunner(context);
             return this.scriptRunners[targetDid];
@@ -237,8 +239,8 @@ export class RuntimeContext {
             return Promise.resolve(this.vault);
 
         const userDid = RuntimeContext.getInstance().getUserDid();
-        return this.getAppInstanceDIDDoc().then(async (appInstanceDIDDoc) => {
-            return await this.signIntoVault(userDid, appInstanceDIDDoc);
+        return this.getAppInstanceDIDDoc().then((appInstanceDIDDoc) => {
+            return this.signIntoVault(userDid, appInstanceDIDDoc);
         }).then(context => {
             this.scriptRunners[userDid] = new ScriptRunner(context);
             this.vault = new Vault(context);

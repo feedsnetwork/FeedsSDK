@@ -10,6 +10,8 @@ class CollectionNames {
 }
 
 class ScriptingNames {
+    static readonly SCRIPT_PRIFILE_CHANNELS = "script_query_profile_channels_by_targetdid"
+
     static readonly QUERY_SELF_LIKE_BY_ID = "script_query_self_like_by_id"
 
     static readonly QUERY_COMMENT_FROM_POSTS = "script_query_comment_from_posts"
@@ -60,4 +62,4 @@ export {
     ScriptingNames
 }
 
-export const FeedsLocalScriptVersion = '1.0.1'
+export const FeedsLocalScriptVersion = '1.0.3'
