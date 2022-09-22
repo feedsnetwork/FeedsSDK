@@ -115,9 +115,9 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
+    // 查询自己订阅了哪些频道
     public querySubscriptionCount(): Promise<number> {
-            const filter = {
-            }
+        const filter = { "limit": 10000 }
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
             return result.find_message.items.length
         }).catch(error => {
