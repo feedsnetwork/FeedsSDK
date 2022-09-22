@@ -24,9 +24,30 @@ function SigninEE() {
   
     const subscribers = await myChannel.querySubscribers(currentTime, 100)
     console.log("subscribers ========================================", subscribers)
-    const subProfile = subscribers[1]
-    const subscribersOwnedChannels = await subProfile.queryOwnedChannels()
-    console.log("subscribersOwnedChannels ========================================", subscribersOwnedChannels)
+    const subProfile0 = subscribers[0]
+    const subscribersOwnedChannels0 = await subProfile0.queryOwnedChannels()
+    console.log("subscribersOwnedChannels0 ========================================", subscribersOwnedChannels0)
+
+    const channelId0 = subscribersOwnedChannels0[0].getChannelId()
+    const channelInfo0 = await subProfile0.queryOwnedChannnelById(channelId0)
+    console.log("channelInfo0 ========================================", channelInfo0)
+
+    const channelId1 = subscribersOwnedChannels0[1].getChannelId()
+    const channelInfo1 = await subProfile0.queryOwnedChannnelById(channelId1)
+    console.log("channelInfo1 ========================================", channelInfo1)
+
+
+    const subProfile1 = subscribers[1]
+    const subscribersOwnedChannels1 = await subProfile1.queryOwnedChannels()
+    console.log("subscribersOwnedChannels1 ========================================", subscribersOwnedChannels1)
+
+    const channelId3 = subscribersOwnedChannels1[0].getChannelId()
+    const channelInfo3 = await subProfile1.queryOwnedChannnelById(channelId3)
+    console.log("channelInfo3 ========================================", channelInfo3)
+
+    const channelId4 = subscribersOwnedChannels1[1].getChannelId()
+    const channelInfo4 = await subProfile1.queryOwnedChannnelById(channelId4)
+    console.log("channelInfo4 ========================================", channelInfo4)
 
     // const pId0 = 'b40c35292d2ae711289aed4e2bf2da847075af724604bdb0fae4150f85897774'
     // const PId1 = 'bdd113d5e7f368996a51cf2960398ec6709f9ee7ade6ed59ec9682fad73a6245'

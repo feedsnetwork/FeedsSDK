@@ -85,7 +85,8 @@ export class Register {
             installScriptToQueryProfileChannels(this.vault),
             installScriptToQueryProfileChannelById(this.vault),
             installScriptToQueryProfileSubscriptions(this.vault),
-
+            installScriptToQueryProfileSubscriptionsByStartTimeAndLimit(this.vault),
+                        
             // post related
             installScriptToQueryPostsByChannelId(this.vault),
             installScriptToQueryPostsByRangeOfTime(this.vault),
@@ -279,12 +280,10 @@ const installScriptToQueryProfileChannelById = (vault: hiveService): Promise<voi
     }
     const options = {
         "projection": { "_id": false },
-        "sort": {
-            "updated_at": -1
-        }
     }
     const executablefilter = {
-        "type": "public"
+        "type": "public",
+        "channel_id": "$params.channel_id",
     }
     
     const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.CHANNELS, conditionfilter, null)

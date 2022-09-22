@@ -85,11 +85,12 @@ export class Profile implements ProfileHandler {
     }
 
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-        const params = {
+        const filter = {
             "channel_id": channelId,
         }
-        return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID, params, this.targetDid, this.context.getAppDid())
+        return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID, filter, this.targetDid, this.context.getAppDid())
             .then(result => {
+                console.log("queryOwnedChannnelById result ============= ", result)
                 return result.find_message.items
             })
             .then(result => {
