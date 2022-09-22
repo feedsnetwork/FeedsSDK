@@ -114,7 +114,7 @@ export class MyChannel {
     public queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId(),
-                "updated_at": { "$lte": earilerThan }
+                "updated_at": { "$lt": earilerThan }
             }
         const queryOptions = new FindOptions()
         queryOptions.limit = upperLimit
@@ -161,7 +161,7 @@ export class MyChannel {
         const channelId = this.channelInfo.getChannelId()
         const filter = {
             "channel_id": channelId,
-            "updated_at": { $gte: start, $lte: end }
+            "updated_at": { $gt: start, $lt: end }
         }
         return this.vault.queryDBData(CollectionNames.POSTS, filter)
             .then((data: any) => {
@@ -262,7 +262,7 @@ export class MyChannel {
     public querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
         const filter = {
             "channel_id": this.channelInfo.getChannelId(),
-            "updated_at": { "$lte": earilerThan }
+            "updated_at": { "$lt": earilerThan }
         }
         const findOptions = new FindOptions()
         findOptions.limit = upperlimit
