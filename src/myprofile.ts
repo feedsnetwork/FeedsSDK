@@ -147,22 +147,10 @@ export class MyProfile implements ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-    public querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]> {
-        const formeTime = new Date(earlierThan).toISOString()
-        // const filter = {
-        //     "created.$date": { "$lt": formeTime } // $gt: 大于, $lt: 小于
-        // }
-        console.log("formeTime >>>>>>>>>>>>>>>>>>>>>>>>> ", formeTime)
-        const filter = {
-            "$or": [
-                { "created": { "$lt": earlierThan } }, // $gt: 大于, $lt: 小于
-                // { "created.$date": { "$lt": formeTime } }
-            ]
-        }
-        const queryOptions = new FindOptions()
-        queryOptions.limit = maximum
+    public querySubscriptions(): Promise<ChannelInfo[]> {
+        const filter = {}
 
-        return this.vault.queryDBDataWithOptions(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter, queryOptions).then(async result => {
+        return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter).then(async result => {
             let results = []
             result.forEach(async (item) => {
                 const channel_id = item.channel_id;
@@ -172,10 +160,8 @@ export class MyProfile implements ProfileHandler {
                 }
                 const callScriptResult = await this.vault.callScript(ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO, params, target_did, this.context.getAppDid())
                 const channelInfo = ChannelInfo.parse(target_did, callScriptResult.find_message.items[0])
-                console.log("channelInfo >>>>>>>>>>>>>>>>>> ", channelInfo)
                 results.push(channelInfo)
             })
-            console.log("results >>>>>>>>>>>>>>>>>> ", results)
             return results
         }).catch(error => {
             throw new Error(error)
@@ -190,10 +176,9 @@ export class MyProfile implements ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-    public queryAndDispatchSubscriptions(earlierThan: number, maximum: number,
-        dispatcher: Dispatcher<ChannelInfo>) {
+    public queryAndDispatchSubscriptions(dispatcher: Dispatcher<ChannelInfo>) {
 
-        return this.querySubscriptions(earlierThan, maximum).then (channels => {
+        return this.querySubscriptions().then(channels => {
             channels.forEach(item => {
                 dispatcher.dispatch(item)
             })

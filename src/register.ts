@@ -247,29 +247,23 @@ const installScriptToQueryProfileSubscriptions = async (vault: hiveService) => {
 
 const installScriptToQueryProfileSubscriptionsByStartTimeAndLimit = async (vault: hiveService) => {
     const cfilter = {
-        "type": "public",
-        // "user_did": "$caller_did"
     }
     const options = {
         "projection": { "_id": false },
-        "limit": "$params.limit",
-        "sort": {
-            "updated_at": -1
-        }
+        // "limit": "$params.limit",
     }
     const efilter = {
-        "type": "public",
-        "updated_at": {
-            $lt: "$params.start"
-        }
+        // "created": {
+        //     "$lt": "$params.start"
+        // }
     }
 
     const condition = new QueryHasResultCondition("verify_user_permission",
-        CollectionNames.SUBSCRIPTION, cfilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
+        CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, cfilter, null)
+    const executable = new FindExecutable("find_message", CollectionNames.BACKUP_SUBSCRIBEDCHANNELS,
         efilter, options).setOutput(true)
 
-    return await vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS, executable,
+    return await vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS_BY_START_TIME_AND_LIMIT, executable,
         condition, false, false).catch(error => {
         logger.error("Register a script to query profile subscriptions error: ", error)
         throw new Error(error);

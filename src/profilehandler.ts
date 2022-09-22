@@ -46,7 +46,7 @@ interface ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-     querySubscriptions(earlierThan: number, maximum: number): Promise<ChannelInfo[]>;
+    querySubscriptions(): Promise<ChannelInfo[]>;
 
      /**
       * Query a list of subscribed channesl and sent it to dispatcher routine to handle.
@@ -55,7 +55,7 @@ interface ProfileHandler {
       * @param maximum
       * @param dispatcher
       */
-     queryAndDispatchSubscriptions(earlierThan: number, maximum: number, dispatcher: Dispatcher<ChannelInfo>): Promise<void>
+    queryAndDispatchSubscriptions(dispatcher: Dispatcher<ChannelInfo>): Promise<void>
 }
 
 export type {

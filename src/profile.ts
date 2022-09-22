@@ -127,32 +127,35 @@ export class Profile implements ProfileHandler {
     }
 
     // 订阅的channels
-    public querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
+    public querySubscriptions(): Promise<ChannelInfo[]> {
 
         const filter = {
-            "updated_at": { "$lt": earlierThan }
         }
-        const option = new FindOptions()
-        option.limit = upperLimit
-        return this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+        return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS_BY_START_TIME_AND_LIMIT, filter, this.targetDid, this.context.getAppDid()).then(result => {
             return result.find_message.items
         }).then(result => {
-            let channelInfos = []
-            result.forEach(item => {
-                const channelInfo = ChannelInfo.parse(this.targetDid, item)
-                channelInfos.push(channelInfo)
+            let results = []
+            result.forEach(async (item) => {
+                const channel_id = item.channel_id;
+                const target_did = item.target_did.toString();
+                const params = {
+                    "channel_id": channel_id,
+                }
+                const callScriptResult = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params, target_did, this.context.getAppDid())
+                const channelInfo = ChannelInfo.parse(target_did, callScriptResult.find_message.items[0])
+                results.push(channelInfo)
             })
-            return channelInfos
+
+            return results
         }).catch(error => {
             logger.error('query subscription channels error: ', error)
             throw new Error(error)
         })
     }
 
-    public queryAndDispatchSubscriptions(earlierThan: number, upperLimit: number,
-        dispatcher: Dispatcher<ChannelInfo>) {
+    public queryAndDispatchSubscriptions(dispatcher: Dispatcher<ChannelInfo>) {
 
-        return this.querySubscriptions(earlierThan, upperLimit).then (channels => {
+        return this.querySubscriptions().then(channels => {
             channels.forEach(item => {
                 dispatcher.dispatch(item)
             })

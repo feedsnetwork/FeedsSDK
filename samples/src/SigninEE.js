@@ -21,16 +21,33 @@ function SigninEE() {
     const resultChannelInfos = await myprofile.queryOwnedChannels()
     const myChannel = new MyChannel(appCtx, resultChannelInfos[0])
     console.log("myChannel ======================================== ", myChannel)
-  
+      
+    // const result = await myprofile.querySubscriptions()
+    // console.log("result ========================================", result)
+
     const subscribers = await myChannel.querySubscribers(currentTime, 100)
     console.log("subscribers ========================================", subscribers)
     const subProfile0 = subscribers[0]
+    const result0 = await subProfile0.querySubscriptions()
     const subProfileSubscription0 = await subProfile0.querySubscriptionCount()
+    console.log("result0 ========================================", result0)
     console.log("subProfileSubscription0 ========================================", subProfileSubscription0)
 
     const subProfile1 = subscribers[1]
+    const result1 = await subProfile1.querySubscriptions()
     const subProfileSubscription1 = await subProfile1.querySubscriptionCount()
+    console.log("result1 ========================================", result1)
     console.log("subProfileSubscription1 ========================================", subProfileSubscription1)
+
+    // const subscribers = await myChannel.querySubscribers(currentTime, 100)
+    // console.log("subscribers ========================================", subscribers)
+    // const subProfile0 = subscribers[0]
+    // const subProfileSubscription0 = await subProfile0.querySubscriptionCount()
+    // console.log("subProfileSubscription0 ========================================", subProfileSubscription0)
+
+    // const subProfile1 = subscribers[1]
+    // const subProfileSubscription1 = await subProfile1.querySubscriptionCount()
+    // console.log("subProfileSubscription1 ========================================", subProfileSubscription1)
 
     // const subscribersOwnedChannels0 = await subProfile0.queryOwnedChannels()
     // console.log("subscribersOwnedChannels0 ========================================", subscribersOwnedChannels0)
