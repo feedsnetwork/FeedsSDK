@@ -224,21 +224,22 @@ const installScriptToQueryProfileOwnedChannels = async (vault: hiveService) => {
 }
 
 const installScriptToQueryProfileSubscriptions = async (vault: hiveService) => {
-    let filter = {
-        "type": "public",
-    }
+    let conditionfilter = {}
     let options = {
         "projection": { "_id": false },
-        "sort": { "updated_at": -1 }
+        "limit": "$params.limit",
+        "sort": {
+            "updated_at": -1
+        }
     }
+    let executablefilter = {}
 
-    let condition = new QueryHasResultCondition("verify_user_permission",
-        CollectionNames.SUBSCRIPTION, filter, null)
-    let executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
-        filter, options).setOutput(true)
-
+    let queryCondition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, conditionfilter, null)
+    let findExecutable = new FindExecutable("find_message", CollectionNames.BACKUP_SUBSCRIBEDCHANNELS,
+        executablefilter, options).setOutput(true)
     return await vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS,
-        executable, condition, false, false).catch(error => {
+        findExecutable, queryCondition, false, false).catch(error => {
         logger.error("Register a script to query profile subscriptions error: ", error)
         throw new Error(error);
     })
