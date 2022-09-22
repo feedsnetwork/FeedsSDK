@@ -68,8 +68,8 @@ export class Register {
         })
     }
 
-    private setupOnVault(): Promise<void> {
-        return Promise.all([
+    private async setupOnVault() {
+        return await Promise.all([
             this.installScripts(),
             this.createCollections()
         ]).then (_ => {
@@ -79,57 +79,55 @@ export class Register {
         })
     }
 
-    private installScripts(): Promise<void> {
-        return Promise.all([
-            // Profile
-            installScriptToQueryProfileChannels(this.vault),
+    private async installScripts() {
+        return await Promise.all([
+            // Channels
+            installScriptToQueryChannelInfo(this.vault),
+            installScriptToQueryProfileOwnedChannels(this.vault),
             installScriptToQueryProfileChannelById(this.vault),
             installScriptToQueryProfileSubscriptions(this.vault),
             installScriptToQueryProfileSubscriptionsByStartTimeAndLimit(this.vault),
-                        
+
             // post related
-            installScriptToQueryPostsByChannelId(this.vault),
+            installScriptToQueryPostsByChannel(this.vault),
+            installScriptToQueryPostsByStartTime(this.vault),
             installScriptToQueryPostsByRangeOfTime(this.vault),
             installScriptToQueryPostById(this.vault),
-            installScriptToQueryPostsByStartTimeAndLimit(this.vault),
 
             // subscription related
             installScriptForSubscription(this.vault),
-            installScriptToQuerySubscriptionsByChannelId(this.vault),
-            installScriptToQuerySubscriptionByUserDid(this.vault),
+            installScriptToQuerySubscribersOfChannel(this.vault),
+            installScriptToQuerySubscriptionsByUser(this.vault),
             installScriptForUnsubscription(this.vault),
             installScriptToUpdateSubscription(this.vault),
 
             // comment related.
             installScriptToComment(this.vault),
             installScriptToQueryCommentById(this.vault),
-            installScriptToQueryCommentsByPostId(this.vault),
+            installScriptToQueryCommentsByPost(this.vault),
             installScriptToUpdateComment(this.vault),
             installScriptToDeleteComment(this.vault),
-            installScriptToQueryCommentsByChannelId(this.vault),
-            registerQueryCommentsFromPostsScripting(this.vault),
+            installScriptToQueryCommentsByChannel(this.vault),
+            installScriptToQueryCommentsFromPosts(this.vault),
 
             //like related.
-            registerCreateLikeScripting(this.vault),
-            registerQueryLikeByIdScripting(this.vault),
-            registerRemoveLikeScripting(this.vault),
-            registerQueryLikeByChannelScripting(this.vault),
-            registerQueryLikeByPostScripting(this.vault),
-            registerUpdateLike(this.vault),
-            registerQuerySelfLikeByIdScripting(this.vault),
-
-            //channel
-            registerQueryChannelInfoScripting(this.vault),
+            installScriptToAddLike(this.vault),
+            installScriptToRemoveLike(this.vault),
+            installScriptToUpdateLike(this.vault),
+            installScriptToQueryLikesByChannel(this.vault),
+            installScriptToQueryLikesByPost(this.vault),
+            installScriptToQueryLikesByComment(this.vault),
+            installScriptToQueryMyLikes(this.vault),
 
             //DisplayName
-            registerQueryDisplayNameScripting(this.vault),
+            installScriptToQueryDisplayNameOfChannel(this.vault),
 
-            //Public post
-            registerQueryPublicPostByIdScripting(this.vault),
-            registerQueryPublicPostByChannelIdScripting(this.vault),
-            registerQueryPublicPostRangeOfTimeScripting(this.vault),
+            //Published post
+            installScriptToQueryPublishedPostById(this.vault),
+            installScriptToQueryPublishedPostsByChannel(this.vault),
+            installScriptToQueryPublishedPostsByRangeOfTime(this.vault),
 
-            registerQuerySubscriptionInfoByUserDIDAndChannelIdScripting(this.vault)
+            installScriptToQuerySubscriptionToChannelByDID(this.vault)
         ]).then(values => {
             logger.debug('Registe all scripting success: ', values)
         }).catch (error => {
@@ -137,8 +135,8 @@ export class Register {
         })
     }
 
-    private createCollections(): Promise<void> {
-        return Promise.all([
+    private async createCollections() {
+        return await Promise.all([
             createCollection(CollectionNames.FEEDS_SCRIPTING, this.vault),
             createCollection(CollectionNames.CHANNELS, this.vault),
             createCollection(CollectionNames.POSTS, this.vault),
@@ -155,7 +153,7 @@ export class Register {
     }
 
     prepareConnectHive(): Promise<void> {
-        return registerQueryChannelInfoScripting(this.vault)
+        return installScriptToQueryChannelInfo(this.vault)
     }
 
     private updateRemoteFeedsScriptingVersion(lasterVersion: string): Promise<UpdateResult> {
@@ -179,74 +177,75 @@ export class Register {
     }
 }
 
-const createCollection = (collectioName: string, vault: hiveService): Promise<void> => {
-    return vault.createCollection(collectioName);
+const createCollection = async (collectioName: string, vault: hiveService) => {
+    return await vault.createCollection(collectioName);
 }
 
-const registerQueryChannelInfoScripting = (vault: hiveService): Promise<void> => {
-    const filter = {
+const installScriptToQueryChannelInfo = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "type": "public"
     }
-    const options = {
+    let options = {
         "projection": { "_id": false },
         "limit": 100
     }
 
-    const executable = new FindExecutable("find_message", CollectionNames.CHANNELS, filter, options).setOutput(true);
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO, executable, null, false).catch( error => {
-        logger.error("Register query channel info scripting error: ", error);
-        throw new Error(error);
+    let executable = new FindExecutable("find_message", CollectionNames.CHANNELS,
+        cfilter, options).setOutput(true);
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO,
+        executable, null, false).catch( error => {
+        logger.error(`Failed to register script on vault to query channel information: ${error}`)
+        throw new Error(error)
     })
 }
 
-// 新增，查询Profile 创建的channle
-const installScriptToQueryProfileChannels = (vault: hiveService): Promise<void> => {
-    const conditionfilter = {
+// query owned channel by profile.
+const installScriptToQueryProfileOwnedChannels = async (vault: hiveService) => {
+    let filter = {
         "type": "public"
     }
-    const options = {
+    let options = {
         "projection": { "_id": false },
         "limit": "$params.limit",
-        "sort": {
-            "updated_at": -1
-        }
+        "sort": {"updated_at": -1 }
     }
-    const executablefilter = {
-        "type": "public"
-    }
-    const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.CHANNELS, conditionfilter, null)
-    const findExecutable = new FindExecutable("find_message", CollectionNames.CHANNELS, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_CHANNELS, findExecutable, queryCondition, false, false).catch(error => {
-        logger.error("Register a script to query profile channels error: ", error)
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.CHANNELS, filter, null)
+    let executable = new FindExecutable("find_message", CollectionNames.CHANNELS,
+        filter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_CHANNELS,
+        executable, condition, false, false).catch(error => {
+        logger.error(`Failed to register script on vault to query owned channels: ${error}`)
         throw new Error(error);
     })
 }
 
-const installScriptToQueryProfileSubscriptions = (vault: hiveService): Promise<void> => {
-    const conditionfilter = {
+const installScriptToQueryProfileSubscriptions = async (vault: hiveService) => {
+    let filter = {
         "type": "public",
     }
-    const options = {
+    let options = {
         "projection": { "_id": false },
-        "sort": {
-            "updated_at": -1
-        }
-    }
-    const executablefilter = {
-        "type": "public"
+        "sort": { "updated_at": -1 }
     }
 
-    const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-    const findExecutable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS, findExecutable, queryCondition, false, false).catch(error => {
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, filter, null)
+    let executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
+        filter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS,
+        executable, condition, false, false).catch(error => {
         logger.error("Register a script to query profile subscriptions error: ", error)
         throw new Error(error);
     })
 }
 
-const installScriptToQueryProfileSubscriptionsByStartTimeAndLimit = (vault: hiveService): Promise<void> => {
-    const conditionfilter = {
+const installScriptToQueryProfileSubscriptionsByStartTimeAndLimit = async (vault: hiveService) => {
+    const cfilter = {
         "type": "public",
         // "user_did": "$caller_did"
     }
@@ -257,44 +256,81 @@ const installScriptToQueryProfileSubscriptionsByStartTimeAndLimit = (vault: hive
             "updated_at": -1
         }
     }
-    const executablefilter = {
+    const efilter = {
         "type": "public",
         "updated_at": {
             $lt: "$params.start"
         }
     }
 
-    const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-    const findExecutable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS, findExecutable, queryCondition, false, false).catch(error => {
+    const condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    const executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
+        efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS, executable,
+        condition, false, false).catch(error => {
         logger.error("Register a script to query profile subscriptions error: ", error)
         throw new Error(error);
     })
 }
 
-// 新增 Profile 通过channel id 查询 channel
-const installScriptToQueryProfileChannelById = (vault: hiveService): Promise<void> => {
-    const conditionfilter = {
+// Query channel by channel id.
+const installScriptToQueryProfileChannelById = async (vault: hiveService) => {
+    const cfilter = {
         "type": "public",
         "channel_id": "$params.channel_id",
     }
     const options = {
         "projection": { "_id": false },
     }
-    const executablefilter = {
+    const efilter = {
         "type": "public",
         "channel_id": "$params.channel_id",
     }
-    
-    const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.CHANNELS, conditionfilter, null)
-    const findExecutable = new FindExecutable("find_message", CollectionNames.CHANNELS, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID, findExecutable, queryCondition, false, false).catch(error => {
+
+    const condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.CHANNELS, cfilter, null)
+    const executable = new FindExecutable("find_message", CollectionNames.CHANNELS,
+        efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID,
+        executable, condition, false, false).catch(error => {
         logger.error("Register a script to query profile channels by channel id error: ", error)
         throw new Error(error);
     })
 }
 
-const installScriptToQueryPostsByStartTimeAndLimit = (vault: hiveService): Promise<void> => {
+const installScriptToQueryPostsByChannel = async (vault: hiveService) => {
+    let conditionfilter = {
+        "channel_id": "$params.channel_id",
+        "user_did": "$caller_did"
+    }
+    let executablefilter = {
+        "channel_id": "$params.channel_id"
+    }
+    let options = {
+        "projection": { "_id": false },
+        "limit": 100
+    }
+
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, conditionfilter, null)
+    let executable = new FindExecutable("find_message", CollectionNames.POSTS,
+        executablefilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_POST_BY_CHANNEL,
+        executable, condition, false, false).catch( error => {
+        logger.error(`Failed to regsiter script to query Posts on specific channel: ${error}`)
+        throw new Error(error)
+    })
+}
+
+const installScriptToQueryPostsByStartTime = async (vault: hiveService) => {
+    let conditionfilter = {
+        "channel_id": "$params.channel_id",
+        "user_did": "$caller_did"
+    }
     let executablefilter = {
         "channel_id": "$params.channel_id",
         "updated_at": {
@@ -308,44 +344,26 @@ const installScriptToQueryPostsByStartTimeAndLimit = (vault: hiveService): Promi
             "updated_at": -1
         }
     }
-    let conditionfilter = {
-        "channel_id": "$params.channel_id",
-        "user_did": "$caller_did"
-    }
 
-    let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-    let findExecutable = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST, findExecutable, queryCondition, false, false).catch(error => {
-        logger.error("Register a script to query posts by startTime and limit error", error)
-        throw new Error(error);
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, conditionfilter, null)
+    let executable = new FindExecutable("find_message", CollectionNames.POSTS,
+        executablefilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST,
+        executable, condition, false, false).catch(error => {
+        logger.error(`Failed to register script to query posts by start time and limit: ${error}`)
+        throw new Error(error)
     })
 }
 // 新增结束
 
-const installScriptToQueryPostsByChannelId = (vault: hiveService): Promise<void> => {
-    let executablefilter = {
-        "channel_id": "$params.channel_id"
-    }
-    let options = {
-        "projection": { "_id": false },
-        "limit": 100
-    }
-    let conditionfilter = {
+const installScriptToQueryPostsByRangeOfTime = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did"
     }
-
-    let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-    let findExecutable = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
-
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_POST_BY_CHANNEL, findExecutable, queryCondition, false, false).catch( error => {
-        logger.error("Register query post by channelId scripting error: ", error)
-        throw new Error(error);
-    })
-}
-
-const installScriptToQueryPostsByRangeOfTime = (vault: hiveService): Promise<void> => {
-    let executablefilter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "updated_at": {
             $gt: "$params.start",
@@ -357,30 +375,30 @@ const installScriptToQueryPostsByRangeOfTime = (vault: hiveService): Promise<voi
         "limit": 30,
         "sort": {"updated_at": -1}
     }
-    let conditionfilter = {
-        "channel_id": "$params.channel_id",
-        "user_did": "$caller_did"
-    }
-    let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-    let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
 
-    return vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST, findExe, queryCondition, false, false).catch(error => {
-        logger.error("Register query post range of time scripting error: ", error);
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.POSTS, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST, executable,
+        condition, false, false).catch(error => {
+        logger.error(`Failed to register script to query posts by range of time: ${error}`)
         throw error
     })
 }
 
-const installScriptToQueryPostById = (vault: hiveService): Promise<void> => {
-    let checkSubscriptionFilter = {
+const installScriptToQueryPublishedPostById = async (vault: hiveService) => {
+    let cfilter1 = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did"
     }
-    let checkPostFilter = {
+    let cfilter2 = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "type": "public"
     }
-    let executablefilter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id"
     }
@@ -388,21 +406,23 @@ const installScriptToQueryPostById = (vault: hiveService): Promise<void> => {
         "projection": { "_id": false },
         "limit": 100
     }
-    let condition = new AndCondition( "verify_user_permission", [
-        new QueryHasResultCondition("subscription_permission", CollectionNames.SUBSCRIPTION, checkSubscriptionFilter, null),
-        new QueryHasResultCondition("post_permission", CollectionNames.POSTS, checkPostFilter, null)
-    ])
-    let executable = new FindExecutable("find_message", CollectionNames.POSTS,
-        executablefilter, options).setOutput(true)
 
-    return vault.registerScript(ScriptingNames.SCRIPT_SPECIFIED_POST, executable, condition, false, false).catch(error => {
-        logger.error("Register query post by id scripting error: ", error)
+    let condition = new AndCondition( "verify_user_permission", [
+        new QueryHasResultCondition("subscription_permission", CollectionNames.SUBSCRIPTION, cfilter1, null),
+        new QueryHasResultCondition("post_permission", CollectionNames.POSTS, cfilter2, null)
+    ])
+    let executable = new FindExecutable("find_message", CollectionNames.POSTS, efilter, options)
+        .setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_SPECIFIED_POST, executable,
+        condition, false, false).catch(error => {
+        logger.error(`Failed to register script to query specific post : ${error}`)
         throw new Error(error)
     })
 }
 
-const installScriptForSubscription = (vault: hiveService): Promise<void> => {
-    let conditionfilter = {
+const installScriptForSubscription = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "type": 'public'    //Currently only public channels are found for subscription
     }
@@ -414,18 +434,24 @@ const installScriptForSubscription = (vault: hiveService): Promise<void> => {
         "updated_at": "$params.updated_at",
         "status": "$params.status"
     }
-    let options = { "projectxsion": { "_id": false } }
+    let options = {
+        "projectxsion": { "_id": false }
+    }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.CHANNELS, conditionfilter, null)
-    const executable = new InsertExecutable("database_insert", CollectionNames.SUBSCRIPTION, document, options)
-    return vault.registerScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, executable, condition).catch(error => {
-        logger.error("Register subscribe scripting error: ", error)
-        throw new Error(error);
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.CHANNELS, cfilter, null)
+    let executable = new InsertExecutable("database_insert",
+        CollectionNames.SUBSCRIPTION, document, options)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL,
+        executable, condition).catch(error => {
+        logger.error(`Failed to register script for subscription to channel: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptToQuerySubscriptionsByChannelId = (vault: hiveService): Promise<void> => {
-    const executableFilter = {
+const installScriptToQuerySubscribersOfChannel = async (vault: hiveService) => {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "status": "$params.status"
     }
@@ -434,51 +460,58 @@ const installScriptToQuerySubscriptionsByChannelId = (vault: hiveService): Promi
         "limit": 100
     }
 
-    const executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
-        executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, executable, null, false).catch(error => {
-        logger.error("registerQuerySubscriptionInfoByChannelId error", error)
+    let executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
+        efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID,
+        executable, null, false).catch(error => {
+        logger.error(`Failed to register script query subscribers of a channel: ${error}`)
         throw new Error(error);
     })
 }
 
-const installScriptToQuerySubscriptionByUserDid = (vault: hiveService): Promise<void> => {
-    const executableFilter = {
+const installScriptToQuerySubscriptionsByUser = async (vault: hiveService) => {
+    let efilter = {
         "user_did": "$params.user_did"
     }
     let options = {
         "projection": { "_id": false },
         "limit": 100
     }
-    const executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION, executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID, executable, null, false).catch(error => {
-        logger.error("Register query subscription info by userDid scripting error: ", error)
-        throw new Error(error);
+
+    let executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
+        efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID,
+        executable, null, false).catch(error => {
+        logger.error(`Failed to regsiter script to query subscription by an user: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptForUnsubscription = (vault: hiveService) : Promise<void>  => {
-    const filter = {
+const installScriptForUnsubscription = async (vault: hiveService) => {
+    let filter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did"
     }
+    let executable = new DeleteExecutable("database_delete", CollectionNames.SUBSCRIPTION, filter)
 
-    const executable = new DeleteExecutable("database_delete", CollectionNames.SUBSCRIPTION, filter)
-    return vault.registerScript(ScriptingNames.SCRIPT_UNSUBSCRIBE_CHANNEL, executable, null).catch(error => {
-        logger.error("Register unsubscribe scripting error: ", error)
-        throw new Error(error);
+    return await vault.registerScript(ScriptingNames.SCRIPT_UNSUBSCRIBE_CHANNEL,
+        executable, null).catch(error => {
+        logger.error(`Failed to registery script to unsubscribe to a chennel: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptToUpdateSubscription = (vault: hiveService): Promise<void> => {
-    const conditionfilter = {
+const installScriptToUpdateSubscription = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
     }
     let set = {
         "status": "$params.status",
         "updated_at": "$params.updated_at",
     }
-    const filter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did",
     }
@@ -487,16 +520,20 @@ const installScriptToUpdateSubscription = (vault: hiveService): Promise<void> =>
         "bypass_document_validation": false,
         "upsert": true
     }
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
 
-    const executable = new UpdateExecutable("database_update", CollectionNames.SUBSCRIPTION, filter, update, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_UPDATE_SUBSCRIPTION, executable, condition, false).catch(error => {
-        logger.error("Register update subscription error: ", error)
-        throw new Error(error);
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new UpdateExecutable("database_update",
+        CollectionNames.SUBSCRIPTION, efilter, update, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_UPDATE_SUBSCRIPTION,
+        executable, condition, false).catch(error => {
+        logger.error(`Failed to register script to update subscription: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptToComment = (vault: hiveService): Promise<void> => {
+const installScriptToComment = async (vault: hiveService) => {
     let conditionfilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did"
@@ -515,45 +552,51 @@ const installScriptToComment = (vault: hiveService): Promise<void> => {
     let options = {
         "projection": {"_id": false}
     }
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-    const executable = new InsertExecutable("database_update", CollectionNames.COMMENTS, executablefilter, options).setOutput(true)
 
-    return vault.registerScript(ScriptingNames.SCRIPT_CREATE_COMMENT, executable, condition, false).catch(error => {
-        logger.error("Register create comment scripting error: ", error)
-        throw new Error(error);
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, conditionfilter, null)
+    let executable = new InsertExecutable("database_update",
+        CollectionNames.COMMENTS, executablefilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_CREATE_COMMENT,
+        executable, condition, false).catch(error => {
+        logger.error(`Failed to register script to make comment: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptToQueryCommentById = (vault: hiveService): Promise<void> => {
+const installScriptToQueryCommentById = async (vault: hiveService) => {
     let conditionFilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did"
     }
-    const executableFilter = {
+    let executableFilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "comment_id": "$params.comment_id"
     }
-
     let options = { "projection":
         { "_id": false }, "limit": 100
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionFilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.COMMENTS, executableFilter, options).setOutput(true)
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, conditionFilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.COMMENTS, executableFilter, options).setOutput(true)
 
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_COMMENT_BY_COMMENTID, executable, condition, false).catch(error => {
-        logger.error("Register find comment by id scripting error: ", error)
-        throw new Error(error);
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_COMMENT_BY_COMMENTID,
+        executable, condition, false).catch(error => {
+        logger.error(`Failed to register script to query comment by Id: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptToQueryCommentsByPostId = (vault: hiveService): Promise<void> => {
+const installScriptToQueryCommentsByPost = async (vault: hiveService) => {
     let conditionFilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did"
     }
-    const executableFilter = {
+    let executableFilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
     }
@@ -562,23 +605,26 @@ const installScriptToQueryCommentsByPostId = (vault: hiveService): Promise<void>
         "limit": 100
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionFilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.COMMENTS, executableFilter, options).setOutput(true)
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, conditionFilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.COMMENTS, executableFilter, options).setOutput(true)
 
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_COMMENT_BY_POSTID, executable, condition, false).catch(error => {
-        logger.error("Register query comment by postId scripting error: ", error)
-        throw new Error(error);
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_COMMENT_BY_POSTID,
+        executable, condition, false).catch(error => {
+        logger.error(`Failed to register script to query comments related to a post: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptToUpdateComment = (vault: hiveService): Promise<void> => {
-    let conditionfilter = {
+const installScriptToUpdateComment = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "comment_id": "$params.comment_id",
         "creater_did": "$caller_did"
     }
-    const filter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "comment_id": "$params.comment_id"
@@ -595,70 +641,80 @@ const installScriptToUpdateComment = (vault: hiveService): Promise<void> => {
         "upsert": true
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.COMMENTS, conditionfilter, null)
-    const executable = new UpdateExecutable("database_update", CollectionNames.COMMENTS, filter, update, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_UPDATE_COMMENT, executable, condition, false).catch(error => {
-        logger.error("Register update comment scripting error: ", error)
-        throw new Error(error);
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.COMMENTS, cfilter, null)
+    let executable = new UpdateExecutable("database_update",
+        CollectionNames.COMMENTS, efilter, update, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_UPDATE_COMMENT, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to update comment: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptToDeleteComment = (vault: hiveService): Promise<void> => {
-    let conditionfilter = {
+const installScriptToDeleteComment = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "comment_id": "$params.comment_id",
         "creater_did": "$caller_did"
     }
-    const filter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "comment_id": "$params.comment_id"
     }
-    let set = {
-        "status": 1, // deleted
-    }
+    let set = { "status": 1, /* deleted */}
     let update = { "$set": set }
     let options = {
         "bypass_document_validation": false,
         "upsert": true
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.COMMENTS, conditionfilter, null)
-    const executable = new UpdateExecutable("database_update", CollectionNames.COMMENTS, filter, update, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_DELETE_COMMENT, executable, condition, false).catch(error => {
-        logger.error("Register delete comment scripting error: ", error)
-        throw new Error(error);
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.COMMENTS, cfilter, null)
+    let executable = new UpdateExecutable("database_update",
+        CollectionNames.COMMENTS, efilter, update, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_DELETE_COMMENT, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to delete a comment: ${error}`)
+        throw new Error(error)
     })
 }
 
-const installScriptToQueryCommentsByChannelId = (vault: hiveService): Promise<void> => {
-    let conditionFilter = {
+const installScriptToQueryCommentsByChannel = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did"
     }
-    const executableFilter = {
+    let efilter = {
         "channel_id": "$params.channel_id"
     }
     let options = {
         "projection": { "_id": false },
         "limit": 100
     }
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionFilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.COMMENTS, executableFilter, options).setOutput(true)
 
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_COMMENT_BY_CHANNELID, executable, condition, false).catch(error => {
-        logger.error("Register query comment by channel scripting error: ", error)
-        throw new Error(error);
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.COMMENTS, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_COMMENT_BY_CHANNELID,
+        executable, condition, false).catch(error => {
+        logger.error(`Failed to register script to query comments related to channel: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerCreateLikeScripting = (vault: hiveService): Promise<void> => {
-    let conditionfilter = {
+const installScriptToAddLike = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did"
     }
-    let executablefilter = {
+    let efilter = {
         "like_id": "$params.like_id",
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
@@ -668,69 +724,53 @@ const registerCreateLikeScripting = (vault: hiveService): Promise<void> => {
         "updated_at": "$params.updated_at",
         "status": "$params.status"
     }
-
     let options = {
         "projection": {"_id": false}
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-    const executable = new InsertExecutable("database_insert", CollectionNames.LIKES, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_CREATE_LIKE, executable, condition, false).catch(error => {
-        logger.error("Register create like scripting error: ", error)
-        throw error
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new InsertExecutable("database_insert",
+        CollectionNames.LIKES, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_CREATE_LIKE, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to give like: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerQueryLikeByIdScripting = (vault: hiveService): Promise<void> => {
-    let conditionFilter = {
-        "channel_id": "$params.channel_id",
-        "user_did": "$caller_did",
-    }
-    const executableFilter = {
-        "channel_id": "$params.channel_id",
-        "post_id": "$params.post_id",
-        "comment_id": "$params.comment_id",
-        "status": "$params.status"
-    }
-    let options = {
-        "projection": { "_id": false },
-        "limit": 100
-    }
-
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionFilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.LIKES, executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_LIKE_BY_ID, executable, condition, false).catch(error => {
-        logger.error("Register query like by id scripting error: ", error)
-        throw error
-    })
-}
-
-const registerRemoveLikeScripting = (vault: hiveService): Promise<void> => {
-    let conditionfilter = {
+const installScriptToRemoveLike = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "comment_id": "$params.comment_id",
         "creater_did": "$caller_did"
     }
-    const filter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "comment_id": "$params.comment_id"
     }
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.LIKES, conditionfilter, null)
-    const executable = new DeleteExecutable("database_delete", CollectionNames.LIKES, filter).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_REMOVE_LIKE, executable, condition, false).catch(error => {
-        logger.error("Register remove like scripting error: ", error)
-        throw error
+
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.LIKES, cfilter, null)
+    let executable = new DeleteExecutable("database_delete",
+        CollectionNames.LIKES, efilter).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_REMOVE_LIKE, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to remove like: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerQueryLikeByChannelScripting = (vault: hiveService): Promise<void> =>{
-    let conditionFilter = {
+const installScriptToQueryLikesByChannel = async (vault: hiveService) =>{
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did",
     }
-    const executableFilter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "status": "$params.status"
     }
@@ -739,20 +779,24 @@ const registerQueryLikeByChannelScripting = (vault: hiveService): Promise<void> 
         "limit": 100
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionFilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.LIKES, executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_LIKE_BY_CHANNEL, executable, condition, false).catch(error => {
-        logger.error("Register query like by channel scripting error: ", error)
-        throw error
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.LIKES, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_LIKE_BY_CHANNEL, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to query likes related to a channel: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerQueryLikeByPostScripting = (vault: hiveService): Promise<void> => {
-    let conditionFilter = {
+const installScriptToQueryLikesByPost = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did",
     }
-    const executableFilter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "status": "$params.status"
@@ -762,16 +806,48 @@ const registerQueryLikeByPostScripting = (vault: hiveService): Promise<void> => 
         "limit": 100
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionFilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.LIKES, executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_LIKE_BY_POST, executable, condition, false).catch(error => {
-        logger.error("Register query like by post scripting error: ", error)
-        throw error
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.LIKES, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_LIKE_BY_POST, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to query likes related a post: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerUpdateLike = (vault: hiveService): Promise<void> => {
-    const conditionfilter = {
+const installScriptToQueryLikesByComment = async (vault: hiveService) => {
+    let cfilter = {
+        "channel_id": "$params.channel_id",
+        "user_did": "$caller_did",
+    }
+    let efilter = {
+        "channel_id": "$params.channel_id",
+        "post_id": "$params.post_id",
+        "comment_id": "$params.comment_id",
+        "status": "$params.status"
+    }
+    let options = {
+        "projection": { "_id": false },
+        "limit": 100
+    }
+
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.LIKES, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_LIKE_BY_ID, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to query likes related to a comment: ${error}`)
+        throw new Error(error)
+    })
+}
+
+const installScriptToUpdateLike = async (vault: hiveService) => {
+    let cfilter = {
         "like_id": "$params.like_id",
         "creater_did": "$caller_did",
     }
@@ -779,7 +855,7 @@ const registerUpdateLike = (vault: hiveService): Promise<void> => {
         "status": "$params.status",
         "updated_at": "$params.updated_at",
     }
-    const filter = {
+    let efilter = {
         "like_id": "$params.like_id",
     }
     let update = { "$set": set }
@@ -788,37 +864,24 @@ const registerUpdateLike = (vault: hiveService): Promise<void> => {
         "upsert": true
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.LIKES, conditionfilter, null)
-    const executable = new UpdateExecutable("database_update", CollectionNames.LIKES, filter, update, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_UPDATE_LIKE, executable, condition, false).catch(error => {
-        logger.error("Register update like error: ", error)
-        throw error
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.LIKES, cfilter, null)
+    let executable = new UpdateExecutable("database_update",
+        CollectionNames.LIKES, efilter, update, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_UPDATE_LIKE, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to update a like: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerQueryDisplayNameScripting = (vault: hiveService): Promise<void> => {
-    const executableFilter = {
-        "channel_id": "$params.channel_id",
-        "user_did": "$params.user_did"
-    }
-    let options = {
-         "projection": { "_id": false },
-         "limit": 100
-    }
-
-    const executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION, executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_USER_DISPLAYNAME, executable, null, false).catch(error => {
-        logger.error("Register query display name scripting error: ", error)
-        throw error
-    })
-}
-
-const registerQueryCommentsFromPostsScripting = (vault: hiveService): Promise<void> => {
-    let conditionFilter = {
+const installScriptToQueryCommentsFromPosts = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did",
     }
-    const executableFilter = {
+    let efilter = {
         "post_id": { "$in": "$params.post_ids" }
     }
     let options = {
@@ -826,20 +889,24 @@ const registerQueryCommentsFromPostsScripting = (vault: hiveService): Promise<vo
         "limit": 100
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionFilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.COMMENTS, executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.QUERY_COMMENT_FROM_POSTS, executable, condition, false).catch(error => {
-        logger.error("Register query comments from posts scripting error: ", error)
-        throw error
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.COMMENTS, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.QUERY_COMMENT_FROM_POSTS, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to query comments from posts: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerQuerySelfLikeByIdScripting = (vault: hiveService): Promise<void> => {
-    let conditionFilter = {
+const installScriptToQueryMyLikes = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$caller_did",
     }
-    const executableFilter = {
+    let efilter = {
         "like_id": "$params.like_id",
         "creater_did": "$caller_did",
         "status": "$params.status"
@@ -849,21 +916,45 @@ const registerQuerySelfLikeByIdScripting = (vault: hiveService): Promise<void> =
         "limit": 100
     }
 
-    const condition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionFilter, null)
-    const executable = new FindExecutable("find_message", CollectionNames.LIKES, executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.QUERY_SELF_LIKE_BY_ID, executable, condition, false).catch(error => {
-        logger.error("Register query self like byId scripting error: ", error)
-        throw error
+    let condition = new QueryHasResultCondition("verify_user_permission",
+        CollectionNames.SUBSCRIPTION, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.LIKES, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.QUERY_SELF_LIKE_BY_ID, executable,
+        condition, false).catch(error => {
+        logger.error(`Failed to register script to query my likes: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerQueryPublicPostByIdScripting = (vault: hiveService): Promise<void> => {
-    let postCondition = {
+const installScriptToQueryDisplayNameOfChannel = async (vault: hiveService) => {
+    let efilter = {
+        "channel_id": "$params.channel_id",
+        "user_did": "$params.user_did"
+    }
+    let options = {
+         "projection": { "_id": false },
+         "limit": 100
+    }
+
+    let executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
+        efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_USER_DISPLAYNAME,
+        executable, null, false).catch(error => {
+        logger.error(`Failed to register script to query display name: ${error}`)
+        throw new Error(error)
+    })
+}
+
+const installScriptToQueryPostById = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "type": 'public'
     }
-    let executablefilter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
         "type": 'public'
@@ -873,20 +964,24 @@ const registerQueryPublicPostByIdScripting = (vault: hiveService): Promise<void>
         "limit": 100
     }
 
-    let queryCondition = new QueryHasResultCondition("post_permission", CollectionNames.POSTS, postCondition, null)
-    let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.QUERY_PUBLIC_SPECIFIED_POST, findExe, queryCondition, false, false).catch(error => {
-        logger.error('Register query public post by id error: ', error)
+    let condition = new QueryHasResultCondition("post_permission",CollectionNames.POSTS,
+        cfilter, null)
+    let executable = new FindExecutable("find_message", CollectionNames.POSTS,
+        efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.QUERY_PUBLIC_SPECIFIED_POST, executable,
+        condition, false, false).catch(error => {
+        logger.error(`Failed to register script to query posts: ${error}`)
         throw error
     })
 }
 
-const registerQueryPublicPostByChannelIdScripting = (vault: hiveService): Promise<void> => {
-    let conditionfilter = {
+const installScriptToQueryPublishedPostsByChannel = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "type": 'public'
     }
-    let executablefilter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "type": 'public'
     }
@@ -894,20 +989,26 @@ const registerQueryPublicPostByChannelIdScripting = (vault: hiveService): Promis
         "projection": { "_id": false },
         "limit": 100
     }
-    let queryCondition = new QueryHasResultCondition("channel_permission", CollectionNames.CHANNELS, conditionfilter, null)
-    let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.QUERY_PUBLIC_POST_BY_CHANNEL, findExe, queryCondition, false, false).catch(error => {
-        logger.error('Register query public post by channel error: ', error)
-        throw error
+
+    let condition = new QueryHasResultCondition("channel_permission",
+        CollectionNames.CHANNELS, cfilter, null)
+    let executable = new FindExecutable("find_message", CollectionNames.POSTS,
+        efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.QUERY_PUBLIC_POST_BY_CHANNEL, executable,
+        condition, false, false).catch(error => {
+
+        logger.error(`Failed to register script to query published posts by channel: ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerQueryPublicPostRangeOfTimeScripting = (vault: hiveService): Promise<void> => {
-    let conditionfilter = {
+const installScriptToQueryPublishedPostsByRangeOfTime = async (vault: hiveService) => {
+    let cfilter = {
         "channel_id": "$params.channel_id",
         "type": 'public'
     }
-    let executablefilter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "updated_at": {
              $gt: "$params.start",
@@ -915,18 +1016,27 @@ const registerQueryPublicPostRangeOfTimeScripting = (vault: hiveService): Promis
         },
         "type": 'public'
     }
-    let options = { "projection": { "_id": false }, "limit": 30, "sort": { "updated_at": -1 } }
+    let options = {
+        "projection": { "_id": false },
+        "limit": 30,
+        "sort": { "updated_at": -1 }
+    }
 
-    let queryCondition = new QueryHasResultCondition("channel_permission", CollectionNames.CHANNELS, conditionfilter, null)
-    let findExe = new FindExecutable("find_message", CollectionNames.POSTS, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.QUERY_PUBLIC_SOMETIME_POST, findExe, queryCondition, false, false).catch(error => {
-        logger.error("Register query public post range of time scripting error: ", error)
-        throw error
+    let condition = new QueryHasResultCondition("channel_permission",
+        CollectionNames.CHANNELS, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.POSTS, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.QUERY_PUBLIC_SOMETIME_POST,
+        executable, condition, false, false).catch(error => {
+
+        logger.error(`Failed to regsiter script to query published posts by range of time : ${error}`)
+        throw new Error(error)
     })
 }
 
-const registerQuerySubscriptionInfoByUserDIDAndChannelIdScripting = (vault: hiveService): Promise<void> => {
-    const executableFilter = {
+const installScriptToQuerySubscriptionToChannelByDID = async (vault: hiveService) => {
+    const efilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$params.user_did"
     }
@@ -935,13 +1045,16 @@ const registerQuerySubscriptionInfoByUserDIDAndChannelIdScripting = (vault: hive
         "limit": 100
     }
 
-    const executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION, executableFilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID_CHANNELID, executable, null, false).catch(error => {
-        logger.error("Register query subscription info by userDid and channelId scripting error: ", error)
-        throw error
+    let executable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
+        efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID_CHANNELID,
+        executable, null, false).catch(error => {
+
+        logger.error(`Failed to query subscription on specific channel by user DID: ${error}`)
+        throw new Error(error)
     })
 }
 function resolve(arg0: string) {
     throw new Error('Function not implemented.')
 }
-
