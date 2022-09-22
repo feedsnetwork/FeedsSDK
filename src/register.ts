@@ -244,6 +244,32 @@ const installScriptToQueryProfileSubscriptions = (vault: hiveService): Promise<v
     })
 }
 
+const installScriptToQueryProfileSubscriptionsByStartTimeAndLimit = (vault: hiveService): Promise<void> => {
+    const conditionfilter = {
+        "type": "public",
+        // "user_did": "$caller_did"
+    }
+    const options = {
+        "projection": { "_id": false },
+        "limit": "$params.limit",
+        "sort": {
+            "updated_at": -1
+        }
+    }
+    const executablefilter = {
+        "type": "public",
+        "updated_at": {
+            $lt: "$params.start"
+        }
+    }
+
+    const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
+    const findExecutable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION, executablefilter, options).setOutput(true)
+    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS, findExecutable, queryCondition, false, false).catch(error => {
+        logger.error("Register a script to query profile subscriptions error: ", error)
+        throw new Error(error);
+    })
+}
 
 // 新增 Profile 通过channel id 查询 channel
 const installScriptToQueryProfileChannelById = (vault: hiveService): Promise<void> => {

@@ -127,22 +127,21 @@ export class Profile implements ProfileHandler {
 
     // 订阅的channels
     public querySubscriptions(earlierThan: number, upperLimit: number): Promise<ChannelInfo[]> {
-        return new Promise<Channel[]>((resolve, _reject) => {
-            // earlierThan : TODO:
-            // upperLimit : TODO:
-            const filter = {
-            }
-            const result = this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
-                this.targetDid, this.context.getAppDid())
-            //return result.find_message.items
-            resolve(result)
+
+        const filter = {
+            "updated_at": { "$lt": earlierThan }
+        }
+        const option = new FindOptions()
+        option.limit = upperLimit
+        return this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+            return result.find_message.items
         }).then(result => {
-            let channels = []
+            let channelInfos = []
             result.forEach(item => {
-                const channel = Channel.parseOne(this.targetDid, item)
-                channels.push(channel)
+                const channelInfo = ChannelInfo.parse(this.targetDid, item)
+                channelInfos.push(channelInfo)
             })
-            return channels
+            return channelInfos
         }).catch(error => {
             logger.error('query subscription channels error: ', error)
             throw new Error(error)
