@@ -6,6 +6,7 @@ import { ProfileHandler } from "./profilehandler";
 import { hiveService as VaultService } from "./hiveService"
 import { CollectionNames as collections, ScriptingNames as scripts } from "./vault/constants"
 import { Logger } from './utils/logger'
+import { FindOptions } from "@elastosfoundation/hive-js-sdk/typings";
 
 const logger = new Logger("Profile")
 
@@ -84,18 +85,17 @@ export class Profile implements ProfileHandler {
     }
 
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-        return new Promise((resolve, _reject) => {
-            const params = {
-                "channel_id": channelId,
-            }
-            const result = this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.targetDid, this.context.getAppDid())
-            //return result.find_message.items
-            resolve(result)
-        }).then(result => {
-            const channelInfo = ChannelInfo.parse(this.targetDid, result[0])
-            return channelInfo
-        })
+        const params = {
+            "channel_id": channelId,
+        }
+        return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID, params, this.targetDid, this.context.getAppDid())
+            .then(result => {
+                return result.find_message.items
+            })
+            .then(result => {
+                const channelInfo = ChannelInfo.parse(this.targetDid, result[0])
+                return channelInfo
+            })
     }
 
     public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
@@ -115,14 +115,10 @@ export class Profile implements ProfileHandler {
     }
 
     public querySubscriptionCount(): Promise<number> {
-        return new Promise<number>((resolve, _reject) => {
             const filter = {
             }
-            const result = this.vault.callScript(collections.BACKUP_SUBSCRIBEDCHANNELS, filter,
-                this.targetDid, this.context.getAppDid())
-            //const channels = result.find_message.items
-            //resolve(channels.length)
-            resolve(result)
+        return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+            return result.find_message.items.length
         }).catch(error => {
             logger.error('query subscription count error: ', error)
             throw new Error(error)

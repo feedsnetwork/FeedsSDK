@@ -83,6 +83,9 @@ export class Register {
         return Promise.all([
             // Profile
             installScriptToQueryProfileChannels(this.vault),
+            installScriptToQueryProfileChannelById(this.vault),
+            installScriptToQueryProfileSubscriptions(this.vault),
+
             // post related
             installScriptToQueryPostsByChannelId(this.vault),
             installScriptToQueryPostsByRangeOfTime(this.vault),
@@ -198,23 +201,70 @@ const registerQueryChannelInfoScripting = (vault: hiveService): Promise<void> =>
 
 // 新增，查询Profile 创建的channle
 const installScriptToQueryProfileChannels = (vault: hiveService): Promise<void> => {
-    let conditionfilter = {
+    const conditionfilter = {
         "type": "public"
     }
-
-    let options = {
+    const options = {
         "projection": { "_id": false },
         "limit": "$params.limit",
+        "sort": {
+            "updated_at": -1
+        }
     }
+    const executablefilter = {
+        "type": "public"
+    }
+    const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.CHANNELS, conditionfilter, null)
+    const findExecutable = new FindExecutable("find_message", CollectionNames.CHANNELS, executablefilter, options).setOutput(true)
+    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_CHANNELS, findExecutable, queryCondition, false, false).catch(error => {
+        logger.error("Register a script to query profile channels error: ", error)
+        throw new Error(error);
+    })
+}
 
-    let executablefilter = {
+const installScriptToQueryProfileSubscriptions = (vault: hiveService): Promise<void> => {
+    const conditionfilter = {
+        "type": "public",
+    }
+    const options = {
+        "projection": { "_id": false },
+        "sort": {
+            "updated_at": -1
+        }
+    }
+    const executablefilter = {
         "type": "public"
     }
 
-    let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.CHANNELS, conditionfilter, null)
-    let findExecutable = new FindExecutable("find_message", CollectionNames.CHANNELS, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_CHANNELS, findExecutable, queryCondition, false, false).catch(error => {
-        logger.error("Register a script to query posts by startTime and limit error", error)
+    const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
+    const findExecutable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION, executablefilter, options).setOutput(true)
+    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS, findExecutable, queryCondition, false, false).catch(error => {
+        logger.error("Register a script to query profile subscriptions error: ", error)
+        throw new Error(error);
+    })
+}
+
+
+// 新增 Profile 通过channel id 查询 channel
+const installScriptToQueryProfileChannelById = (vault: hiveService): Promise<void> => {
+    const conditionfilter = {
+        "type": "public",
+        "channel_id": "$params.channel_id",
+    }
+    const options = {
+        "projection": { "_id": false },
+        "sort": {
+            "updated_at": -1
+        }
+    }
+    const executablefilter = {
+        "type": "public"
+    }
+    
+    const queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.CHANNELS, conditionfilter, null)
+    const findExecutable = new FindExecutable("find_message", CollectionNames.CHANNELS, executablefilter, options).setOutput(true)
+    return vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID, findExecutable, queryCondition, false, false).catch(error => {
+        logger.error("Register a script to query profile channels by channel id error: ", error)
         throw new Error(error);
     })
 }
@@ -223,7 +273,7 @@ const installScriptToQueryPostsByStartTimeAndLimit = (vault: hiveService): Promi
     let executablefilter = {
         "channel_id": "$params.channel_id",
         "updated_at": {
-            $gt: "$params.start"
+            $lt: "$params.start"
         }
     }
     let options = {
@@ -245,6 +295,7 @@ const installScriptToQueryPostsByStartTimeAndLimit = (vault: hiveService): Promi
         throw new Error(error);
     })
 }
+// 新增结束
 
 const installScriptToQueryPostsByChannelId = (vault: hiveService): Promise<void> => {
     let executablefilter = {

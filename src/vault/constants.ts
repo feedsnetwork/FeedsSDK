@@ -10,6 +10,9 @@ class CollectionNames {
 }
 
 class ScriptingNames {
+
+    static readonly SCRIPT_PRIFILE_SUBSCRIPTIONS = "script_query_profile_subscriptions"
+    static readonly SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID = "script_query_profile_channels_by_channel_id"
     static readonly SCRIPT_PRIFILE_CHANNELS = "script_query_profile_channels_by_targetdid"
 
     static readonly QUERY_SELF_LIKE_BY_ID = "script_query_self_like_by_id"
