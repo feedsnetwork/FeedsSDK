@@ -6,7 +6,7 @@ import { ProfileHandler } from "./profilehandler";
 import { hiveService as VaultService } from "./hiveService"
 import { CollectionNames as collections, ScriptingNames as scripts } from "./vault/constants"
 import { Logger } from './utils/logger'
-import { FindOptions } from "@elastosfoundation/hive-js-sdk/typings";
+import { FindOptions } from "@elastosfoundation/hive-js-sdk";
 
 const logger = new Logger("Profile")
 

@@ -65,4 +65,4 @@ export {
     ScriptingNames
 }
 
-export const FeedsLocalScriptVersion = '1.0.3'
+export const FeedsLocalScriptVersion = '1.0.4'

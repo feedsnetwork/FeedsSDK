@@ -1,4 +1,4 @@
-import { DatabaseService, ScriptingService, FilesService, Executable, Condition, InsertResult, InsertOptions, UpdateOptions, UpdateResult } from "@elastosfoundation/hive-js-sdk/typings"
+import { DatabaseService, ScriptingService, FilesService, Executable, Condition, InsertResult, InsertOptions, UpdateOptions, UpdateResult } from "@elastosfoundation/hive-js-sdk"
 
 export class Vault {
     public appinstanceDid: string
