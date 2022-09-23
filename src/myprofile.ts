@@ -152,16 +152,18 @@ export class MyProfile implements ProfileHandler {
 
         return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter).then(async result => {
             let results = []
-            result.forEach(async (item) => {
-                const channel_id = item.channel_id;
-                const target_did = item.target_did.toString();
+            for (let index = 0; index < result.length; index++) {
+                const item = result[index]
+                const channel_id = item.channel_id
+                const target_did = item.target_did.toString()
                 const params = {
                     "channel_id": channel_id,
                 }
                 const callScriptResult = await this.vault.callScript(ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO, params, target_did, this.context.getAppDid())
                 const channelInfo = ChannelInfo.parse(target_did, callScriptResult.find_message.items[0])
                 results.push(channelInfo)
-            })
+            }
+
             return results
         }).catch(error => {
             throw new Error(error)
