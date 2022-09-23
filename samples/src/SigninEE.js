@@ -27,17 +27,30 @@ function SigninEE() {
 
     const subscribers = await myChannel.querySubscribers(currentTime, 100)
     console.log("subscribers ========================================", subscribers)
+    
     const subProfile0 = subscribers[0]
-    const result0 = await subProfile0.querySubscriptions()
-    const subProfileSubscription0 = await subProfile0.querySubscriptionCount()
-    console.log("result0 ========================================", result0)
-    console.log("subProfileSubscription0 ========================================", subProfileSubscription0)
+    const channelInfos0 = await subProfile0.querySubscriptions()
+    // const subProfileSubscription0 = await subProfile0.querySubscriptionCount()
+    console.log("channelInfos0 ========================================", channelInfos0)
+    // console.log("subProfileSubscription0 ========================================", subProfileSubscription0)
+    console.log("channelInfos0.count ========================================", channelInfos0.length)
+    for (let index = 0; index < channelInfos0.length; index++) {
+      const item = channelInfos0[index]
+      const channel = new Channel(item)
+      const result = await channel.queryChannelInfo()
+      console.log("channelInfos0 result ========================================", result)
+    }
 
     const subProfile1 = subscribers[1]
-    const result1 = await subProfile1.querySubscriptions()
-    const subProfileSubscription1 = await subProfile1.querySubscriptionCount()
-    console.log("result1 ========================================", result1)
-    console.log("subProfileSubscription1 ========================================", subProfileSubscription1)
+    const channelInfos1 = await subProfile1.querySubscriptions()
+    console.log("channelInfos1 ========================================", channelInfos1)
+
+    for (let index = 0; index < channelInfos1.length; index++) {
+      const item = channelInfos1[index]
+      const channel = new Channel(item)
+      const result = await channel.queryChannelInfo()
+      console.log("channelInfos1 result ========================================", result)
+    }
 
     // const subscribers = await myChannel.querySubscribers(currentTime, 100)
     // console.log("subscribers ========================================", subscribers)

@@ -21,6 +21,8 @@ class Channel implements ChannelHandler {
 
     public constructor(channelInfo: ChannelInfo) {
         this.channelInfo = channelInfo;
+        this.vault = new VaultService()
+        this.context = RuntimeContext.getInstance()
     }
 
     /**
@@ -35,18 +37,16 @@ class Channel implements ChannelHandler {
      * Query the channel infomation from remote channel on Vault.
      * @returns An promise object that contains channel information.
      */
-    public queryChannelInfo(): Promise<ChannelInfo> {
-        return new Promise<any>(async (resolve, _reject) => {
-            const params = {
-                "channel_id": this.getChannelInfo().getChannelId()
-            }
-            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.getChannelInfo().getOwnerDid(), this.context.getAppDid());
+    public queryChannelInfo(): Promise<ChannelInfo> {            
+        const channelId = this.getChannelInfo().getChannelId()
+        const params = {
+            "channel_id": channelId
+        }
 
-            // TODO error.
-            resolve(result)
-        }).then(result => {
-            return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result)
+        return this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
+            this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
+            .then(result => {
+                return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result.find_message.items[0])
         }).catch(error => {
             logger.log('Query channel information error: ', error)
             throw new Error(error)
@@ -182,22 +182,19 @@ class Channel implements ChannelHandler {
      * @returns An promise object that contains the post.
      */
     public queryPost(postId: string): Promise<PostBody> {
-        return new Promise<any>( (resolve, _reject) => {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
-            const result = this.vault.callScript(scripts.SCRIPT_SPECIFIED_POST, params,
-                this.channelInfo.getOwnerDid(), this.context.getAppDid());
-
-            // TODO: error.
-            resolve(result)
-        }).then ((data) => {
+        return this.vault.callScript(scripts.SCRIPT_SPECIFIED_POST, params,
+            this.channelInfo.getOwnerDid(), this.context.getAppDid())
+            .then((data) => {
             let posts = []
-            data.forEach(item => {
-                Post.parse(this.getChannelInfo().getOwnerDid(), item)
-                // TODO:
-            })
+                for (let index = 0; index < data.length; index++) {
+                    const item = data[index]
+                    const post = Post.parse(this.getChannelInfo().getOwnerDid(), item)
+                    posts.push(post)
+                }
             return posts[0]
         }).catch (error => {
             logger.error("Query post:", error)
