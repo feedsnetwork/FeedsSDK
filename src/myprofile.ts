@@ -222,7 +222,7 @@ export class MyProfile implements ProfileHandler {
         })
     }
 
-    // 为了测试：除测试channel
+    // 为了测试：删除测试channel
     public async deleteChannel(channelId: string): Promise<void> {
         let filter = { "channel_id": channelId }
         return await this.vault.deleateOneDBData(CollectionNames.CHANNELS, filter)

@@ -46,8 +46,9 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
+    // 新增 1 已讨论 // find_message.totles
     public queryOwnedChannelCount(): Promise<number> {
-        const filter = { "limit": 100 }
+        const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
             console.log("queryOwnedChannelCount ================================ ", result)
             return result.find_message.items.length
@@ -57,8 +58,9 @@ export class Profile implements ProfileHandler {
         })
     }
 
+    // 新增 已讨论 // 1
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
-        const filter = { "limit": 100 }
+        const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
             return result.find_message.items
         }).then(result => {
@@ -88,7 +90,7 @@ export class Profile implements ProfileHandler {
         const filter = {
             "channel_id": channelId,
         }
-        return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID, filter, this.targetDid, this.context.getAppDid())
+        return this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, filter, this.targetDid, this.context.getAppDid())
             .then(result => {
                 console.log("queryOwnedChannnelById result ============= ", result)
                 return result.find_message.items
@@ -115,9 +117,10 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
-    // 查询自己订阅了哪些频道
+    //新增
+    // 查询自己订阅了哪些频道  //先过了，暂时不管
     public querySubscriptionCount(): Promise<number> {
-        const filter = { "limit": 10000 }
+        const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
             return result.find_message.items.length
         }).catch(error => {
@@ -126,13 +129,12 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    // 订阅的channels
+    // 新增
+    // 订阅的channels // 同上
     public querySubscriptions(): Promise<ChannelInfo[]> {
-        // return new Promise(async (resolve, reject) => {
-
         const filter = {
         }
-        return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS_BY_START_TIME_AND_LIMIT, filter, this.targetDid, this.context.getAppDid()).then(result => {
+        return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
             return result.find_message.items
         }).then(async result => {
             let results = []

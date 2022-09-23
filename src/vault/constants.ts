@@ -11,11 +11,8 @@ class CollectionNames {
 
 class ScriptingNames {
     static readonly SCRIPT_PRIFILE_SUBSCRIPTIONS = "script_query_profile_subscriptions"
-    static readonly SCRIPT_PRIFILE_SUBSCRIPTIONS_BY_START_TIME_AND_LIMIT = "script_query_profile_subscriptions_by_start_time_and_limit"
-    static readonly SCRIPT_PRIFILE_CHANNEL_BY_CHANNEL_ID = "script_query_profile_channels_by_channel_id"
     static readonly SCRIPT_PRIFILE_CHANNELS = "script_query_profile_channels_by_targetdid"
-    static readonly SCRIPT_CHANNEL_POST_BY_START_TIME_AND_LIMIT = "script_channel_post_by_start_time_and_limit"
-    static readonly SCRIPT_CHANNEL_POST_BY_START_TIME_AND_END = "script_channel_post_by_start_time_and_end"
+    static readonly SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT = "script_channel_post_by_start_time_and_limit"
 
     static readonly QUERY_SELF_LIKE_BY_ID = "script_query_self_like_by_id"
 
@@ -67,4 +64,4 @@ export {
     ScriptingNames
 }
 
-export const FeedsLocalScriptVersion = '1.0.1'
+export const FeedsLocalScriptVersion = '1.0.3'

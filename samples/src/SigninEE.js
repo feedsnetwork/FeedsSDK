@@ -32,42 +32,41 @@ function SigninEE() {
     const channelInfos0 = await subProfile0.queryOwnedChannels()
     console.log("channelInfos0 ========================================", channelInfos0)
    
-    for (let index = 0; index < channelInfos0.length; index++) {
-      const item = channelInfos0[index]
-      const channelId = item.getChannelId()
-
-      // if (channelId == "af58e9743817447e2d191792ce5f07ecee8eca50bb3abac5e3bbdb8ba6e9ee7c") {
-      //   console.log("返回 channelId  ========================================", channelId)
-      // }
-      // else if (channelId == "149982ed40313750bd044697e74c954ff0af4989274dbfcb53d0ca630095bfbe") {
-      //   console.log("返回 channelId  ========================================", channelId)
-      // }
-      // else {
-        const channel = new Channel(item)
-        const posts = await channel.queryPostsByRangeOfTime(0, currentTime)
-        console.log("posts0 ========================================", posts)
-      // }
-    }
+    // for (let index = 0; index < channelInfos0.length; index++) {
+    //   const item = channelInfos0[index]
+    //     const channel = new Channel(item)
+    //     const posts = await channel.queryPosts(currentTime, 100)
+    //     console.log("posts0 ========================================", posts)
+    // }
 
     const subProfile1 = subscribers[1]
     const channelInfos1 = await subProfile1.queryOwnedChannels()
     console.log("channelInfos1 ========================================", channelInfos1)
 
-    for (let index = 0; index < channelInfos1.length; index++) {
-      const item = channelInfos1[index]
-      const channelId = item.getChannelId()
-      // if (channelId == "af58e9743817447e2d191792ce5f07ecee8eca50bb3abac5e3bbdb8ba6e9ee7c") {
-      //   console.log("返回 channelId  ========================================", channelId)
-      // }
-      // else if (channelId == "149982ed40313750bd044697e74c954ff0af4989274dbfcb53d0ca630095bfbe") {
-      //   console.log("返回 channelId  ========================================", channelId)
-      // }
-      // else {
-      const channel = new Channel(item)
-      const posts = await channel.queryPostsByRangeOfTime(0, currentTime)
-      console.log("posts1 ========================================", posts)
-      // }
-    }
+    // for (let index = 0; index < channelInfos1.length; index++) {
+    //   const item = channelInfos1[index]
+    //   const channel = new Channel(item)
+    //   const posts = await channel.queryPosts(currentTime, 100)
+    //   console.log("posts1 ========================================", posts)
+    // }
+
+    // for (let index = 0; index < channelInfos0.length; index++) {
+    //   const item = channelInfos0[index]
+    //     const channel = new Channel(item)
+    //     const posts = await channel.queryPostsByRangeOfTime(0, currentTime)
+    //     console.log("posts0 ========================================", posts)
+    // }
+
+    // const subProfile1 = subscribers[1]
+    // const channelInfos1 = await subProfile1.queryOwnedChannels()
+    // console.log("channelInfos1 ========================================", channelInfos1)
+
+    // for (let index = 0; index < channelInfos1.length; index++) {
+    //   const item = channelInfos1[index]
+    //   const channel = new Channel(item)
+    //   const posts = await channel.queryPostsByRangeOfTime(0, currentTime)
+    //   console.log("posts1 ========================================", posts)
+    // }
    
     // for (let index = 0; index < channelInfos0.length; index++) {
     //   const item = channelInfos0[index]
@@ -196,7 +195,7 @@ function SigninEE() {
     // const targetDid = 'did:elastos:ipkhCHvuxepfEoDffkZqWWfy9YM9AX4bw2'
     // const subChannelId = "f84d291671fa706522703a94e0c017c5dbde913b93aae45fa5174f255c9f4ebe"
     // const subDisplayName = myprofile.getName()
-    // const status = 0
+    // const status = 0 
     // const chnnelEntry = new ChannelEntry(targetDid, subChannelId, subDisplayName, status)
     // const unsubscribeNewChannel = await myprofile.subscribeChannel(chnnelEntry)
     // console.log("unsubscribeNewChannel ============================================ ", unsubscribeNewChannel)
