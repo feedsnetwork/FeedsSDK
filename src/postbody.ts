@@ -298,10 +298,8 @@ export class PostBody {
     }
 
     public static parse(targetDid: string, post: any): PostBody {
-        console.log("parse =================== ", post)
         const contents = JSON.parse(post.content)
         const _mediaDatas = contents.mediaData
-        console.log("parse  _mediaDatas =================== ", _mediaDatas)
 
         let mediaDatas = []
         _mediaDatas.forEach(item => {

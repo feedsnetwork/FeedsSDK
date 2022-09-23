@@ -87,6 +87,7 @@ export class Register {
             installScriptToQueryProfileChannelById(this.vault),
             installScriptToQueryProfileSubscriptions(this.vault),
             installScriptToQueryProfileSubscriptionsByStartTimeAndLimit(this.vault),
+            installScriptToQueryProfilePostsByStartTimeAndEndTime(this.vault),
 
             // post related
             installScriptToQueryPostsByChannel(this.vault),
@@ -334,7 +335,7 @@ const installScriptToQueryPostsByStartTime = async (vault: hiveService) => {
     }
     let options = {
         "projection": { "_id": false },
-        "limit": "$params.limit",
+        "limit": "$params.limit", 
         "sort": {
             "updated_at": -1
         }
@@ -345,11 +346,41 @@ const installScriptToQueryPostsByStartTime = async (vault: hiveService) => {
     let executable = new FindExecutable("find_message", CollectionNames.POSTS,
         executablefilter, options).setOutput(true)
 
-    return await vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST,
+    return await vault.registerScript(ScriptingNames.SCRIPT_CHANNEL_POST_BY_START_TIME_AND_LIMIT,
         executable, condition, false, false).catch(error => {
         logger.error(`Failed to register script to query posts by start time and limit: ${error}`)
         throw new Error(error)
     })
+}
+const installScriptToQueryProfilePostsByStartTimeAndEndTime = async (vault: hiveService) => {
+    let cfilter = {
+        "channel_id": "$params.channel_id",
+        "type": 'public'
+    }
+    let efilter = {
+        "channel_id": "$params.channel_id",
+        "updated_at": {
+            $gt: "$params.start",
+            $lt: "$params.end"
+        },
+        "type": 'public'
+    }
+    let options = {
+        "projection": { "_id": false },
+        "sort": { "updated_at": -1 }
+    }
+
+    let condition = new QueryHasResultCondition("channel_permission",
+        CollectionNames.CHANNELS, cfilter, null)
+    let executable = new FindExecutable("find_message",
+        CollectionNames.POSTS, efilter, options).setOutput(true)
+
+    return await vault.registerScript(ScriptingNames.SCRIPT_CHANNEL_POST_BY_START_TIME_AND_END,
+        executable, condition, false, false).catch(error => {
+
+            logger.error(`Failed to regsiter script to query published posts by range of time : ${error}`)
+            throw new Error(error)
+        })
 }
 // 新增结束
 
@@ -367,7 +398,7 @@ const installScriptToQueryPostsByRangeOfTime = async (vault: hiveService) => {
     }
     let options = {
         "projection": {"_id": false},
-        "limit": 30,
+        "limit": 30,//原来script中： "limit": 30
         "sort": {"updated_at": -1}
     }
 
@@ -375,6 +406,7 @@ const installScriptToQueryPostsByRangeOfTime = async (vault: hiveService) => {
         CollectionNames.SUBSCRIPTION, cfilter, null)
     let executable = new FindExecutable("find_message",
         CollectionNames.POSTS, efilter, options).setOutput(true)
+
 
     return await vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_POST, executable,
         condition, false, false).catch(error => {
@@ -1013,7 +1045,7 @@ const installScriptToQueryPublishedPostsByRangeOfTime = async (vault: hiveServic
     }
     let options = {
         "projection": { "_id": false },
-        "limit": 30,
+        "limit": 30, // 去掉feeds版本中的limit=30
         "sort": { "updated_at": -1 }
     }
 

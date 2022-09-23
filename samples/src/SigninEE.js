@@ -29,28 +29,63 @@ function SigninEE() {
     console.log("subscribers ========================================", subscribers)
     
     const subProfile0 = subscribers[0]
-    const channelInfos0 = await subProfile0.querySubscriptions()
-    // const subProfileSubscription0 = await subProfile0.querySubscriptionCount()
+    const channelInfos0 = await subProfile0.queryOwnedChannels()
     console.log("channelInfos0 ========================================", channelInfos0)
-    // console.log("subProfileSubscription0 ========================================", subProfileSubscription0)
-    console.log("channelInfos0.count ========================================", channelInfos0.length)
+   
     for (let index = 0; index < channelInfos0.length; index++) {
       const item = channelInfos0[index]
-      const channel = new Channel(item)
-      const result = await channel.queryChannelInfo()
-      console.log("channelInfos0 result ========================================", result)
+      const channelId = item.getChannelId()
+
+      // if (channelId == "af58e9743817447e2d191792ce5f07ecee8eca50bb3abac5e3bbdb8ba6e9ee7c") {
+      //   console.log("返回 channelId  ========================================", channelId)
+      // }
+      // else if (channelId == "149982ed40313750bd044697e74c954ff0af4989274dbfcb53d0ca630095bfbe") {
+      //   console.log("返回 channelId  ========================================", channelId)
+      // }
+      // else {
+        const channel = new Channel(item)
+        const posts = await channel.queryPostsByRangeOfTime(0, currentTime)
+        console.log("posts0 ========================================", posts)
+      // }
     }
 
     const subProfile1 = subscribers[1]
-    const channelInfos1 = await subProfile1.querySubscriptions()
+    const channelInfos1 = await subProfile1.queryOwnedChannels()
     console.log("channelInfos1 ========================================", channelInfos1)
 
     for (let index = 0; index < channelInfos1.length; index++) {
       const item = channelInfos1[index]
+      const channelId = item.getChannelId()
+      // if (channelId == "af58e9743817447e2d191792ce5f07ecee8eca50bb3abac5e3bbdb8ba6e9ee7c") {
+      //   console.log("返回 channelId  ========================================", channelId)
+      // }
+      // else if (channelId == "149982ed40313750bd044697e74c954ff0af4989274dbfcb53d0ca630095bfbe") {
+      //   console.log("返回 channelId  ========================================", channelId)
+      // }
+      // else {
       const channel = new Channel(item)
-      const result = await channel.queryChannelInfo()
-      console.log("channelInfos1 result ========================================", result)
+      const posts = await channel.queryPostsByRangeOfTime(0, currentTime)
+      console.log("posts1 ========================================", posts)
+      // }
     }
+   
+    // for (let index = 0; index < channelInfos0.length; index++) {
+    //   const item = channelInfos0[index]
+    //   const channel = new Channel(item)
+    //   const result = await channel.queryChannelInfo()
+    //   console.log("channelInfos0 result ========================================", result)
+    // }
+
+    // const subProfile1 = subscribers[1]
+    // const channelInfos1 = await subProfile1.querySubscriptions()
+    // console.log("channelInfos1 ========================================", channelInfos1)
+
+    // for (let index = 0; index < channelInfos1.length; index++) {
+    //   const item = channelInfos1[index]
+    //   const channel = new Channel(item)
+    //   const result = await channel.queryChannelInfo()
+    //   console.log("channelInfos1 result ========================================", result)
+    // }
 
     // const subscribers = await myChannel.querySubscribers(currentTime, 100)
     // console.log("subscribers ========================================", subscribers)

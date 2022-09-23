@@ -128,22 +128,18 @@ class Channel implements ChannelHandler {
      * @returns An promise object that contains a list of posts.
      */
     public queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
-        return new Promise( (resolve, _reject) => {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "start": start,
                 "end": end
             }
-            const result = this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+        return this.vault.callScript(scripts.SCRIPT_CHANNEL_POST_BY_START_TIME_AND_END, params,
                 this.channelInfo.getOwnerDid(), this.context.getAppDid())
-
-            // TOOD: error
-            resolve(result)
-        }).then((result: any)=> {
+            .then((result: any) => {
             const targetDid = this.channelInfo.getOwnerDid()
             let posts = []
-            result.find_message.items.array.forEach(item => {
-                const post = PostBody.parse(targetDid, item)
+                result.find_message.items.forEach(item => {
+                    const post = Post.parse(targetDid, item)
                 posts.push(post)
             })
             return posts
