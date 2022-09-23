@@ -128,23 +128,25 @@ export class Profile implements ProfileHandler {
 
     // 订阅的channels
     public querySubscriptions(): Promise<ChannelInfo[]> {
+        // return new Promise(async (resolve, reject) => {
 
         const filter = {
         }
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS_BY_START_TIME_AND_LIMIT, filter, this.targetDid, this.context.getAppDid()).then(result => {
             return result.find_message.items
-        }).then(result => {
+        }).then(async result => {
             let results = []
-            result.forEach(async (item) => {
-                const channel_id = item.channel_id;
-                const target_did = item.target_did.toString();
+            for (let index = 0; index < result.length; index++) {
+                const item = result[index]
+                const channel_id = item.channel_id
+                const target_did = item.target_did.toString()
                 const params = {
                     "channel_id": channel_id,
                 }
                 const callScriptResult = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params, target_did, this.context.getAppDid())
                 const channelInfo = ChannelInfo.parse(target_did, callScriptResult.find_message.items[0])
                 results.push(channelInfo)
-            })
+            }
 
             return results
         }).catch(error => {
