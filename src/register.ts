@@ -220,10 +220,11 @@ const installScriptToQueryProfileOwnedChannels = async (vault: hiveService) => {
     })
 }
 
+// 暂定 已过
 const installScriptToQueryPostsByEndTimeAndLimit = async (vault: hiveService) => {
     let conditionfilter = {
         "channel_id": "$params.channel_id",
-        "user_did": "$caller_did"
+        // "user_did": "$caller_did"
     }
     let executablefilter = {
         "channel_id": "$params.channel_id",

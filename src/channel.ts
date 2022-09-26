@@ -89,7 +89,7 @@ class Channel implements ChannelHandler {
                 console.log("callScript result ========= ")
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
-            result.find_message.items.array.forEach(item => {
+                result.find_message.items.forEach(item => {
                 const post = PostBody.parse(targetDid, item)
                 posts.push(post)
             })
@@ -140,7 +140,7 @@ class Channel implements ChannelHandler {
             const targetDid = this.channelInfo.getOwnerDid()
             let posts = []
                 result.find_message.items.forEach(item => {
-                    const post = Post.parse(targetDid, item)
+                    const post = PostBody.parse(targetDid, item)
                 posts.push(post)
             })
             return posts
@@ -183,13 +183,14 @@ class Channel implements ChannelHandler {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
-        return this.vault.callScript(scripts.SCRIPT_SPECIFIED_POST, params,
+        return this.vault.callScript(scripts.QUERY_PUBLIC_SPECIFIED_POST, params,
             this.channelInfo.getOwnerDid(), this.context.getAppDid())
             .then((data) => {
+                const result = data.find_message.items
             let posts = []
-                for (let index = 0; index < data.length; index++) {
-                    const item = data[index]
-                    const post = Post.parse(this.getChannelInfo().getOwnerDid(), item)
+                for (let index = 0; index < result.length; index++) {
+                    const item = result[index]
+                    const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
                     posts.push(post)
                 }
             return posts[0]

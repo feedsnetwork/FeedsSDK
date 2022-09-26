@@ -46,12 +46,12 @@ export class Profile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
-    // 新增 1 已讨论 // find_message.totles
+    // 新增 1 已讨论 // find_message.total
     public queryOwnedChannelCount(): Promise<number> {
         const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
             console.log("queryOwnedChannelCount ================================ ", result)
-            return result.find_message.items.length
+            return result.find_message.total
         }).catch(error => {
             logger.error('get owned channels count error: ', error)
             throw new Error(error)
