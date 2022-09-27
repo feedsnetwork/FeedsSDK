@@ -4,6 +4,7 @@ import { PostBody } from './postbody'
 import { Dispatcher } from './dispatcher';
 import { Comment } from './comment'
 import { hiveService } from "./hiveService"
+import { utils } from "./utils/utils"
 
 import { ScriptingNames as scripts } from './vault/constants';
 
@@ -13,17 +14,45 @@ export class Post {
     private runtime: RuntimeContext;
     private body: PostBody;
     private vault: hiveService
+    private context: RuntimeContext
 
     private constructor(body: PostBody) {
         this.body = body;
+        this.context = RuntimeContext.getInstance()
     }
 
     public getBody(): PostBody {
         return this.body;
     }
 
-    public addComent(): Promise<string> {
-        throw new Error("Method not implemented");
+    private generateCommentId(did: string, postId: string, refCommentId: string, commentContent: string): string {
+        return utils.generateCommentId(did, postId, refCommentId, commentContent)
+    }
+
+    public addComent(content: string): Promise<boolean> {
+        const userDid = this.context.getUserDid()
+        const channelId = this.getBody().getChannelId()
+        const postId = this.getBody().getPostId()
+        const refcommentId = "0"
+        const commentId = this.generateCommentId(userDid, postId, refcommentId, content)
+        const createdAt = (new Date()).getTime()
+        const params = {
+            "comment_id": commentId,
+            "channel_id": channelId,
+            "post_id": postId,
+            "refcomment_id": refcommentId,
+            "content": content,
+            "created_at": createdAt
+        }
+
+        return this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
+            this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                return true
+            })
+            .catch(error => {
+                logger.error("Add coment error : ", error)
+                throw new Error(error)
+            })
     }
 
     public updateComment(commentId: string): Promise<void> {
