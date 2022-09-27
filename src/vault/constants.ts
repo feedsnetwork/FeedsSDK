@@ -10,6 +10,8 @@ class CollectionNames {
 }
 
 class ScriptingNames {
+
+    static readonly SCRIPT_CHANNEL_SUBSCRIBERS = "script_query_channel_subscribers"
     static readonly SCRIPT_PRIFILE_SUBSCRIPTIONS = "script_query_profile_subscriptions"
     static readonly SCRIPT_PRIFILE_CHANNELS = "script_query_profile_channels_by_targetdid"
     static readonly SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT = "script_channel_post_by_start_time_and_limit"

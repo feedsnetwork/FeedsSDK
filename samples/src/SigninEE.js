@@ -35,9 +35,11 @@ function SigninEE() {
     for (let index = 0; index < channelInfos0.length; index++) {
       const item = channelInfos0[index]
         const channel = new Channel(item)
-        const subscriber = await channel.querySubscriberCount()
+        const subscriberCount = await channel.querySubscriberCount()
+        console.log("all subscriberCount 0 ========================================", subscriberCount)
+        const subscriber = await channel.querySubscribers(currentTime, 100)
         console.log("all subscriber 0 ========================================", subscriber)
-    }
+      }
 
     const subProfile1 = subscribers[1]
     const channelInfos1 = await subProfile1.queryOwnedChannels()
@@ -46,7 +48,9 @@ function SigninEE() {
     for (let index = 0; index < channelInfos1.length; index++) {
       const item = channelInfos1[index]
       const channel = new Channel(item)
-      const subscriber = await channel.querySubscriberCount()
+      const subscriberCount = await channel.querySubscriberCount()
+      console.log("all subscriberCount 1 ========================================", subscriberCount)
+      const subscriber = await channel.querySubscribers(currentTime, 100)
       console.log("all subscriber 1 ========================================", subscriber)
     }
     /*

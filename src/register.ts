@@ -84,7 +84,7 @@ export class Register {
             // Channels
             installScriptToQueryChannelInfo(this.vault),
             installScriptToQueryProfileOwnedChannels(this.vault),
-            installScriptToQueryProfileSubscriptions(this.vault),
+            installScriptToQueryChannelSubscribers(this.vault),
             installScriptToQueryPostsByEndTimeAndLimit(this.vault),
 
             // post related
@@ -253,23 +253,25 @@ const installScriptToQueryPostsByEndTimeAndLimit = async (vault: hiveService) =>
 }
 
 // 还没调试
-const installScriptToQueryProfileSubscriptions = async (vault: hiveService) => {
-    let conditionfilter = {}
+const installScriptToQueryChannelSubscribers = async (vault: hiveService) => {
     let options = {
         "projection": { "_id": false },
-        // "limit": "$params.limit",
+        "limit": "$params.limit", 
         "sort": {
             "updated_at": -1
         }
     }
-    let executablefilter = {}
+    let executablefilter = {
+        "channel_id": "$params.channel_id",
+        "updated_at": {
+            $lt: "$params.end"
+        }
+    }
 
-    let queryCondition = new QueryHasResultCondition("verify_user_permission",
-        CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, conditionfilter, null)
-    let findExecutable = new FindExecutable("find_message", CollectionNames.BACKUP_SUBSCRIBEDCHANNELS,
+    let findExecutable = new FindExecutable("find_message", CollectionNames.SUBSCRIPTION,
         executablefilter, options).setOutput(true)
-    return await vault.registerScript(ScriptingNames.SCRIPT_PRIFILE_SUBSCRIPTIONS,
-        findExecutable, queryCondition, false, false).catch(error => {
+    return await vault.registerScript(ScriptingNames.SCRIPT_CHANNEL_SUBSCRIBERS,
+        findExecutable, null, false, false).catch(error => {
             logger.error("Register a script to query profile subscriptions error: ", error)
             throw new Error(error);
         })

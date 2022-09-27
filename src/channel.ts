@@ -240,8 +240,29 @@ class Channel implements ChannelHandler {
      * @param earilerThan The timestamp
      * @param upperlimit The maximum number of subscribers for this query.
      */
-    public querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
-        throw new Error("Method not implemented");
+    // 新增：需讨论1
+    public querySubscribers(earilerThan: number, upperLimit: number): Promise<Profile[]> {
+        const params = {
+            "channel_id": this.getChannelInfo().getChannelId(),
+            "limit": upperLimit,
+            "end": earilerThan,
+        }
+        return this.vault.callScript(scripts.SCRIPT_CHANNEL_SUBSCRIBERS, params,
+            this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
+                return result.find_message.items
+            }).then((result) => {
+                let profiles = []
+                for (let index = 0; index < result.length; index++) {
+                    const item = result[index]
+                    const profile = Profile.parse(this.context, this.getChannelInfo().getOwnerDid(), item)
+                    profiles.push(profile)
+                }
+                return profiles
+            })
+            .catch(error => {
+                logger.error("Query ubscribers error : ", error)
+                throw new Error(error)
+            })
     }
 
     /**
@@ -252,7 +273,14 @@ class Channel implements ChannelHandler {
      */
     public queryAndDispatchSubscribers(earilerThan: number, upperLimit: number,
         dispatcher: Dispatcher<Profile>): Promise<void> {
-        throw new Error('Method not implemented.')
+        return this.querySubscribers(earilerThan, upperLimit).then(profiles => {
+            profiles.forEach(item => {
+                dispatcher.dispatch(item)
+            })
+        }).catch(error => {
+            logger.error("Query and dispatch subscribers error :", error)
+            throw new Error(error)
+        })
     }
 
     static parse(targetDid: string, item: any): Channel {
