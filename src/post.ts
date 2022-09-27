@@ -136,6 +136,7 @@ export class Post {
         })
     }
 
+    //post下的评论: 包含子评论
     public queryCommentsRangeOfTime(begin: number, end: number): Promise<Comment[]> {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
@@ -175,20 +176,24 @@ export class Post {
     }
 
     public queryCommentById(commentId: string): Promise<Comment> {
-        return new Promise<Comment>((resolve, _reject) => {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "comment_id": commentId
             }
-            const result = this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
-                this.getBody().getTargetDid(), this.context.getAppDid())
-            //TODO:
-            resolve(result)
-        }).then(result => {
-            // TODO:
-            return result
-        }).catch(error => {
+        return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
+            this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                return result.find_message.items
+            })
+            .then(result => {
+                let comments = []
+                result.forEach(item => {
+                    const comment = Comment.parse(item)
+                    comments.push(comment)
+                })
+                return comments[0]
+            })
+            .catch(error => {
             logger.error('fetch comment by id error:', error)
             throw new Error(error);
         })
@@ -202,16 +207,61 @@ export class Post {
         })
     }
 
-    public static parse(targetDid: string, result: any): Post {
+    // 同步feeds api
+    public queryCommentByPostId(): Promise<Comment[]> {
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
+            this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                return result.find_message.items
+            })
+            .then(result => {
+                let comments = []
+                result.forEach(item => {
+                    const comment = Comment.parse(item)
+                    comments.push(comment)
+                })
+                return comments
+            })
+            .catch(error => {
+                logger.error('fetch comment by id error:', error)
+                throw new Error(error);
+            })
+    }
 
+    // 同步feeds api
+    public queryCommentByChannel(): Promise<Comment[]> {
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID, params,
+            this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                return result.find_message.items
+            })
+            .then(result => {
+                let comments = []
+                result.forEach(item => {
+                    const comment = Comment.parse(item)
+                    comments.push(comment)
+                })
+                return comments
+            })
+            .catch(error => {
+                logger.error('fetch comment by id error:', error)
+                throw new Error(error);
+            })
+    }
+
+    public static parse(targetDid: string, result: any): Post {
         try {
             const postChun = PostBody.parse(targetDid, result)
             const post = new Post(postChun)
             return post
         } catch (error) {
-            //logger.error('Parse post result error: ', error)
+            logger.error('Parse post result error: ', error)
             throw error
         }
-        return null;
     }
 }

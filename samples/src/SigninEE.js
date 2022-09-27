@@ -45,10 +45,31 @@ function SigninEE() {
           // const rec = await post_1.deleteComment(cid)
           // console.log("删除 comments 0 ========================================", rec)
 
-          // if (index === 0) {
+          // if (index === 1) {
           //   const re = await post_1.addComment("测试添加评论 ---" + index)
           //   console.log("添加 comments 0 ========================================", re)
           // }
+
+          // if (index === 2) {
+          //   const re = await post_1.addComment("测试添加评论 ---" + index)
+          //   console.log("添加 comments 0 ========================================", re)
+          //   const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
+          //   console.log("添加 comments 0 ========================================", re0)
+          // }
+
+        if (index === 3) {
+          const re = await post_1.addComment("测试添加评论 ---" + index)
+          console.log("添加 comments 0 ========================================", re)
+          const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
+          console.log("更新 comments 0 ========================================", re0)
+        }
+
+        if (index === 4) {
+          const re = await post_1.addComment("测试添加评论 ---" + index)
+          console.log("添加 comments 0 ========================================", re)
+          const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
+          console.log("更新 comments 0 ========================================", re0)
+        }
 
           const comments = await post_1.queryCommentsRangeOfTime(0, currentTime)
           console.log("多个 comments 0 ========================================", comments)
@@ -72,7 +93,20 @@ function SigninEE() {
         console.log("单个post 1 ========================================", post)
         const post_1 = new Post(post)
         const comments = await post_1.queryCommentsRangeOfTime(0, currentTime)
-        console.log("多个 comments 0 ========================================", comments)
+        console.log(index + "多个 comments 1 ========================================", comments)
+        // if (index === 3) {
+        //   const re = await post_1.addComment("测试添加评论 ---" + index)
+        //   console.log("添加 comments 1 ========================================", re)
+        //   const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
+        //   console.log("更新 comments 1 ========================================", re0)
+        // }
+
+        // if (index === 4) {
+        //   const re = await post_1.addComment("测试添加评论 ---" + index)
+        //   console.log("添加 comments 1 ========================================", re)
+        //   const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
+        //   console.log("更新 comments 1 ========================================", re0)
+        // }
       }
     }
 
