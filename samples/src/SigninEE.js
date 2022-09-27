@@ -22,9 +22,55 @@ function SigninEE() {
     const myChannel = new MyChannel(appCtx, resultChannelInfos[0])
     console.log("myChannel ======================================== ", myChannel)
       
+    const subscribers = await myChannel.querySubscribers(currentTime, 100)
+    console.log("subscribers ========================================", subscribers)
+    
+    const subProfile0 = subscribers[0]
+    const channelInfos0 = await subProfile0.queryOwnedChannels()
+    console.log("channelInfos0 ========================================", channelInfos0)
+   
+    for (let index = 0; index < channelInfos0.length; index++) {
+      const item = channelInfos0[index]
+        const channel = new Channel(item)
+        const postBodys = await channel.queryPosts(currentTime, 100)
+        console.log("all posts0 ========================================", postBodys)
+
+        for (let index = 0; index < postBodys.length; index++) {
+          const postBody = postBodys[index]
+          const postId = postBody.getPostId()
+          const post = await channel.queryPost(postId)
+          console.log("单个post 0 ========================================", post)
+          const post_1 = new Post(post)
+          const comments = await post_1.queryCommentsRangeOfTime(0, currentTime)
+          console.log("多个 comments 0 ========================================", comments)
+        }
+    }
+
+    const subProfile1 = subscribers[1]
+    const channelInfos1 = await subProfile1.queryOwnedChannels()
+    console.log("channelInfos1 ========================================", channelInfos1)
+
+    for (let index = 0; index < channelInfos1.length; index++) {
+      const item = channelInfos1[index]
+      const channel = new Channel(item)
+      const postBodys = await channel.queryPosts(currentTime, 100)
+      console.log("all posts1 ========================================", postBodys)
+    
+      for (let index = 0; index < postBodys.length; index++) {
+        const postBody = postBodys[index]
+        const postId = postBody.getPostId()
+        const post = await channel.queryPost(postId)
+        console.log("单个post 1 ========================================", post)
+        const post_1 = new Post(post)
+        const comments = await post_1.queryCommentsRangeOfTime(0, currentTime)
+        console.log("多个 comments 0 ========================================", comments)
+      }
+    }
+
     // const result = await myprofile.querySubscriptions()
     // console.log("result ========================================", result)
 
+    /*
     const subscribers = await myChannel.querySubscribers(currentTime, 100)
     console.log("subscribers ========================================", subscribers)
     
@@ -53,6 +99,7 @@ function SigninEE() {
       const subscriber = await channel.querySubscribers(currentTime, 100)
       console.log("all subscriber 1 ========================================", subscriber)
     }
+    */
     /*
     for (let index = 0; index < channelInfos0.length; index++) {
       const item = channelInfos0[index]

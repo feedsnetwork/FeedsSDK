@@ -119,7 +119,15 @@ export class CommentInfo {
         return this.memo
     }
 
-    public static parse(targetDid: string, comment: any) {
+    public static parse(comment: any): CommentInfo {
+        const commentInfo = new CommentInfo(comment.channel_id, comment.post_id, comment.comment_id)
+        commentInfo.setCreaterDid(comment.creater_did)
+        commentInfo.setRefcommentId(comment.refcomment_id)
+        commentInfo.setContent(comment.content)
+        commentInfo.setStatus(comment.status)
+        commentInfo.setCreatedAt(comment.created_at)
+        commentInfo.setUpdatedAt(comment.updated_at)
 
+        return commentInfo
     }
 }

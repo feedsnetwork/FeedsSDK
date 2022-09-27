@@ -5,13 +5,14 @@ import { Dispatcher } from './dispatcher';
 import { Comment } from './comment'
 import { hiveService } from "./hiveService"
 import { utils } from "./utils/utils"
+import { CommentInfo } from "./commentInfo"
+import { hiveService as VaultService } from "./hiveService"
 
 import { ScriptingNames as scripts } from './vault/constants';
 
 const logger = new Logger("Post")
 
 export class Post {
-    private runtime: RuntimeContext;
     private body: PostBody;
     private vault: hiveService
     private context: RuntimeContext
@@ -19,6 +20,7 @@ export class Post {
     private constructor(body: PostBody) {
         this.body = body;
         this.context = RuntimeContext.getInstance()
+        this.vault = new VaultService()
     }
 
     public getBody(): PostBody {
@@ -29,7 +31,7 @@ export class Post {
         return utils.generateCommentId(did, postId, refCommentId, commentContent)
     }
 
-    public addComment(content: string): Promise<boolean> {
+    public addComment(content: string): Promise<CommentInfo> {
         const userDid = this.context.getUserDid()
         const channelId = this.getBody().getChannelId()
         const postId = this.getBody().getPostId()
@@ -47,7 +49,9 @@ export class Post {
 
         return this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
-                return true
+                console.log("addComment ===================== ", result)
+                const commentInfo = CommentInfo.parse(params)
+                return commentInfo
             })
             .catch(error => {
                 logger.error("Add coment error : ", error)
@@ -86,7 +90,7 @@ export class Post {
          const targetDid = this.getBody().getTargetDid()
 
          return this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
-                targetDid, this.runtime.getAppDid())
+             targetDid, this.context.getAppDid())
             .then(result => {
                 return true
             })
@@ -105,7 +109,7 @@ export class Post {
                 "created": { "$gt": earlierThan }
             }
             const result = this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
-                this.getBody().getTargetDid(), this.runtime.getAppDid())
+                this.getBody().getTargetDid(), this.context.getAppDid())
 
             // TODO: error
             resolve(result)
@@ -129,22 +133,27 @@ export class Post {
         })
     }
 
-    public queryCommentsRangeOfTime(begin: number, end: number, maximum: number): Promise<Comment[]> {
-       return new Promise<Comment[]>((resolve, _reject) => {
+    public queryCommentsRangeOfTime(begin: number, end: number): Promise<Comment[]> {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "start": begin,
                 "end": end
             }
-            const result = this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
-                this.getBody().getTargetDid(), this.runtime.getAppDid())
-            // TODO: error.
-            resolve(result)
-        }).then(result => {
-            // TODO:
-            return result
-        }).catch(error => {
+        return this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
+            this.getBody().getTargetDid(), this.context.getAppDid())
+            .then(result => {
+                return result.find_message.items
+            })
+            .then(result => {
+                let comments = []
+                result.forEach(item => {
+                    const comment = Comment.parse(item)
+                    comments.push(comment)
+                })
+                return comments
+            })
+            .catch(error => {
             logger.error('fetch comments range of time error:', error)
             throw new Error(error)
         })
@@ -169,7 +178,7 @@ export class Post {
                 "comment_id": commentId
             }
             const result = this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
-                this.getBody().getTargetDid(), this.runtime.getAppDid())
+                this.getBody().getTargetDid(), this.context.getAppDid())
             //TODO:
             resolve(result)
         }).then(result => {
