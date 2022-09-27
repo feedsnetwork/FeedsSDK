@@ -29,7 +29,7 @@ export class Post {
         return utils.generateCommentId(did, postId, refCommentId, commentContent)
     }
 
-    public addComent(content: string): Promise<boolean> {
+    public addComment(content: string): Promise<boolean> {
         const userDid = this.context.getUserDid()
         const channelId = this.getBody().getChannelId()
         const postId = this.getBody().getPostId()
