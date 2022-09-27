@@ -54,9 +54,27 @@ export class Post {
                 throw new Error(error)
             })
     }
+    
+    public updateComment(commentId: string, content: string): Promise<boolean> {
+        const updatedAt = (new Date()).getTime()
+        const channelId = this.getBody().getChannelId()
+        const postId = this.getBody().getPostId()
 
-    public updateComment(commentId: string): Promise<void> {
-        throw new Error("Method not implemented");
+        const params = {
+            "channel_id": channelId,
+            "post_id": postId,
+            "comment_id": commentId,
+            "content": content,
+            "updated_at": updatedAt
+        }
+        return this.vault.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
+            this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                return true
+            })
+            .catch(error => {
+                logger.error("Update comment error : ", error)
+                throw new Error(error)
+            })
     }
 
     public deleteComment(commentId: string) {
