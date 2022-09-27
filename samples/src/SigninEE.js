@@ -35,6 +35,24 @@ function SigninEE() {
     for (let index = 0; index < channelInfos0.length; index++) {
       const item = channelInfos0[index]
         const channel = new Channel(item)
+        const subscriber = await channel.querySubscriberCount()
+        console.log("all subscriber 0 ========================================", subscriber)
+    }
+
+    const subProfile1 = subscribers[1]
+    const channelInfos1 = await subProfile1.queryOwnedChannels()
+    console.log("channelInfos1 ========================================", channelInfos1)
+
+    for (let index = 0; index < channelInfos1.length; index++) {
+      const item = channelInfos1[index]
+      const channel = new Channel(item)
+      const subscriber = await channel.querySubscriberCount()
+      console.log("all subscriber 1 ========================================", subscriber)
+    }
+    /*
+    for (let index = 0; index < channelInfos0.length; index++) {
+      const item = channelInfos0[index]
+        const channel = new Channel(item)
         const postBodys = await channel.queryPosts(currentTime, 100)
         console.log("all posts0 ========================================", postBodys)
 
@@ -63,7 +81,7 @@ function SigninEE() {
         const post = await channel.queryPost(postId)
         console.log("单个post 1 ========================================", post)
       }
-    }
+    }*/
 
     // for (let index = 0; index < channelInfos0.length; index++) {
     //   const item = channelInfos0[index]

@@ -184,9 +184,9 @@ class Channel implements ChannelHandler {
                 "post_id": postId
             }
         return this.vault.callScript(scripts.QUERY_PUBLIC_SPECIFIED_POST, params,
-            this.channelInfo.getOwnerDid(), this.context.getAppDid())
-            .then((data) => {
-                const result = data.find_message.items
+            this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
+                return result.find_message.items
+            }).then((result) => {
             let posts = []
                 for (let index = 0; index < result.length; index++) {
                     const item = result[index]
@@ -220,9 +220,20 @@ class Channel implements ChannelHandler {
      * @returns An promise object that contains the number of subscribers to this channel.
      */
     public querySubscriberCount(): Promise<number> {
-        throw new Error('Method not implemented.')
+        const params = {
+            "channel_id": this.getChannelInfo().getChannelId(),
+            "status": 0
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, params,
+            this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
+                console.log("querySubscriberCount ====== ", result)
+                return result.find_message.items.length
+            }).catch(error => {
+                logger.error("Query subscriber: ", error)
+                throw new Error(error)
+            })
     }
-
+    
     /**
      * Query the list of subscribers to this channel.
      *
@@ -239,7 +250,7 @@ class Channel implements ChannelHandler {
      * @param upperLimit
      * @param dispatcher
      */
-    public  queryAndDispatchSubscribers(earilerThan: number, upperLimit: number,
+    public queryAndDispatchSubscribers(earilerThan: number, upperLimit: number,
         dispatcher: Dispatcher<Profile>): Promise<void> {
         throw new Error('Method not implemented.')
     }
