@@ -41,6 +41,23 @@ function SigninEE() {
           const post = await channel.queryPost(postId)
           console.log("单个post 0 ========================================", post)
           const post_1 = new Post(post)
+          const commentsRange = await post_1.queryCommentsRangeOfTime(0, currentTime)
+          console.log(index + ": 多个 queryCommentsRangeOfTime 0 ========================================", commentsRange)
+
+          const commentsend = await post_1.queryComments(currentTime, 100)
+          console.log(index + ": 多个 queryComments 0 ========================================", commentsend)
+
+          for (let index = 0; index < commentsRange.length; index++) {
+            const comment = commentsRange[index]
+            const cId = comment.getCommentInfo().getCommentId()
+            const comments = await post_1.queryCommentById(cId)
+            console.log("查询 queryCommentById 0 ========================================", comments)
+            const comments1 = await post_1.queryCommentByPostId()
+            console.log("查询 queryCommentByPostId 0 ========================================", comments1)
+            const comments2 = await post_1.queryCommentByChannel()
+            console.log("查询 queryCommentByChannel 0 ========================================", comments2)
+          }
+
           // const cid = "c745b7e1d83d09a10bde147b68443c6e247874fff1fdd23b8379fe0bc19d733a"
           // const rec = await post_1.deleteComment(cid)
           // console.log("删除 comments 0 ========================================", rec)
@@ -57,22 +74,22 @@ function SigninEE() {
           //   console.log("添加 comments 0 ========================================", re0)
           // }
 
-        if (index === 3) {
-          const re = await post_1.addComment("测试添加评论 ---" + index)
-          console.log("添加 comments 0 ========================================", re)
-          const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
-          console.log("更新 comments 0 ========================================", re0)
-        }
+        // if (index === 3) {
+        //   const re = await post_1.addComment("测试添加评论 ---" + index)
+        //   console.log("添加 comments 0 ========================================", re)
+        //   const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
+        //   console.log("更新 comments 0 ========================================", re0)
+        // }
 
-        if (index === 4) {
-          const re = await post_1.addComment("测试添加评论 ---" + index)
-          console.log("添加 comments 0 ========================================", re)
-          const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
-          console.log("更新 comments 0 ========================================", re0)
-        }
+        // if (index === 4) {
+        //   const re = await post_1.addComment("测试添加评论 ---" + index)
+        //   console.log("添加 comments 0 ========================================", re)
+        //   const re0 = await post_1.updateComment(re.getCommentId() ,"修改新添加的评论 ---" + index)
+        //   console.log("更新 comments 0 ========================================", re0)
+        // }
 
-          const comments = await post_1.queryCommentsRangeOfTime(0, currentTime)
-          console.log("多个 comments 0 ========================================", comments)
+        //   const comments = await post_1.queryCommentsRangeOfTime(0, currentTime)
+        //   console.log("多个 comments 0 ========================================", comments)
         }
     }
 
@@ -92,8 +109,22 @@ function SigninEE() {
         const post = await channel.queryPost(postId)
         console.log("单个post 1 ========================================", post)
         const post_1 = new Post(post)
-        const comments = await post_1.queryCommentsRangeOfTime(0, currentTime)
-        console.log(index + "多个 comments 1 ========================================", comments)
+        const commentsRange = await post_1.queryCommentsRangeOfTime(0, currentTime)
+        console.log(index + ": 多个 queryCommentsRangeOfTime 1 ========================================", commentsRange)
+        
+        const commentsend = await post_1.queryComments(currentTime, 100)
+        console.log(index + ": 多个 queryComments 1 ========================================", commentsend)
+
+        for (let index = 0; index < commentsRange.length; index++) {
+          const comment = commentsRange[index]
+          const cId = comment.getCommentInfo().getCommentId()
+          const comments = await post_1.queryCommentById(cId)
+          console.log("查询 queryCommentById 1 ========================================", comments)
+          const comments1 = await post_1.queryCommentByPostId()
+          console.log("查询 queryCommentByPostId 1 ========================================", comments1)
+          const comments2 = await post_1.queryCommentByChannel()
+          console.log("查询 queryCommentByChannel 1 ========================================", comments2)
+        }
         // if (index === 3) {
         //   const re = await post_1.addComment("测试添加评论 ---" + index)
         //   console.log("添加 comments 1 ========================================", re)

@@ -11,6 +11,7 @@ class CollectionNames {
 
 class ScriptingNames {
 
+    static readonly SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT = "script_comment_by_end_time_and_limit"
     static readonly SCRIPT_CHANNEL_SUBSCRIBERS = "script_query_channel_subscribers"
     static readonly SCRIPT_PRIFILE_SUBSCRIPTIONS = "script_query_profile_subscriptions"
     static readonly SCRIPT_PRIFILE_CHANNELS = "script_query_profile_channels_by_targetdid"
@@ -66,4 +67,4 @@ export {
     ScriptingNames
 }
 
-export const FeedsLocalScriptVersion = '1.0.1'
+export const FeedsLocalScriptVersion = '1.0.5'
