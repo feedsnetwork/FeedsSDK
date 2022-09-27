@@ -78,24 +78,22 @@ export class Post {
     }
 
     public deleteComment(commentId: string) {
-        return new Promise( (resolve, _reject) => {
-            const params = {
-                "channel_id": this.getBody().getChannelId(),
-                "post_id": this.getBody().getPostId(),
-                "comment_id": commentId
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+            "comment_id": commentId
             }
-            const targetDid = this.getBody().getTargetDid()
+         const targetDid = this.getBody().getTargetDid()
 
-            const result = this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
+         return this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
                 targetDid, this.runtime.getAppDid())
-            // TODO: error.
-            resolve(result)
-        }).then( result => {
-            // TODO:
-        }).catch (error => {
-            logger.error('Delete comment error:', error)
-            throw new Error(error)
-        });
+            .then(result => {
+                return true
+            })
+            .catch(error => {
+                logger.error("Update comment error : ", error)
+                    throw new Error(error)
+            })
     }
 
     public queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
