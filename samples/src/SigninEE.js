@@ -41,6 +41,15 @@ function SigninEE() {
           const post = await channel.queryPost(postId)
           console.log("单个post 0 ========================================", post)
           const post_1 = new Post(post)
+          // const cid = "c745b7e1d83d09a10bde147b68443c6e247874fff1fdd23b8379fe0bc19d733a"
+          // const rec = await post_1.deleteComment(cid)
+          // console.log("删除 comments 0 ========================================", rec)
+
+          // if (index === 0) {
+          //   const re = await post_1.addComment("测试添加评论 ---" + index)
+          //   console.log("添加 comments 0 ========================================", re)
+          // }
+
           const comments = await post_1.queryCommentsRangeOfTime(0, currentTime)
           console.log("多个 comments 0 ========================================", comments)
         }

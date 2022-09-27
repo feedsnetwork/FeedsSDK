@@ -108,7 +108,7 @@ export class Register {
             installScriptToQueryCommentsByChannel(this.vault),
             installScriptToQueryCommentsFromPosts(this.vault),
             installQueryCommentRangeOfTimeScripting(this.vault),
-            
+
             //like related.
             installScriptToAddLike(this.vault),
             installScriptToRemoveLike(this.vault),
@@ -275,6 +275,21 @@ const installScriptToQueryChannelSubscribers = async (vault: hiveService) => {
         findExecutable, null, false, false).catch(error => {
             logger.error("Register a script to query profile subscriptions error: ", error)
             throw new Error(error);
+        })
+}
+
+// feeds 中有实现，但是没有调用注册（等同于新增）, 添加了条件 "status": "$params.status"
+const installQueryCommentRangeOfTimeScripting = async (vault: hiveService) => {
+    let executablefilter =
+        { "channel_id": "$params.channel_id", "post_id": "$params.post_id", "updated_at": { $gt: "$params.start", $lt: "$params.end" }, "status": "$params.status" }
+    let options = { "projection": { "_id": false }, "limit": 100, "sort": { "updated_at": -1 } }
+    let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
+    let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
+    let findExe = new FindExecutable("find_message", CollectionNames.COMMENTS, executablefilter, options).setOutput(true)
+    return vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_COMMENT, findExe, queryCondition, false, false)
+        .catch(error => {
+            logger.error(`Install query comment range of time scripting error: ${error}`)
+            throw new Error(error)
         })
 }
 // 新增结束
@@ -654,21 +669,6 @@ const installScriptToQueryCommentsByChannel = async (vault: hiveService) => {
         logger.error(`Failed to register script to query comments related to channel: ${error}`)
         throw new Error(error)
     })
-}
-
-// feeds 中有实现，但是没有调用注册
-const installQueryCommentRangeOfTimeScripting = async (vault: hiveService) => {
-    let executablefilter =
-        { "channel_id": "$params.channel_id", "post_id": "$params.post_id", "updated_at": { $gt: "$params.start", $lt: "$params.end" } }
-    let options = { "projection": { "_id": false }, "limit": 30, "sort": { "updated_at": -1 } }
-    let conditionfilter = { "channel_id": "$params.channel_id", "user_did": "$caller_did" }
-    let queryCondition = new QueryHasResultCondition("verify_user_permission", CollectionNames.SUBSCRIPTION, conditionfilter, null)
-    let findExe = new FindExecutable("find_message", CollectionNames.COMMENTS, executablefilter, options).setOutput(true)
-    return vault.registerScript(ScriptingNames.SCRIPT_SOMETIME_COMMENT, findExe, queryCondition, false, false)
-        .catch(error => {
-            logger.error(`Install query comment range of time scripting error: ${error}`)
-            throw new Error(error)
-        })
 }
 
 const installScriptToAddLike = async (vault: hiveService) => {

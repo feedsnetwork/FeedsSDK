@@ -38,18 +38,21 @@ export class Post {
         const refcommentId = "0"
         const commentId = this.generateCommentId(userDid, postId, refcommentId, content)
         const createdAt = (new Date()).getTime()
-        const params = {
+        let params = {
             "comment_id": commentId,
             "channel_id": channelId,
             "post_id": postId,
             "refcomment_id": refcommentId,
             "content": content,
-            "created_at": createdAt
+            "created_at": createdAt,
         }
 
         return this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
                 console.log("addComment ===================== ", result)
+                params["updated_at"] = createdAt
+                params["status"] = 0
+                params["creater_did"] = this.context.getUserDid()
                 const commentInfo = CommentInfo.parse(params)
                 return commentInfo
             })
@@ -138,7 +141,8 @@ export class Post {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "start": begin,
-                "end": end
+                "end": end,
+                "status": 0
             }
         return this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid())
