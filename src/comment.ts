@@ -1,23 +1,20 @@
 import { Logger } from './utils/logger'
+import { CommentInfo } from './commentInfo'
+import { RuntimeContext } from './runtimeContext'
 
 const logger = new Logger("Comment")
 
-/*
 export class Comment {
-    private commentInfo: HiveData.CommentInfo
-    private hiveHelper: HiveHelper
+    private commentInfo: CommentInfo
+    private context: RuntimeContext
 
-    constructor(commentInfo: HiveData.CommentInfo) {
+    constructor(commentInfo: CommentInfo) {
+        this.context = RuntimeContext.getInstance()
         this.commentInfo = commentInfo
-        this.hiveHelper = new HiveHelper(AppContext.getInstance())
     }
 
-    public getCommentInfo(): HiveData.CommentInfo {
+    public getCommentInfo(): CommentInfo {
         return this.commentInfo
     }
-} */
-
-export class Comment {
-
-}
+} 
 
