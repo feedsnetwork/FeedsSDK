@@ -233,6 +233,10 @@ export class utils {
     return utils.SHA256(did + channelName)
   }
 
+  public static generateLikeId(postId: string, commentId: string, userDid: string): string {
+    return utils.SHA256(postId + commentId + userDid)
+  }
+
   public static getCurrentTimeNum(): number {
     return new Date().getTime()
   }

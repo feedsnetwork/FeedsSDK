@@ -9,6 +9,7 @@ import { CommentInfo } from "./commentInfo"
 import { hiveService as VaultService } from "./hiveService"
 
 import { ScriptingNames as scripts } from './vault/constants';
+import { LikeInfo } from './likeInfo';
 
 const logger = new Logger("Post")
 
@@ -246,6 +247,32 @@ export class Post {
             .catch(error => {
                 logger.error('fetch comment by id error:', error)
                 throw new Error(error);
+            })
+    }
+
+    public static generateLikeId(postId: string, commentId: string, userDid: string): string {
+        return utils.generateLikeId(postId, commentId, userDid)
+    }
+
+    // targetDid: comment/post的创建者
+    public addLike(targetDid: string, likeId: string, commentId: string): Promise<LikeInfo> {
+        const createdAt = (new Date()).getTime()
+        const params = {
+            "like_id": likeId,
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+            "comment_id": commentId,
+            "created_at": createdAt,
+            "updated_at": createdAt,
+            "status": 0
+        }
+        return this.vault.callScript(scripts.SCRIPT_CREATE_LIKE, params, targetDid, this.context.getAppDid()).then(result => {
+            const likeInfo = LikeInfo.parse(targetDid, params)
+            return likeInfo
+        })
+            .catch(error => {
+                logger.error('Add like error:', error)
+                throw new Error(error)
             })
     }
 
