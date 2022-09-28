@@ -101,7 +101,6 @@ export class LikeInfo {
         //TODO:
         const likeInfo = new LikeInfo('', '', '', '')
         likeInfo.setDestDid(targetDid)
-        likeInfo.setDestDid('')
         likeInfo.setCreaterDid('')
         likeInfo.setStatus(0)
         likeInfo.setCreatedAt(0)

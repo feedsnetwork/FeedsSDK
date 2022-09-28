@@ -227,13 +227,13 @@ export class Post {
             })
     }
 
-    // 同步feeds api
-    public queryCommentByChannel(): Promise<Comment[]> {
+    // 同步feeds api // targetDid: 订阅者的did
+    public queryCommentByChannel(targetDid: string): Promise<Comment[]> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
         }
         return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID, params,
-            this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+            targetDid, this.context.getAppDid()).then(result => {
                 return result.find_message.items
             })
             .then(result => {
@@ -303,6 +303,30 @@ export class Post {
             console.log("updateLike result ======== ", result)
             return likeInfo
         })
+            .catch(error => {
+                logger.error('Update like error:', error)
+                throw new Error(error)
+            })
+    }
+
+    // 同步feeds api // targetDid: 订阅者的did
+    public queryLikeByChannel(targetDid: string): Promise<LikeInfo[]> {
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+            "status": 0 // available
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_CHANNEL, params, targetDid, this.context.getAppDid()).then(result => {
+            console.log("queryLikeByChannel result ======== ", result)
+            return result.find_message.items
+        })
+            .then(result => {
+                let likeInfos = []
+                result.forEach(item => {
+                    const like = LikeInfo.parse(targetDid, item)
+                    likeInfos.push(like)
+                })
+                return likeInfos
+            })
             .catch(error => {
                 logger.error('Update like error:', error)
                 throw new Error(error)
