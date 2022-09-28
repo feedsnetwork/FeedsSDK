@@ -292,6 +292,23 @@ export class Post {
             })
     }
 
+    public updateLike(targetDid: string, likeInfo: LikeInfo): Promise<LikeInfo> {
+        const updatedAt = (new Date()).getTime()
+        const params = {
+            "updated_at": updatedAt,
+            "like_id": likeInfo.getLikeId(),
+            "status": likeInfo.getStatus()
+        }
+        return this.vault.callScript(scripts.SCRIPT_UPDATE_LIKE, params, targetDid, this.context.getAppDid()).then(result => {
+            console.log("updateLike result ======== ", result)
+            return likeInfo
+        })
+            .catch(error => {
+                logger.error('Update like error:', error)
+                throw new Error(error)
+            })
+    }
+
     public static parse(targetDid: string, result: any): Post {
         try {
             const postChun = PostBody.parse(targetDid, result)
