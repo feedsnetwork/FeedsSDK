@@ -276,6 +276,22 @@ export class Post {
             })
     }
 
+    // targetDid: comment/post的创建者
+    public removeLike(targetDid: string, commentId: string): Promise<boolean> {
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+            "comment_id": commentId,
+        }
+        return this.vault.callScript(scripts.SCRIPT_REMOVE_LIKE, params, targetDid, this.context.getAppDid()).then(result => {
+            return true
+        })
+            .catch(error => {
+                logger.error('Remove like error:', error)
+                throw new Error(error)
+            })
+    }
+
     public static parse(targetDid: string, result: any): Post {
         try {
             const postChun = PostBody.parse(targetDid, result)
