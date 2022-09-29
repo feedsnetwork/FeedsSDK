@@ -77,6 +77,7 @@ export class Post {
         }
         return this.vault.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                console.log("updateComment ===================== ", result)
                 return true
             })
             .catch(error => {
@@ -96,10 +97,11 @@ export class Post {
          return this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
              targetDid, this.context.getAppDid())
             .then(result => {
+                console.log("deleteComment ===================== ", result)
                 return true
             })
             .catch(error => {
-                logger.error("Update comment error : ", error)
+                logger.error("Delete comment error : ", error)
                     throw new Error(error)
             })
     }
@@ -144,6 +146,7 @@ export class Post {
         return this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid())
             .then(result => {
+
                 return result.find_message.items
             })
             .then(result => {
@@ -232,19 +235,19 @@ export class Post {
     }
 
     // targetDid: comment/post的创建者
-    public addLike(targetDid: string, likeId: string, commentId: string): Promise<LikeInfo> {
+    public addLike(likeId: string): Promise<LikeInfo> {
         const createdAt = (new Date()).getTime()
         const params = {
             "like_id": likeId,
             "channel_id": this.getBody().getChannelId(),
             "post_id": this.getBody().getPostId(),
-            "comment_id": commentId,
+            "comment_id": "0",
             "created_at": createdAt,
             "updated_at": createdAt,
             "status": 0
         }
-        return this.vault.callScript(scripts.SCRIPT_CREATE_LIKE, params, targetDid, this.context.getAppDid()).then(result => {
-            const likeInfo = LikeInfo.parse(targetDid, params)
+        return this.vault.callScript(scripts.SCRIPT_CREATE_LIKE, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+            const likeInfo = LikeInfo.parse(this.context.getUserDid(), params)
             return likeInfo
         })
             .catch(error => {
@@ -254,13 +257,13 @@ export class Post {
     }
 
     // targetDid: comment/post的创建者
-    public removeLike(targetDid: string, commentId: string): Promise<boolean> {
+    public removeLike(): Promise<boolean> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
             "post_id": this.getBody().getPostId(),
-            "comment_id": commentId,
+            "comment_id": "0",
         }
-        return this.vault.callScript(scripts.SCRIPT_REMOVE_LIKE, params, targetDid, this.context.getAppDid()).then(result => {
+        return this.vault.callScript(scripts.SCRIPT_REMOVE_LIKE, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
             return true
         })
             .catch(error => {
@@ -270,14 +273,14 @@ export class Post {
     }
 
     // 同步feeds api
-    public updateLike(targetDid: string, likeInfo: LikeInfo): Promise<LikeInfo> {
+    public updateLike(likeInfo: LikeInfo): Promise<LikeInfo> {
         const updatedAt = (new Date()).getTime()
         const params = {
             "updated_at": updatedAt,
             "like_id": likeInfo.getLikeId(),
             "status": likeInfo.getStatus()
         }
-        return this.vault.callScript(scripts.SCRIPT_UPDATE_LIKE, params, targetDid, this.context.getAppDid()).then(result => {
+        return this.vault.callScript(scripts.SCRIPT_UPDATE_LIKE, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
             console.log("updateLike result ======== ", result)
             return likeInfo
         })
@@ -311,15 +314,15 @@ export class Post {
         })
     }
 
-    // 同步feeds api //targetDid: 点赞者的did 
-    public queryLikeById(targetDid: string, commentId: string): Promise<any> {
+    // 同步feeds api //targetDid: post创建者
+    public queryLikeById(): Promise<any> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
             "post_id": this.getBody().getPostId(),
-            "comment_id": commentId,
+            "comment_id": "0",
             "status": 0 // available
         }
-        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_ID, params, targetDid, this.context.getAppDid()).then(result => {
+        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_ID, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
             console.log("queryLikeById result ======== ", result)
             return result.find_message.items
         }).then(result => {
@@ -330,9 +333,9 @@ export class Post {
             })
             return likeInfos
         })
-            .catch(error => {
-                logger.error('Query like by id error:', error)
-                throw new Error(error)
+        .catch(error => {
+            logger.error('Query like by id error:', error)
+            throw new Error(error)
             })
     }
 

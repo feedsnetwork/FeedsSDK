@@ -26,6 +26,7 @@ export class Comment {
     public getCommentInfo(): CommentInfo {
         return this.commentInfo
     }
+
     public addComment(content: string): Promise<CommentInfo> {
         const userDid = this.context.getUserDid()
         const channelId = this.getCommentInfo().getChannelId()
@@ -183,15 +184,15 @@ export class Comment {
             })
     }
 
-    // 同步feeds api //targetDid: 点赞者的did 
-    public queryLikeById(targetDid: string, commentId: string): Promise<any> {
+    // 同步feeds api //targetDid: 
+    public queryLikeById(commentId: string): Promise<any> {
         const params = {
             "channel_id": this.getCommentInfo().getChannelId(),
             "post_id": this.getCommentInfo().getPostId(),
             "comment_id": commentId,
             "status": 0 // available
         }
-        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_ID, params, targetDid, this.context.getAppDid()).then(result => {
+        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_ID, params, this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
             console.log("queryLikeById result ======== ", result)
             return result.find_message.items
         }).then(result => {
