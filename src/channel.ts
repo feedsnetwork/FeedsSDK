@@ -285,6 +285,29 @@ class Channel implements ChannelHandler {
         })
     }
 
+    //需订阅才能调用 同步feeds api 
+    public queryPostByChannelId() {
+        const params = {
+            "channel_id": this.getChannelInfo().getChannelId(),
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+            this.getChannelInfo().getOwnerDid(), this.context.getAppDid()).then(result => {
+                return result.find_message.items
+            })
+            .then(result => {
+                let posts = []
+                result.forEach(item => {
+                    const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
+                    posts.push(post)
+                })
+                return posts
+            })
+            .catch(error => {
+                logger.error('Query post by channelId error:', error)
+                throw new Error(error)
+            })
+    }
+
     //需订阅才能调用 同步feeds api // targetDid: 订阅者的did
     public queryCommentByChannel(): Promise<CommentInfo[]> {
         const params = {
