@@ -292,6 +292,7 @@ export class Post {
             })
     }
 
+    // 同步feeds api
     public updateLike(targetDid: string, likeInfo: LikeInfo): Promise<LikeInfo> {
         const updatedAt = (new Date()).getTime()
         const params = {
@@ -377,6 +378,31 @@ export class Post {
         })
             .catch(error => {
                 logger.error('Query like by id error:', error)
+                throw new Error(error)
+            })
+    }
+
+    //post //同步feeds api
+    public queryLikeByRangeOfTime(start: number, end: number) {
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+            "start": start,
+            "end": end // available
+        }
+        return this.vault.callScript(scripts.SCRIPT_SOMETIME_LIKE, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+            console.log("queryLikeByRangeOfTime result ======== ", result)
+            return result.find_message.items
+        }).then(result => {
+            let likeInfos = []
+            result.forEach(item => {
+                const like = LikeInfo.parse(this.getBody().getTargetDid(), item)
+                likeInfos.push(like)
+            })
+            return likeInfos
+        })
+            .catch(error => {
+                logger.error('Query like by range of time error:', error)
                 throw new Error(error)
             })
     }
