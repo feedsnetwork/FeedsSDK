@@ -327,11 +327,11 @@ export class Post {
             return likeInfos
         })
             .catch(error => {
-                logger.error('Update like error:', error)
+                logger.error('Query like by channel error:', error)
                 throw new Error(error)
             })
     }
-    
+
     // 同步feeds api 
     public queryLikeByPost(): Promise<any> {
         const params = {
@@ -351,9 +351,34 @@ export class Post {
             return likeInfos
         })
         .catch(error => {
-            logger.error('Update like error:', error)
+            logger.error('Query like by post error:', error)
             throw new Error(error)
         })
+    }
+
+    // 同步feeds api //targetDid: 点赞者的did 
+    public queryLikeById(targetDid: string, commentId: string): Promise<any> {
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+            "comment_id": commentId,
+            "status": 0 // available
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_ID, params, targetDid, this.context.getAppDid()).then(result => {
+            console.log("queryLikeById result ======== ", result)
+            return result.find_message.items
+        }).then(result => {
+            let likeInfos = []
+            result.forEach(item => {
+                const like = LikeInfo.parse(this.getBody().getTargetDid(), item)
+                likeInfos.push(like)
+            })
+            return likeInfos
+        })
+            .catch(error => {
+                logger.error('Query like by id error:', error)
+                throw new Error(error)
+            })
     }
 
     public static parse(targetDid: string, result: any): Post {
