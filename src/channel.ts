@@ -8,6 +8,8 @@ import { hiveService as VaultService } from "./hiveService"
 import { Profile } from './profile'
 import { RuntimeContext } from './runtimecontext'
 import { ScriptingNames as scripts } from './vault/constants'
+import { CommentInfo } from './commentInfo'
+import { LikeInfo } from './likeInfo'
 
 const logger = new Logger("Channel")
 /**
@@ -281,6 +283,52 @@ class Channel implements ChannelHandler {
             logger.error("Query and dispatch subscribers error :", error)
             throw new Error(error)
         })
+    }
+
+    //需订阅才能调用 同步feeds api // targetDid: 订阅者的did
+    public queryCommentByChannel(): Promise<CommentInfo[]> {
+        const params = {
+            "channel_id": this.getChannelInfo().getChannelId(),
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID, params,
+            this.getChannelInfo().getOwnerDid(), this.context.getAppDid()).then(result => {
+                return result.find_message.items
+            })
+            .then(result => {
+                let comments = []
+                result.forEach(item => {
+                    const comment = CommentInfo.parse(item)
+                    comments.push(comment)
+                })
+                return comments
+            })
+            .catch(error => {
+                logger.error('fetch comment by id error:', error)
+                throw new Error(error);
+            })
+    }
+
+    // 需订阅才能调用 同步feeds api // targetDid: 订阅者的did
+    public queryLikeByChannel(targetDid: string): Promise<LikeInfo[]> {
+        const params = {
+            "channel_id": this.getChannelInfo().getChannelId(),
+            "status": 0 // available
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_CHANNEL, params, targetDid, this.context.getAppDid()).then(result => {
+            console.log("queryLikeByChannel result ======== ", result)
+            return result.find_message.items
+        }).then(result => {
+            let likeInfos = []
+            result.forEach(item => {
+                const like = LikeInfo.parse(targetDid, item)
+                likeInfos.push(like)
+            })
+            return likeInfos
+        })
+            .catch(error => {
+                logger.error('Query like by channel error:', error)
+                throw new Error(error)
+            })
     }
 
     static parse(targetDid: string, item: any): Channel {

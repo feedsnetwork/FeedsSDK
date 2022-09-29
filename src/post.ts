@@ -227,29 +227,6 @@ export class Post {
             })
     }
 
-    // 同步feeds api // targetDid: 订阅者的did
-    public queryCommentByChannel(targetDid: string): Promise<Comment[]> {
-        const params = {
-            "channel_id": this.getBody().getChannelId(),
-        }
-        return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID, params,
-            targetDid, this.context.getAppDid()).then(result => {
-                return result.find_message.items
-            })
-            .then(result => {
-                let comments = []
-                result.forEach(item => {
-                    const comment = Comment.parse(item)
-                    comments.push(comment)
-                })
-                return comments
-            })
-            .catch(error => {
-                logger.error('fetch comment by id error:', error)
-                throw new Error(error);
-            })
-    }
-
     public static generateLikeId(postId: string, commentId: string, userDid: string): string {
         return utils.generateLikeId(postId, commentId, userDid)
     }
@@ -306,29 +283,6 @@ export class Post {
         })
             .catch(error => {
                 logger.error('Update like error:', error)
-                throw new Error(error)
-            })
-    }
-
-    // 同步feeds api // targetDid: 订阅者的did
-    public queryLikeByChannel(targetDid: string): Promise<LikeInfo[]> {
-        const params = {
-            "channel_id": this.getBody().getChannelId(),
-            "status": 0 // available
-        }
-        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_CHANNEL, params, targetDid, this.context.getAppDid()).then(result => {
-            console.log("queryLikeByChannel result ======== ", result)
-            return result.find_message.items
-        }).then(result => {
-            let likeInfos = []
-            result.forEach(item => {
-                const like = LikeInfo.parse(targetDid, item)
-                likeInfos.push(like)
-                })
-            return likeInfos
-        })
-            .catch(error => {
-                logger.error('Query like by channel error:', error)
                 throw new Error(error)
             })
     }
