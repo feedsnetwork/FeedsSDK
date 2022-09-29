@@ -18,6 +18,39 @@ function SigninEE() {
     const myprofile = await appCtx.signin()
 
     const currentTime = new Date().getTime()
+    const resultSubscriptions = await myprofile.querySubscriptions()
+    console.log("resultSubscriptions ======================================== ", resultSubscriptions)
+    
+    for (let index = 0; index < resultSubscriptions.length; index++) {
+      const item = resultSubscriptions[index]
+      const channel = new Channel(item)
+      const postBodys = await channel.queryPostsByRangeOfTime(0, currentTime)
+      console.log(index + "postBodys ======================================== ", postBodys)
+      for (let index = 0; index < postBodys.length; index++) {
+        const item = postBodys[index]
+        const post = new Post(item)
+        console.log(index + "postBodys item ======================================== ", item)
+        const aLike = await post.removeLike(item.getTargetDid(), "0")
+        console.log(index + "postBodys removeLike ======================================== ", aLike)
+      }
+    }
+    /*
+    for (let index = 0; index < resultSubscriptions.length; index++) {
+      const item = resultSubscriptions[index]
+      const channel = new Channel(item)
+      const postBodys = await channel.queryPostsByRangeOfTime(0, currentTime)
+      console.log(index + "postBodys ======================================== ", postBodys)
+      for (let index = 0; index < postBodys.length; index++) {
+        const item = postBodys[index]
+        const post = new Post(item)
+        console.log(index + "postBodys item ======================================== ", item)
+        const likeId = Post.generateLikeId(item.getPostId(), '0', myprofile.getUserDid())
+        const aLike = await post.addLike(item.getTargetDid(), likeId, "0")
+        console.log(index + "postBodys aLike ======================================== ", aLike)
+      }
+    }
+*/
+    /*
     const resultChannelInfos = await myprofile.queryOwnedChannels()
     const myChannel = new MyChannel(appCtx, resultChannelInfos[0])
     console.log("myChannel ======================================== ", myChannel)
@@ -28,7 +61,8 @@ function SigninEE() {
     const subProfile0 = subscribers[0]
     const channelInfos0 = await subProfile0.queryOwnedChannels()
     console.log("channelInfos0 ========================================", channelInfos0)
-   
+  */
+  /*
     for (let index = 0; index < channelInfos0.length; index++) {
       const item = channelInfos0[index]
         const channel = new Channel(item)
@@ -57,7 +91,7 @@ function SigninEE() {
             const comments2 = await post_1.queryCommentByChannel()
             console.log("查询 queryCommentByChannel 0 ========================================", comments2)
           }
-
+        
           // const cid = "c745b7e1d83d09a10bde147b68443c6e247874fff1fdd23b8379fe0bc19d733a"
           // const rec = await post_1.deleteComment(cid)
           // console.log("删除 comments 0 ========================================", rec)
@@ -92,7 +126,8 @@ function SigninEE() {
         //   console.log("多个 comments 0 ========================================", comments)
         }
     }
-
+  */
+  /*
     const subProfile1 = subscribers[1]
     const channelInfos1 = await subProfile1.queryOwnedChannels()
     console.log("channelInfos1 ========================================", channelInfos1)
@@ -140,7 +175,7 @@ function SigninEE() {
         // }
       }
     }
-
+  */
     // const result = await myprofile.querySubscriptions()
     // console.log("result ========================================", result)
 
