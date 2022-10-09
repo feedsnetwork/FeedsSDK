@@ -98,15 +98,14 @@ export class Likeinfo  {
     }
 
     public static parse(targetDid: string, like: any): Likeinfo {
-        //TODO:
-        const likeInfo = new Likeinfo('', '', '', '')
+        const likeInfo = new Likeinfo(like.like_id, like.post_id, like.comment_id, like.channel_id)
         likeInfo.setDestDid(targetDid)
-        likeInfo.setCreaterDid('')
-        likeInfo.setStatus(0)
-        likeInfo.setCreatedAt(0)
-        likeInfo.setUpdatedAt(0)
-        likeInfo.setProof('')
-        likeInfo.setMemo('')
+        likeInfo.setCreaterDid(like.creater_did)
+        likeInfo.setStatus(like.status)
+        likeInfo.setCreatedAt(like.created_at)
+        likeInfo.setUpdatedAt(like.updated_at)
+        likeInfo.setProof(like.proof)
+        likeInfo.setMemo(like.memo)
 
         return likeInfo
     }
