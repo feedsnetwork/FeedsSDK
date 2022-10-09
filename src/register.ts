@@ -306,14 +306,13 @@ const installScriptToQueryCommentByEndTimeAndLimit = async (vault: hiveService) 
         })
 }
 
-// 待讨论：feeds 中有实现，但是没有调用注册（等同于新增）, 添加了条件 "status": "$params.status"
+// 新增结束
 const installQueryCommentRangeOfTimeScripting = async (vault: hiveService) => {
     let executablefilter =
     {
         "channel_id": "$params.channel_id",
         "post_id": "$params.post_id",
-        "updated_at": { $gt: "$params.start", $lt: "$params.end" },
-        "status": "$params.status"
+        "updated_at": { $gt: "$params.start", $lt: "$params.end" }
     }
     let options = {
         "projection": { "_id": false },
@@ -331,7 +330,6 @@ const installQueryCommentRangeOfTimeScripting = async (vault: hiveService) => {
             throw new Error(error)
         })
 }
-// 新增结束
 
 const installScriptToQueryPostsByChannel = async (vault: hiveService) => {
     let conditionfilter = {
