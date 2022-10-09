@@ -126,64 +126,6 @@ export class Comment {
             })
     }
 
-    // targetDid: comment/post的创建者
-    public addLike(likeId: string): Promise<Likeinfo> {
-        const createdAt = (new Date()).getTime()
-        const params = {
-            "like_id": likeId,
-            "channel_id": this.getCommentInfo().getChannelId(),
-            "post_id": this.getCommentInfo().getPostId(),
-            "comment_id": this.getCommentInfo().getCommentId(),
-            "created_at": createdAt,
-            "updated_at": createdAt,
-            "status": 0
-        }
-        return this.vault.callScript(scripts.SCRIPT_CREATE_LIKE, params, this.getCommentInfo().getCommentId(), this.context.getAppDid()).then(result => {
-            console.log("Comment---->>>> addLike ============ ", result)
-            const likeInfo = Likeinfo.parse(this.context.getUserDid(), params)
-            return likeInfo
-        })
-            .catch(error => {
-                logger.error('Add like error:', error)
-                throw new Error(error)
-            })
-    }
-
-    // targetDid: comment/post的创建者
-    public removeLike(): Promise<boolean> {
-        const params = {
-            "channel_id": this.getCommentInfo().getChannelId(),
-            "post_id": this.getCommentInfo().getPostId(),
-            "comment_id": this.getCommentInfo().getCommentId(),
-        }
-        return this.vault.callScript(scripts.SCRIPT_REMOVE_LIKE, params, this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
-            console.log("Comment---->>>> removeLike ============ ", result)
-            return true
-        })
-            .catch(error => {
-                logger.error('Remove like error:', error)
-                throw new Error(error)
-            })
-    }
-
-    // 同步feeds api
-    public updateLike(targetDid: string, likeInfo: Likeinfo): Promise<Likeinfo> {
-        const updatedAt = (new Date()).getTime()
-        const params = {
-            "updated_at": updatedAt,
-            "like_id": likeInfo.getLikeId(),
-            "status": likeInfo.getStatus()
-        }
-        return this.vault.callScript(scripts.SCRIPT_UPDATE_LIKE, params, targetDid, this.context.getAppDid()).then(result => {
-            console.log("updateLike result ======== ", result)
-            return likeInfo
-        })
-            .catch(error => {
-                logger.error('Update like error:', error)
-                throw new Error(error)
-            })
-    }
-
     // 同步feeds api //targetDid: 
     public queryLikeById(commentId: string): Promise<any> {
         const params = {

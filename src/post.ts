@@ -235,6 +235,7 @@ export class Post {
     }
 
     // targetDid: comment/post的创建者
+    // commentId = 0 给post点赞
     public addLike(likeId: string): Promise<Likeinfo> {
         const createdAt = (new Date()).getTime()
         const params = {
@@ -256,12 +257,48 @@ export class Post {
             })
     }
 
+    public addLikeByCommentId(likeId: string, commentId: string): Promise<Likeinfo> {
+        const createdAt = (new Date()).getTime()
+        const params = {
+            "like_id": likeId,
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+            "comment_id": commentId,
+            "created_at": createdAt,
+            "updated_at": createdAt,
+            "status": 0
+        }
+        return this.vault.callScript(scripts.SCRIPT_CREATE_LIKE, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+            const likeInfo = Likeinfo.parse(this.context.getUserDid(), params)
+            return likeInfo
+        })
+            .catch(error => {
+                logger.error('Add like error:', error)
+                throw new Error(error)
+            })
+    }
+
     // targetDid: comment/post的创建者
     public removeLike(): Promise<boolean> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
             "post_id": this.getBody().getPostId(),
             "comment_id": "0",
+        }
+        return this.vault.callScript(scripts.SCRIPT_REMOVE_LIKE, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+            return true
+        })
+            .catch(error => {
+                logger.error('Remove like error:', error)
+                throw new Error(error)
+            })
+    }
+
+    public removeLikeByCommnetId(commentId: string): Promise<boolean> {
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+            "comment_id": commentId,
         }
         return this.vault.callScript(scripts.SCRIPT_REMOVE_LIKE, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
             return true
@@ -336,6 +373,30 @@ export class Post {
         .catch(error => {
             logger.error('Query like by id error:', error)
             throw new Error(error)
+            })
+    }
+
+    public queryLikeByCommnetId(commentId: string): Promise<any> {
+        const params = {
+            "channel_id": this.getBody().getChannelId(),
+            "post_id": this.getBody().getPostId(),
+            "comment_id": commentId,
+            "status": 0 // available
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_ID, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+            console.log("queryLikeByCommnetId result ======== ", result)
+            return result.find_message.items
+        }).then(result => {
+            let likeInfos = []
+            result.forEach(item => {
+                const like = Likeinfo.parse(this.getBody().getTargetDid(), item)
+                likeInfos.push(like)
+            })
+            return likeInfos
+        })
+            .catch(error => {
+                logger.error('Query like by comment id error:', error)
+                throw new Error(error)
             })
     }
 
