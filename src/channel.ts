@@ -9,7 +9,7 @@ import { Profile } from './profile'
 import { RuntimeContext } from './runtimecontext'
 import { ScriptingNames as scripts } from './vault/constants'
 import { CommentInfo } from './commentInfo'
-import { LikeInfo } from './likeInfo'
+import { Likeinfo } from './Likeinfo'
 
 const logger = new Logger("Channel")
 /**
@@ -332,7 +332,7 @@ class Channel implements ChannelHandler {
     }
 
     // 需订阅才能调用 同步feeds api // targetDid: 订阅者的did
-    public queryLikeByChannel(targetDid: string): Promise<LikeInfo[]> {
+    public queryLikeByChannel(targetDid: string): Promise<Likeinfo[]> {
         const params = {
             "channel_id": this.getChannelInfo().getChannelId(),
             "status": 0 // available
@@ -341,12 +341,12 @@ class Channel implements ChannelHandler {
             console.log("queryLikeByChannel result ======== ", result)
             return result.find_message.items
         }).then(result => {
-            let likeInfos = []
+            let likes = []
             result.forEach(item => {
-                const like = LikeInfo.parse(targetDid, item)
-                likeInfos.push(like)
+                const like = Likeinfo.parse(targetDid, item)
+                likes.push(like)
             })
-            return likeInfos
+            return likes
         })
             .catch(error => {
                 logger.error('Query like by channel error:', error)

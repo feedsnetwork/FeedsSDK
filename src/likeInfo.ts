@@ -1,4 +1,4 @@
-export class LikeInfo {
+export class Likeinfo  {
     private likeId: string
     private postId: string
     private commentId: string
@@ -18,7 +18,7 @@ export class LikeInfo {
         this.channelId = channelId
     }
 
-    setDestDid(destDid: string): LikeInfo {
+    setDestDid(destDid: string): Likeinfo {
         this.destDid = destDid
         return this
     }
@@ -27,7 +27,7 @@ export class LikeInfo {
         return this.destDid
     }
 
-    setCreaterDid(createrDid: string): LikeInfo {
+    setCreaterDid(createrDid: string): Likeinfo {
         this.createrDid = createrDid
         return this
     }
@@ -52,7 +52,7 @@ export class LikeInfo {
         return this.commentId
     }
 
-    setStatus(status: number): LikeInfo {
+    setStatus(status: number): Likeinfo {
         this.status = status
         return this
     }
@@ -61,7 +61,7 @@ export class LikeInfo {
         return this.status
     }
 
-    setUpdatedAt(updatedAt: number): LikeInfo {
+    setUpdatedAt(updatedAt: number): Likeinfo {
         this.updatedAt = updatedAt
         return this
     }
@@ -70,7 +70,7 @@ export class LikeInfo {
         return this.updatedAt
     }
 
-    setCreatedAt(createdAt: number): LikeInfo {
+    setCreatedAt(createdAt: number): Likeinfo {
         this.createdAt = createdAt
         return this
     }
@@ -79,7 +79,7 @@ export class LikeInfo {
         return this.createdAt
     }
 
-    setProof(proof: string): LikeInfo {
+    setProof(proof: string): Likeinfo {
         this.proof = proof
         return this
     }
@@ -88,7 +88,7 @@ export class LikeInfo {
         return this.proof
     }
 
-    setMemo(memo: string): LikeInfo {
+    setMemo(memo: string): Likeinfo {
         this.memo = memo
         return this
     }
@@ -97,9 +97,9 @@ export class LikeInfo {
         return this.memo
     }
 
-    public static parse(targetDid: string, like: any): LikeInfo {
+    public static parse(targetDid: string, like: any): Likeinfo {
         //TODO:
-        const likeInfo = new LikeInfo('', '', '', '')
+        const likeInfo = new Likeinfo('', '', '', '')
         likeInfo.setDestDid(targetDid)
         likeInfo.setCreaterDid('')
         likeInfo.setStatus(0)

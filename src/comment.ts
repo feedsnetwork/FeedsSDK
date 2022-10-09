@@ -4,7 +4,7 @@ import { RuntimeContext } from './runtimecontext'
 import { hiveService as VaultService } from "./hiveService"
 import { utils } from "./utils/utils"
 import { ScriptingNames as scripts } from './vault/constants';
-import { LikeInfo } from "./LikeInfo"
+import { Likeinfo } from "./Likeinfo"
 
 const logger = new Logger("Comment")
 
@@ -127,7 +127,7 @@ export class Comment {
     }
 
     // targetDid: comment/post的创建者
-    public addLike(likeId: string): Promise<LikeInfo> {
+    public addLike(likeId: string): Promise<Likeinfo> {
         const createdAt = (new Date()).getTime()
         const params = {
             "like_id": likeId,
@@ -140,7 +140,7 @@ export class Comment {
         }
         return this.vault.callScript(scripts.SCRIPT_CREATE_LIKE, params, this.getCommentInfo().getCommentId(), this.context.getAppDid()).then(result => {
             console.log("Comment---->>>> addLike ============ ", result)
-            const likeInfo = LikeInfo.parse(this.context.getUserDid(), params)
+            const likeInfo = Likeinfo.parse(this.context.getUserDid(), params)
             return likeInfo
         })
             .catch(error => {
@@ -167,7 +167,7 @@ export class Comment {
     }
 
     // 同步feeds api
-    public updateLike(targetDid: string, likeInfo: LikeInfo): Promise<LikeInfo> {
+    public updateLike(targetDid: string, likeInfo: Likeinfo): Promise<Likeinfo> {
         const updatedAt = (new Date()).getTime()
         const params = {
             "updated_at": updatedAt,
@@ -198,7 +198,7 @@ export class Comment {
         }).then(result => {
             let likeInfos = []
             result.forEach(item => {
-                const like = LikeInfo.parse(this.getCommentInfo().getCreaterDid(), item)
+                const like = Likeinfo.parse(this.getCommentInfo().getCreaterDid(), item)
                 likeInfos.push(like)
             })
             return likeInfos

@@ -9,7 +9,7 @@ import { CommentInfo } from "./commentInfo"
 import { hiveService as VaultService } from "./hiveService"
 
 import { ScriptingNames as scripts } from './vault/constants';
-import { LikeInfo } from './likeInfo';
+import { Likeinfo } from './Likeinfo';
 
 const logger = new Logger("Post")
 
@@ -235,7 +235,7 @@ export class Post {
     }
 
     // targetDid: comment/post的创建者
-    public addLike(likeId: string): Promise<LikeInfo> {
+    public addLike(likeId: string): Promise<Likeinfo> {
         const createdAt = (new Date()).getTime()
         const params = {
             "like_id": likeId,
@@ -247,7 +247,7 @@ export class Post {
             "status": 0
         }
         return this.vault.callScript(scripts.SCRIPT_CREATE_LIKE, params, this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
-            const likeInfo = LikeInfo.parse(this.context.getUserDid(), params)
+            const likeInfo = Likeinfo.parse(this.context.getUserDid(), params)
             return likeInfo
         })
             .catch(error => {
@@ -273,7 +273,7 @@ export class Post {
     }
 
     // 同步feeds api
-    public updateLike(likeInfo: LikeInfo): Promise<LikeInfo> {
+    public updateLike(likeInfo: Likeinfo): Promise<Likeinfo> {
         const updatedAt = (new Date()).getTime()
         const params = {
             "updated_at": updatedAt,
@@ -303,7 +303,7 @@ export class Post {
         }).then(result => {
             let likeInfos = []
             result.forEach(item => {
-                const like = LikeInfo.parse(this.getBody().getTargetDid(), item)
+                const like = Likeinfo.parse(this.getBody().getTargetDid(), item)
                 likeInfos.push(like)
             })
             return likeInfos
@@ -328,7 +328,7 @@ export class Post {
         }).then(result => {
             let likeInfos = []
             result.forEach(item => {
-                const like = LikeInfo.parse(this.getBody().getTargetDid(), item)
+                const like = Likeinfo.parse(this.getBody().getTargetDid(), item)
                 likeInfos.push(like)
             })
             return likeInfos
@@ -353,7 +353,7 @@ export class Post {
         }).then(result => {
             let likeInfos = []
             result.forEach(item => {
-                const like = LikeInfo.parse(this.getBody().getTargetDid(), item)
+                const like = Likeinfo.parse(this.getBody().getTargetDid(), item)
                 likeInfos.push(like)
             })
             return likeInfos

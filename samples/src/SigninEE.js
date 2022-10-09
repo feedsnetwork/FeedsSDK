@@ -28,15 +28,21 @@ function SigninEE() {
       for (let index = 0; index < postBodys.length; index++) {
         const item = postBodys[index]
         const post = new Post(item)
+        const postId = item.getPostId()
+        console.log(index + "postId ======================================== ", postId)
+
+        const like = await post.queryLikeByPost()
+        console.log(index + "like ======================================== ", like)
+
         console.log(index + "postBodys item ======================================== ", item)
-        const comments = await post.queryCommentsRangeOfTime(0, currentTime)
-        console.log(index + "comments ======================================== ", comments)
-        for (let index = 0; index < comments.length; index++) {
-          const item = comments[index]
-          const likeId = Post.generateLikeId(item.getCommentInfo().getPostId(), '0', myprofile.getUserDid())
-          const adLike = await post.addLike(item.getTargetDid(), likeId, item.getCommentInfo().getCommentId())
-          console.log(index + "adLike ======================================== ", adLike)
-        }
+        // const comments = await post.queryCommentsRangeOfTime(0, currentTime)
+        // console.log(index + "comments ======================================== ", comments)
+        // for (let index = 0; index < comments.length; index++) {
+          // const item = comments[index]
+          // const likeId = Post.generateLikeId(item.getCommentInfo().getPostId(), '0', myprofile.getUserDid())
+          // const adLike = await post.addLike(item.getTargetDid(), likeId, item.getCommentInfo().getCommentId())
+          // console.log(index + "adLike ======================================== ", adLike)
+        // }
       }
     }
     /*
