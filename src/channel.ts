@@ -286,7 +286,7 @@ class Channel implements ChannelHandler {
     }
 
     //需订阅才能调用 同步feeds api 
-    public queryPostByChannelId() {
+    public queryPostByChannelId(): Promise<PostBody[]> {
         const params = {
             "channel_id": this.getChannelInfo().getChannelId(),
         }

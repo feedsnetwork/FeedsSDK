@@ -107,7 +107,7 @@ export class Post {
     }
 
     // 新增
-    public queryComments(earlierThan: number, maximum: number): Promise<Comment[]> {
+    public queryComments(earlierThan: number, maximum: number): Promise<CommentInfo[]> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
             "post_id": this.getBody().getPostId(),
@@ -117,14 +117,22 @@ export class Post {
         return this.vault.callScript(scripts.SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
                 return result.find_message.items
-        }).catch(error => {
+            }).then(result => {
+                let comments = []
+                result.forEach(item => {
+                    const com = CommentInfo.parse(item)
+                    comments.push(com)
+                })
+                return comments
+            })
+            .catch(error => {
             logger.error('fetch comments error:', error)
             throw new Error(error)
         })
     }
 
     public queryAndDispatchComments(earlierThan: number, maximum: number,
-        dispatcher: Dispatcher<Comment>) {
+        dispatcher: Dispatcher<CommentInfo>) {
         return this.queryComments(earlierThan, maximum).then((comments) => {
             comments.forEach(item => {
                 dispatcher.dispatch(item)
@@ -135,7 +143,7 @@ export class Post {
     }
 
     //post下的评论: 包含子评论
-    public queryCommentsRangeOfTime(begin: number, end: number): Promise<Comment[]> {
+    public queryCommentsRangeOfTime(begin: number, end: number): Promise<CommentInfo[]> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
             "post_id": this.getBody().getPostId(),
@@ -164,8 +172,8 @@ export class Post {
     }
 
     public queryAndDispatchCommentsRangeOfTime(begin: number, end: number,
-        dispatcher: Dispatcher<Comment>) {
-        return this.queryComments(begin, end).then((comments) => {
+        dispatcher: Dispatcher<CommentInfo>) {
+        return this.queryCommentsRangeOfTime(begin, end).then((comments) => {
             comments.forEach(item => {
                 dispatcher.dispatch(item)
             })
