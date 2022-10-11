@@ -158,7 +158,7 @@ export class Register {
 
     private updateRemoteFeedsScriptingVersion(lasterVersion: string): Promise<UpdateResult> {
         const doc = { "laster_version": lasterVersion,}
-        let filter = { "laster_version": lasterVersion }
+        let filter = {}
         let update = { "$set": doc }
         const option = new UpdateOptions(false, true)
 
@@ -178,7 +178,13 @@ export class Register {
 }
 
 const createCollection = async (collectioName: string, vault: hiveService) => {
-    return await vault.createCollection(collectioName);
+    return vault.createCollection(collectioName).catch(error => {
+        if (error.message === "Already exists") {
+            // ignore
+        } else {
+            throw new Error(error);
+        }
+    })
 }
 
 const installScriptToQueryChannelInfo = async (vault: hiveService) => {
