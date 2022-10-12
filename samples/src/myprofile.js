@@ -1,12 +1,21 @@
 import { useState, useEffect } from "react";
+import {RuntimeContext, MyProfile as FeedsMyProfile } from '@feedsnetwork/feeds-sdk-development';
 
-const MyProfile = () => {
+async function MyProfile() {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     /*
     const [image, setImage] = useState(null); */
     const [urlImage, setUrlImage] = useState('');
     const [progress, setProgress] = useState(0);
+
+    // 测试代码
+    const context = RuntimeContext.getInstance()
+    const userDid = context.getUserDid() 
+    const myProfile = FeedsMyProfile(context, userDid, null, null, null)
+    const resultSubscriptions = await myProfile.querySubscriptions()
+    console.log("resultSubscriptions ======================================== ", resultSubscriptions)
+
 
     useEffect(() => {
         console.log(progress);
