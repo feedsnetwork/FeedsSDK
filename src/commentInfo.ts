@@ -2,6 +2,7 @@ import { JSONObject } from "@elastosfoundation/did-js-sdk"
 import { utils } from "./utils/utils"
 
 export class CommentInfo {
+    private targetDid: string
     private createrDid: string
     private channelId: string
     private postId: string
@@ -18,6 +19,15 @@ export class CommentInfo {
         this.channelId = channelId
         this.postId = postId
         this.commentId = commentId
+    }
+
+    setTargetDid(targetDid: string): CommentInfo {
+        this.targetDid = targetDid
+        return this
+    }
+
+    public getTargetDidDid() {
+        return this.targetDid
     }
 
     setCreaterDid(createrDid: string): CommentInfo {
@@ -119,8 +129,9 @@ export class CommentInfo {
         return this.memo
     }
 
-    public static parse(comment: any): CommentInfo {
+    public static parse(targetDid: string, comment: any): CommentInfo {
         const commentInfo = new CommentInfo(comment.channel_id, comment.post_id, comment.comment_id)
+        commentInfo.setTargetDid(targetDid)
         commentInfo.setCreaterDid(comment.creater_did)
         commentInfo.setRefcommentId(comment.refcomment_id)
         commentInfo.setContent(comment.content)

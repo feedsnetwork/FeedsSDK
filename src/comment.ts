@@ -11,11 +11,13 @@ export class Comment {
     private commentInfo: CommentInfo
     private context: RuntimeContext
     private vault: VaultService
+    private targetDid: string
 
-    constructor(commentInfo: CommentInfo) {
+    constructor(targetDid: string, commentInfo: CommentInfo) {
         this.context = RuntimeContext.getInstance()
         this.commentInfo = commentInfo
         this.vault = new VaultService()
+        this.targetDid = targetDid
     }
 
     private generateCommentId(did: string, postId: string, refCommentId: string, commentContent: string): string {
@@ -24,6 +26,10 @@ export class Comment {
 
     public getCommentInfo(): CommentInfo {
         return this.commentInfo
+    }
+
+    public getTargetDid(): string {
+        return this.targetDid
     }
 
     public addComment(content: string): Promise<CommentInfo> {
@@ -44,11 +50,10 @@ export class Comment {
 
         return this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
             this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
-                console.log("addComment ===================== ", result)
                 params["updated_at"] = createdAt
                 params["status"] = 0
                 params["creater_did"] = this.context.getUserDid()
-                const commentInfo = CommentInfo.parse(params)
+                const commentInfo = CommentInfo.parse(this.targetDid, params)
                 return commentInfo
             })
             .catch(error => {
@@ -114,7 +119,7 @@ export class Comment {
             .then(result => {
                 let comments = []
                 result.forEach(item => {
-                    const comment = Comment.parse(item)
+                    const comment = Comment.parse(this.targetDid, item)
                     comments.push(comment)
                 })
                 return comments[0]
@@ -125,9 +130,9 @@ export class Comment {
             })
     }
 
-    public static parse(data: any): Comment {
-        const commentInfo = CommentInfo.parse(data)
-        const comment = new Comment(commentInfo)
+    public static parse(targetDid: string, data: any): Comment {
+        const commentInfo = CommentInfo.parse(targetDid, data)
+        const comment = new Comment(targetDid, commentInfo)
         return comment
     }
 } 
