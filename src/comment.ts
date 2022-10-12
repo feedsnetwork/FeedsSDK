@@ -4,7 +4,6 @@ import { RuntimeContext } from './runtimecontext'
 import { hiveService as VaultService } from "./hiveService"
 import { utils } from "./utils/utils"
 import { ScriptingNames as scripts } from './vault/constants';
-import { Likeinfo } from "./Likeinfo"
 
 const logger = new Logger("Comment")
 
@@ -123,31 +122,6 @@ export class Comment {
             .catch(error => {
                 logger.error('fetch comment by id error:', error)
                 throw new Error(error);
-            })
-    }
-
-    // 同步feeds api //targetDid: 
-    public queryLikeById(commentId: string): Promise<any> {
-        const params = {
-            "channel_id": this.getCommentInfo().getChannelId(),
-            "post_id": this.getCommentInfo().getPostId(),
-            "comment_id": commentId,
-            "status": 0 // available
-        }
-        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_ID, params, this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
-            console.log("queryLikeById result ======== ", result)
-            return result.find_message.items
-        }).then(result => {
-            let likeInfos = []
-            result.forEach(item => {
-                const like = Likeinfo.parse(this.getCommentInfo().getCreaterDid(), item)
-                likeInfos.push(like)
-            })
-            return likeInfos
-        })
-            .catch(error => {
-                logger.error('Query like by id error:', error)
-                throw new Error(error)
             })
     }
 

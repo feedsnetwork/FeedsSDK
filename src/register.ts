@@ -73,7 +73,7 @@ export class Register {
             this.installScripts(),
             this.createCollections()
         ]).then (_ => {
-            console.log("Prepare everything on vault")
+            logger.log("Prepare everything on vault")
         }).catch( error => {
             throw new Error(error);
         })

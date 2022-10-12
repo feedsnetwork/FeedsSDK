@@ -45,11 +45,6 @@ export class MyChannel {
         const filter = {
             "channel_id": channelId
         }
-        const ownerDid = this.channelInfo.getOwnerDid()
-        const appDid = this.context.getAppDid()
-        console.log("queryChannelInfo filter ============================================ ", filter)
-        console.log("queryChannelInfo ownerDid ============================================ ", ownerDid)
-        console.log("queryChannelInfo appDid ============================================ ", appDid)
 
         return this.vault.queryDBData(CollectionNames.CHANNELS, filter)
             .then(result => {
@@ -315,10 +310,9 @@ export class MyChannel {
             "tag"   : body.getTag(),
             "proof" : body.getProof()
         }
-        console.log("post doc =============================== ", doc)
         return this.vault.insertDBData(collections.POSTS, doc)
             .then(result => {
-                console.log("result ====== ", result)
+                logger.debug('Post data success: ', result)
                 return true
             }).catch(error => {
                 logger.error('Post data error: ', error)
@@ -342,7 +336,7 @@ export class MyChannel {
         const update = { "$set": doc }
         return this.vault.updateOneDBData(collections.POSTS, filter, update, new UpdateOptions(false, true))
             .then(result => {
-                console.log("result ====== ", result)
+                logger.debug('Delete data success: ', result)
                 return true
         }).catch (error => {
             logger.error('Delete data from postDB error: ', error)

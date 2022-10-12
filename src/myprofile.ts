@@ -1,6 +1,6 @@
 
 import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
-import { FindOptions, InsertResult, UpdateOptions } from "@elastosfoundation/hive-js-sdk"
+import { InsertResult } from "@elastosfoundation/hive-js-sdk"
 
 import { RuntimeContext } from "./runtimecontext";
 import { Channel } from "./channel";
@@ -15,26 +15,15 @@ import { ProfileHandler } from "./profilehandler";
 
 const logger = new Logger("MyProfile")
 
-/*
-type SubscribedChannel = {
-    targetDid: string,// 订阅channel的创建者的did
-    channelId: string
-} */
-
-// TODO: 优化去重
 export class MyProfile implements ProfileHandler {
     private context: RuntimeContext;
 
     private userDid: string;
     private nameCredential: VerifiableCredential;
-    private descCredential: VerifiableCredential;
-    private walletAddress: string;
-
     private vault: VaultService;
 
     public constructor(context: RuntimeContext, userDid: string, name: VerifiableCredential,
-        description: VerifiableCredential,
-        walletAddress: string) {
+        description: VerifiableCredential) {
 
         logger.info(`User Did: ${userDid}`);
         logger.info(`Name credential: ${JSON.stringify(name.toJSON())}`)
@@ -45,8 +34,6 @@ export class MyProfile implements ProfileHandler {
         this.context = context;
         this.userDid = userDid;
         this.nameCredential = name;
-        this.descCredential = description;
-        this.walletAddress  = walletAddress;
         this.vault = new VaultService()
     }
 
@@ -56,22 +43,6 @@ export class MyProfile implements ProfileHandler {
 
     public getName(): string {
         return this.nameCredential ? this.nameCredential.getSubject().getProperty('name'): this.userDid;
-    }
-
-    public getDescription(): string {
-        return this.descCredential ? this.descCredential.getSubject().getProperty('description'): '';
-    }
-
-    public getWalletAddress(): string {
-        return this.walletAddress;
-    }
-
-    public getOwnedChannelCount(): number {
-        throw new Error("Method not implemented.");
-    }
-
-    public getOwnedChannels(): Channel[] {
-        throw new Error("Method not implemented.");
     }
 
     public queryOwnedChannelCount(): Promise<number> {
@@ -121,10 +92,6 @@ export class MyProfile implements ProfileHandler {
         }).catch (error => {
             throw new Error(error)
         })
-    }
-
-    public getSubscriptionCount(): number {
-        throw new Error("Method not implemented.");
     }
 
     /**
@@ -222,42 +189,6 @@ export class MyProfile implements ProfileHandler {
         })
     }
 
-    // 为了测试：删除测试channel
-    public async deleteChannel(channelId: string): Promise<void> {
-        let filter = { "channel_id": channelId }
-        return await this.vault.deleateOneDBData(CollectionNames.CHANNELS, filter)
-    }
-
-    /**
-     * purge channel
-     *
-     * @param myChannel
-     * @returns
-     */
-    public purgeChannel(_channelId: string): Promise<void> {
-        throw new Error("Method not implemented");
-    }
-
-    /**
-     * Publish channel onto Feeds channel registry contract, which is an ERC721 compatbile
-     * contract as Feeds channel collection.
-     *
-     * @param channelId the channel Identifier to be published on registry contract.
-     * @returns
-     */
-    public publishChannel(_myChannel: MyChannel): Promise<void> {
-        throw new Error("Method not implemented");
-    }
-
-    /**
-     *
-     * @param _channelId
-     * @returns
-     */
-    public unpublishChannel(_channelId: string): Promise<void> {
-        throw new Error("Method not implemented");
-    }
-
     /**
      * TODO:
      *
@@ -274,9 +205,6 @@ export class MyProfile implements ProfileHandler {
             }
         const targetDid = channelEntry.getTargetDid()
         const appDid = this.context.getAppDid()
-        console.log("subscribeChannel params ====================== ", params)
-        console.log("subscribeChannel targetDid ====================== ", targetDid)
-        console.log("subscribeChannel appDid ====================== ", appDid)
         return this.vault.callScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, params,
             targetDid, appDid).then(_ => {
                 return this.subscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
