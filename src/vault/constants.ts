@@ -1,5 +1,5 @@
 class CollectionNames {
-    static readonly FEEDS_SCRIPTING = "feeds_scripting"
+    static readonly FEEDS_SCRIPTING = "feeds_scripting2"
 
     static readonly CHANNELS  = "channels"
     static readonly POSTS     = "posts"
