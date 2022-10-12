@@ -48,11 +48,10 @@ export class Post {
 
         return this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
-                console.log("addComment ===================== ", result)
                 params["updated_at"] = createdAt
                 params["status"] = 0
                 params["creater_did"] = this.context.getUserDid()
-                const commentInfo = CommentInfo.parse(params)
+                const commentInfo = CommentInfo.parse(this.getBody().getTargetDid(), params)
                 return commentInfo
             })
             .catch(error => {
@@ -75,7 +74,7 @@ export class Post {
         }
         return this.vault.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
-                console.log("updateComment ===================== ", result)
+                logger.debug("update comment success: ", result)
                 return true
             })
             .catch(error => {
@@ -95,7 +94,7 @@ export class Post {
          return this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
              targetDid, this.context.getAppDid())
             .then(result => {
-                console.log("deleteComment ===================== ", result)
+                logger.log("delete comment success: ", result)
                 return true
             })
             .catch(error => {
@@ -118,7 +117,7 @@ export class Post {
             }).then(result => {
                 let comments = []
                 result.forEach(item => {
-                    const com = CommentInfo.parse(item)
+                    const com = CommentInfo.parse(this.getBody().getTargetDid(), item)
                     comments.push(com)
                 })
                 return comments
@@ -152,13 +151,12 @@ export class Post {
         return this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid())
             .then(result => {
-
                 return result.find_message.items
             })
             .then(result => {
                 let comments = []
                 result.forEach(item => {
-                    const comment = Comment.parse(item)
+                    const comment = Comment.parse(this.getBody().getTargetDid(), item)
                     comments.push(comment)
                 })
                 return comments
@@ -193,7 +191,7 @@ export class Post {
             .then(result => {
                 let comments = []
                 result.forEach(item => {
-                    const comment = Comment.parse(item)
+                    const comment = Comment.parse(this.getBody().getTargetDid(), item)
                     comments.push(comment)
                 })
                 return comments[0]
@@ -225,7 +223,7 @@ export class Post {
             .then(result => {
                 let comments = []
                 result.forEach(item => {
-                    const comment = Comment.parse(item)
+                    const comment = Comment.parse(this.getBody().getTargetDid(), item)
                     comments.push(comment)
                 })
                 return comments

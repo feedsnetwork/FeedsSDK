@@ -318,7 +318,7 @@ class Channel implements ChannelHandler {
             .then(result => {
                 let comments = []
                 result.forEach(item => {
-                    const comment = CommentInfo.parse(item)
+                    const comment = CommentInfo.parse(this.getChannelInfo().getOwnerDid(), item)
                     comments.push(comment)
                 })
                 return comments
