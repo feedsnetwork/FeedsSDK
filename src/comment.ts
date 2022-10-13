@@ -47,9 +47,11 @@ export class Comment {
             "content": content,
             "created_at": createdAt,
         }
+        logger.debug("add comment params: ", params)
 
         return this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
             this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
+                logger.debug("add comment success: ", result)
                 params["updated_at"] = createdAt
                 params["status"] = 0
                 params["creater_did"] = this.context.getUserDid()
@@ -57,7 +59,7 @@ export class Comment {
                 return commentInfo
             })
             .catch(error => {
-                logger.error("Add coment error : ", error)
+                logger.error("Add comment error : ", error)
                 throw new Error(error)
             })
     }
@@ -74,9 +76,10 @@ export class Comment {
             "content": content,
             "updated_at": updatedAt
         }
+        logger.debug("update comment params: ", params)
         return this.vault.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
             this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
-                console.log("Comment---->>>> updateComment ============ ", result)
+                logger.debug("update comment success: ", result)
                 return true
             })
             .catch(error => {
@@ -91,16 +94,17 @@ export class Comment {
             "post_id": this.getCommentInfo().getPostId(),
             "comment_id": this.getCommentInfo().getCommentId()
         }
+        logger.debug("delete comment params: ", params)
         const targetDid = this.getCommentInfo().getCreaterDid()
 
         return this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
             targetDid, this.context.getAppDid())
             .then(result => {
-                console.log("Comment---->>>> deleteComment ============ ", result)
+                logger.debug("delete comment success: ", result)
                 return true
             })
             .catch(error => {
-                logger.error("Update comment error : ", error)
+                logger.error("delete comment error : ", error)
                 throw new Error(error)
             })
     }
@@ -111,9 +115,10 @@ export class Comment {
             "post_id": this.getCommentInfo().getPostId(),
             "comment_id": this.getCommentInfo().getCommentId()
         }
+        logger.debug("query comment byId params: ", params)
         return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
             this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
-                console.log("Comment---->>>> queryCommentById ============ ", result)
+                logger.debug("query comment byId success: ", result)
                 return result.find_message.items
             })
             .then(result => {
@@ -122,10 +127,11 @@ export class Comment {
                     const comment = Comment.parse(this.targetDid, item)
                     comments.push(comment)
                 })
+                logger.debug("query comment by id 'comments': ", comments)
                 return comments[0]
             })
             .catch(error => {
-                logger.error('fetch comment by id error:', error)
+                logger.error('query comment by id error:', error)
                 throw new Error(error);
             })
     }

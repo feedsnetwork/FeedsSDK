@@ -49,10 +49,10 @@ export class Profile implements ProfileHandler {
     public queryOwnedChannelCount(): Promise<number> {
         const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
-            console.log("queryOwnedChannelCount ================================ ", result)
+            logger.debug("query owned channel count success: ", result)
             return result.find_message.total
         }).catch(error => {
-            logger.error('get owned channels count error: ', error)
+            logger.error('query owned channels count error: ', error)
             throw new Error(error)
         })
     }
@@ -61,6 +61,7 @@ export class Profile implements ProfileHandler {
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
         const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+            logger.debug("query owned channels success: ", result)
             return result.find_message.items
         }).then(result => {
             let channelInfos = []
@@ -68,9 +69,10 @@ export class Profile implements ProfileHandler {
                 const channelInfo = ChannelInfo.parse(this.targetDid, item)
                 channelInfos.push(channelInfo)
             })
+            logger.debug("query owned channels 'ChannelInfo': ", channelInfos)
             return channelInfos
         }).catch(error => {
-            logger.error('get owned channels error: ', error)
+            logger.error('query owned channels error: ', error)
             throw new Error(error)
         })
     }
@@ -81,6 +83,7 @@ export class Profile implements ProfileHandler {
                 dispatcher.dispatch(item)
             })
         }).catch (error => {
+            logger.error("query and dispatch owned channels error: ", error)
             throw new Error(error)
         })
     }
@@ -89,15 +92,21 @@ export class Profile implements ProfileHandler {
         const filter = {
             "channel_id": channelId,
         }
+        logger.debug("query owned channel by id params: ", filter)
         return this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, filter, this.targetDid, this.context.getAppDid())
             .then(result => {
-                console.log("queryOwnedChannnelById result ============= ", result)
+                logger.debug("query owned channel by id success: ", result)
                 return result.find_message.items
             })
             .then(result => {
                 const channelInfo = ChannelInfo.parse(this.targetDid, result[0])
+                logger.debug("query owned channel by id 'ChannelInfo': ", channelInfo)
                 return channelInfo
+            }).catch(error => {
+                logger.error("query owned channel by id error: ", error)
+                throw new Error(error)
             })
+
     }
 
     public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
@@ -108,22 +117,15 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    /**
-     * Get the total number of subscribed channels from local storage
-     * @returns The number of subscribed channels
-     */
-    public getSubscriptionCount(): number {
-        throw new Error("Method not implemented.");
-    }
-
     //新增
     // 查询自己订阅了哪些频道  //先过了，暂时不管
     public querySubscriptionCount(): Promise<number> {
         const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+            logger.debug("query subscription Count success: ", result)
             return result.find_message.items.length
         }).catch(error => {
-            logger.error('query subscription count error: ', error)
+            logger.error("query subscription Count error: ", error)
             throw new Error(error)
         })
     }
@@ -134,6 +136,7 @@ export class Profile implements ProfileHandler {
         const filter = {
         }
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+            logger.debug("query subscriptions success: ", result)
             return result.find_message.items
         }).then(async result => {
             let results = []
@@ -148,6 +151,7 @@ export class Profile implements ProfileHandler {
                 const channelInfo = ChannelInfo.parse(target_did, callScriptResult.find_message.items[0])
                 results.push(channelInfo)
             }
+            logger.debug("query subscriptions 'ChannelInfo': ", results)
 
             return results
         }).catch(error => {

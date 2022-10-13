@@ -45,13 +45,18 @@ export class Post {
             "content": content,
             "created_at": createdAt,
         }
+        logger.debug("add comment params: ", params)
 
         return this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                logger.debug("add comment success: ", result)
+
                 params["updated_at"] = createdAt
                 params["status"] = 0
                 params["creater_did"] = this.context.getUserDid()
                 const commentInfo = CommentInfo.parse(this.getBody().getTargetDid(), params)
+                logger.debug("add comment 'CommentInfo': ", commentInfo)
+
                 return commentInfo
             })
             .catch(error => {
@@ -72,6 +77,8 @@ export class Post {
             "content": content,
             "updated_at": updatedAt
         }
+        logger.debug("update comment params: ", params)
+
         return this.vault.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
                 logger.debug("update comment success: ", result)
@@ -90,11 +97,12 @@ export class Post {
             "comment_id": commentId
             }
          const targetDid = this.getBody().getTargetDid()
+        logger.debug("delete comment params: ", params)
 
          return this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
              targetDid, this.context.getAppDid())
             .then(result => {
-                logger.log("delete comment success: ", result)
+                logger.debug("delete comment success: ", result)
                 return true
             })
             .catch(error => {
@@ -111,10 +119,12 @@ export class Post {
             "limit": maximum,
             "end": earlierThan 
         }
+        logger.debug("query comment params: ", params)
         return this.vault.callScript(scripts.SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
                 return result.find_message.items
             }).then(result => {
+                logger.debug("query comment success: ", result)
                 let comments = []
                 result.forEach(item => {
                     const com = CommentInfo.parse(this.getBody().getTargetDid(), item)
@@ -123,7 +133,7 @@ export class Post {
                 return comments
             })
             .catch(error => {
-            logger.error('fetch comments error:', error)
+                logger.error("query comment error: ", error)
             throw new Error(error)
         })
     }
@@ -140,7 +150,7 @@ export class Post {
     }
 
     //post下的评论: 包含子评论
-    public queryCommentsRangeOfTime(begin: number, end: number): Promise<CommentInfo[]> {
+    public queryCommentsRangeOfTime(begin: number, end: number): Promise<Comment[]> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
             "post_id": this.getBody().getPostId(),
@@ -148,9 +158,11 @@ export class Post {
             "end": end,
             "status": 0
         }
+        logger.log("query comments range of time params: ", params)
         return this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
             this.getBody().getTargetDid(), this.context.getAppDid())
             .then(result => {
+                logger.debug("query comments range of time success: ", result)
                 return result.find_message.items
             })
             .then(result => {
@@ -159,16 +171,17 @@ export class Post {
                     const comment = Comment.parse(this.getBody().getTargetDid(), item)
                     comments.push(comment)
                 })
+                logger.debug("query comments range of time 'Comment': ", comments)
                 return comments
             })
             .catch(error => {
-            logger.error('fetch comments range of time error:', error)
+                logger.error('query comments range of time error:', error)
             throw new Error(error)
         })
     }
 
     public queryAndDispatchCommentsRangeOfTime(begin: number, end: number,
-        dispatcher: Dispatcher<CommentInfo>) {
+        dispatcher: Dispatcher<Comment>) {
         return this.queryCommentsRangeOfTime(begin, end).then((comments) => {
             comments.forEach(item => {
                 dispatcher.dispatch(item)
@@ -184,8 +197,11 @@ export class Post {
                 "post_id": this.getBody().getPostId(),
                 "comment_id": commentId
             }
+        logger.debug("query comment by id params: ", params)
+
         return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                logger.debug("query comment by id success: ", result)
                 return result.find_message.items
             })
             .then(result => {
@@ -194,10 +210,11 @@ export class Post {
                     const comment = Comment.parse(this.getBody().getTargetDid(), item)
                     comments.push(comment)
                 })
+                logger.debug("query comment by id 'Comment': ", comments)
                 return comments[0]
             })
             .catch(error => {
-            logger.error('fetch comment by id error:', error)
+                logger.error('query comment by id error:', error)
             throw new Error(error);
         })
     }
@@ -216,8 +233,10 @@ export class Post {
             "channel_id": this.getBody().getChannelId(),
             "post_id": this.getBody().getPostId(),
         }
+        logger.debug("query comment by post id params: ", params)
         return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
             this.getBody().getTargetDid(), this.context.getAppDid()).then(result => {
+                logger.debug("query comment by post id success: ", result)
                 return result.find_message.items
             })
             .then(result => {
@@ -226,10 +245,11 @@ export class Post {
                     const comment = Comment.parse(this.getBody().getTargetDid(), item)
                     comments.push(comment)
                 })
+                logger.debug("query comment by post id 'Comment': ", comments)
                 return comments
             })
             .catch(error => {
-                logger.error('fetch comment by id error:', error)
+                logger.error('query comment by post id error:', error)
                 throw new Error(error);
             })
     }
