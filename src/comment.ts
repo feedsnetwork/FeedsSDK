@@ -50,7 +50,7 @@ export class Comment {
         logger.debug("add comment params: ", params)
 
         return this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
-            this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
+            this.getCommentInfo().getTargetDidDid(), this.context.getAppDid()).then(result => {
                 logger.debug("add comment success: ", result)
                 params["updated_at"] = createdAt
                 params["status"] = 0
@@ -78,7 +78,7 @@ export class Comment {
         }
         logger.debug("update comment params: ", params)
         return this.vault.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
-            this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
+            this.getCommentInfo().getTargetDidDid(), this.context.getAppDid()).then(result => {
                 logger.debug("update comment success: ", result)
                 return true
             })
@@ -95,7 +95,7 @@ export class Comment {
             "comment_id": this.getCommentInfo().getCommentId()
         }
         logger.debug("delete comment params: ", params)
-        const targetDid = this.getCommentInfo().getCreaterDid()
+        const targetDid = this.getCommentInfo().getTargetDidDid()
 
         return this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
             targetDid, this.context.getAppDid())
@@ -117,7 +117,7 @@ export class Comment {
         }
         logger.debug("query comment byId params: ", params)
         return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
-            this.getCommentInfo().getCreaterDid(), this.context.getAppDid()).then(result => {
+            this.getCommentInfo().getTargetDidDid(), this.context.getAppDid()).then(result => {
                 logger.debug("query comment byId success: ", result)
                 return result.find_message.items
             })
