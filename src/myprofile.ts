@@ -47,21 +47,26 @@ export class MyProfile implements ProfileHandler {
 
     public queryOwnedChannelCount(): Promise<number> {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
+            logger.debug(`query owned channel count success: `, result);
             return result.length
         }).catch(error => {
+            logger.error(`query owned channel count error: `, error);
             throw new Error(error)
         })
     }
 
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
+            logger.debug(`query owned channels success: `, result);
             let myChannelInfos = []
             result.forEach(item => {
                 const channelInfo = ChannelInfo.parse(this.userDid, item)
                 myChannelInfos.push(channelInfo)
             })
+            logger.debug(`query owned channels infos: `, myChannelInfos);
             return myChannelInfos
         }).catch(error => {
+            logger.error(`query owned channels error: `, error);
             throw new Error(error)
         })
     }
@@ -79,9 +84,10 @@ export class MyProfile implements ProfileHandler {
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         const filter = { "channel_id": channelId }
         return this.vault.queryDBData(CollectionNames.CHANNELS, filter).then(result => {
-            console.log("queryOwnedChannnelById result ==== ", result)
+            logger.debug("query owned channnel by id success: ", result)
             return ChannelInfo.parse(this.userDid, result[0])
         }).catch(error => {
+            logger.error("query owned channnel by id error: ", error)
             throw new Error(error)
         })
     }
@@ -101,8 +107,10 @@ export class MyProfile implements ProfileHandler {
      */
     public querySubscriptionCount(): Promise<number> {
         return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {}).then(result => {
+            logger.debug("query subscription count success: ", result)
             return result.length
         }).catch(error => {
+            logger.error("query subscription count error: ", error)
             throw new Error(error)
         })
     }
@@ -118,6 +126,7 @@ export class MyProfile implements ProfileHandler {
         const filter = {}
 
         return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter).then(async result => {
+            logger.debug("query subscriptions success: ", result)
             let results = []
             for (let index = 0; index < result.length; index++) {
                 const item = result[index]
@@ -130,9 +139,11 @@ export class MyProfile implements ProfileHandler {
                 const channelInfo = ChannelInfo.parse(target_did, callScriptResult.find_message.items[0])
                 results.push(channelInfo)
             }
+            logger.debug("query subscriptions channelInfo: ", results)
 
             return results
         }).catch(error => {
+            logger.error("query subscriptions error: ", error)
             throw new Error(error)
         })
     }
@@ -181,10 +192,13 @@ export class MyProfile implements ProfileHandler {
                 "category"  : channelInfo.getCategory(),
                 "proof"     : channelInfo.getProof()
             }
+        logger.debug("create channel param: ", doc)
+        return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(result => {
+            logger.debug("query subscriptions success: ", result)
 
-        return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(_ => {
             return MyChannel.parse(this.userDid, this.context, [doc])
         }).catch(error => {
+            logger.error("query subscriptions error: ", error)
             throw new Error(error)
         })
     }
@@ -203,10 +217,13 @@ export class MyProfile implements ProfileHandler {
                 "updated_at": channelEntry.getUpdatedAt(),
                 "status"    : channelEntry.getStatus()
             }
+        logger.debug("subscribe channel params: ", params)
         const targetDid = channelEntry.getTargetDid()
         const appDid = this.context.getAppDid()
         return this.vault.callScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, params,
-            targetDid, appDid).then(_ => {
+            targetDid, appDid).then(result => {
+                logger.debug("subscribe channel success: ", result)
+
                 return this.subscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
             }).catch(error => {
                 logger.error("Sbuscribe channel error:", error)
@@ -224,9 +241,10 @@ export class MyProfile implements ProfileHandler {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
             }
+        logger.debug("unsubscribe channel params: ", params)
         return this.vault.callScript(ScriptingNames.SCRIPT_UNSUBSCRIBE_CHANNEL, params,
             channelEntry.getTargetDid(), this.context.getAppDid()).then(result => {
-            }).then(_ => {
+                logger.debug("unsubscribe channel success: ", result)
                 return this.unsubscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
             }).catch(error => {
                 logger.error("Unsbuscribe channel error:", error)
