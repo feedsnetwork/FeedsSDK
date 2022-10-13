@@ -102,7 +102,7 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
         isSignin = true;
         const runContext = RuntimeContext.getInstance()
         runContext.setUserDid(userDid)
-        return new MyProfile(context, userDid, nameCredential, bioCredential, walletAddress);
+        return new MyProfile(context, userDid, nameCredential, bioCredential)
 
     }).catch(async error => {
         await essentialsConnector.getWalletConnectProvider().disconnect();
