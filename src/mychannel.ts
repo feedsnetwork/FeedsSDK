@@ -15,7 +15,6 @@ const logger = new Logger("MyChannel")
 export class MyChannel {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
-    private published: boolean;
     private vault: VaultService
 
     public constructor(context: RuntimeContext, channelInfo: ChannelInfo) {
@@ -26,13 +25,6 @@ export class MyChannel {
 
     public getChannelInfo() {
         return this.channelInfo
-    }
-    /**
-     * Check whether this channel is published on the registry contract or not.
-     * @returns The boolean state of being published or not.
-     */
-    public isPublic(): boolean {
-        return this.published;
     }
 
     /**
