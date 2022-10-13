@@ -42,13 +42,14 @@ class Channel implements ChannelHandler {
         const params = {
             "channel_id": channelId
         }
-
+        logger.debug("query channel information params: ", params)
         return this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
             this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
             .then(result => {
+                logger.debug("query channel information success: ", result)
                 return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result.find_message.items[0])
         }).catch(error => {
-            logger.log('Query channel information error: ', error)
+            logger.error('Query channel information error: ', error)
             throw new Error(error)
         })
     }
@@ -83,16 +84,18 @@ class Channel implements ChannelHandler {
                 "limit": upperLimit,
                 "end": earilerThan, 
             }
+        logger.debug("query posts params: ", params)
         return this.vault.callScript(scripts.SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT, params,
             this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
             .then((result: any) => {
-                console.log("callScript result ========= ")
+                logger.debug("query posts success: ", result)
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
                 result.find_message.items.forEach(item => {
                 const post = PostBody.parse(targetDid, item)
                 posts.push(post)
             })
+                logger.debug("query posts 'postBodys': ", posts)
             return posts
         }).catch(error => {
             logger.error('Query posts error:', error)
@@ -134,15 +137,20 @@ class Channel implements ChannelHandler {
                 "start": start,
                 "end": end
             }
+        logger.debug("query posts by range of time params: ", params)
+
         return this.vault.callScript(scripts.QUERY_PUBLIC_SOMETIME_POST, params,
                 this.channelInfo.getOwnerDid(), this.context.getAppDid())
             .then((result: any) => {
+                logger.debug("query posts by range of time success: ", result)
             const targetDid = this.channelInfo.getOwnerDid()
             let posts = []
                 result.find_message.items.forEach(item => {
                     const post = PostBody.parse(targetDid, item)
                 posts.push(post)
             })
+                logger.debug("query posts by range of time 'postBodys': ", posts)
+
             return posts
         }).catch(error => {
             logger.error("Query posts error: ", error)
@@ -183,19 +191,22 @@ class Channel implements ChannelHandler {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
+        logger.debug("query post params: ", params)
         return this.vault.callScript(scripts.QUERY_PUBLIC_SPECIFIED_POST, params,
             this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
                 return result.find_message.items
             }).then((result) => {
+                logger.debug("query post success: ", result)
             let posts = []
                 for (let index = 0; index < result.length; index++) {
                     const item = result[index]
                     const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
                     posts.push(post)
                 }
+                logger.debug("query post 'postBody': ", posts)
             return posts[0]
         }).catch (error => {
-            logger.error("Query post:", error)
+            logger.error("Query post error:", error)
             throw new Error(error)
         })
     }
@@ -224,12 +235,13 @@ class Channel implements ChannelHandler {
             "channel_id": this.getChannelInfo().getChannelId(),
             "status": 0
         }
+        logger.debug("query subscriber count params: ", params)
         return this.vault.callScript(scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, params,
             this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
-                console.log("querySubscriberCount ====== ", result)
+                logger.debug("query subscriber count success: ", result)
                 return result.find_message.items.length
             }).catch(error => {
-                logger.error("Query subscriber: ", error)
+                logger.error("Query subscriber count: ", error)
                 throw new Error(error)
             })
     }
@@ -247,8 +259,11 @@ class Channel implements ChannelHandler {
             "limit": upperLimit,
             "end": earilerThan,
         }
+        logger.debug("query subscriber count params: ", params)
+
         return this.vault.callScript(scripts.SCRIPT_CHANNEL_SUBSCRIBERS, params,
             this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
+                logger.debug("query subscriber count success: ", result)
                 return result.find_message.items
             }).then((result) => {
                 let profiles = []
@@ -257,6 +272,7 @@ class Channel implements ChannelHandler {
                     const profile = Profile.parse(this.context, this.getChannelInfo().getOwnerDid(), item)
                     profiles.push(profile)
                 }
+                logger.debug("query subscriber count 'profiles': ", profiles)
                 return profiles
             })
             .catch(error => {
@@ -288,8 +304,10 @@ class Channel implements ChannelHandler {
         const params = {
             "channel_id": this.getChannelInfo().getChannelId(),
         }
+        logger.debug("query post by channel id params: ", params)
         return this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
             this.getChannelInfo().getOwnerDid(), this.context.getAppDid()).then(result => {
+                logger.debug("query post by channel id success: ", result)
                 return result.find_message.items
             })
             .then(result => {
@@ -298,6 +316,8 @@ class Channel implements ChannelHandler {
                     const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
                     posts.push(post)
                 })
+                logger.debug("query post by channel id 'postBodys': ", posts)
+
                 return posts
             })
             .catch(error => {
@@ -311,8 +331,10 @@ class Channel implements ChannelHandler {
         const params = {
             "channel_id": this.getChannelInfo().getChannelId(),
         }
+        logger.debug("query comment by channel params: ", params)
         return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID, params,
             this.getChannelInfo().getOwnerDid(), this.context.getAppDid()).then(result => {
+                logger.debug("query comment by channel success: ", result)
                 return result.find_message.items
             })
             .then(result => {
@@ -321,10 +343,11 @@ class Channel implements ChannelHandler {
                     const comment = CommentInfo.parse(this.getChannelInfo().getOwnerDid(), item)
                     comments.push(comment)
                 })
+                logger.debug("query comment by channel 'commentInfo': ", comments)
                 return comments
             })
             .catch(error => {
-                logger.error('fetch comment by id error:', error)
+                logger.error('query comment by channel error:', error)
                 throw new Error(error);
             })
     }
