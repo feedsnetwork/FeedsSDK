@@ -32,7 +32,7 @@ export class Comment {
         return this.targetDid
     }
 
-    public addComment(content: string): Promise<CommentInfo> {
+    public addComment(content: string): Promise<Comment> {
         const userDid = this.context.getUserDid()
         const channelId = this.getCommentInfo().getChannelId()
         const postId = this.getCommentInfo().getPostId()
@@ -55,8 +55,8 @@ export class Comment {
                 params["updated_at"] = createdAt
                 params["status"] = 0
                 params["creater_did"] = this.context.getUserDid()
-                const commentInfo = CommentInfo.parse(this.targetDid, params)
-                return commentInfo
+                const comment = Comment.parse(this.targetDid, params)
+                return comment
             })
             .catch(error => {
                 logger.error("Add comment error : ", error)
