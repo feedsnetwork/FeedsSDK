@@ -30,7 +30,7 @@ export class Post {
         return utils.generateCommentId(did, postId, refCommentId, commentContent)
     }
 
-    public addComment(content: string): Promise<CommentInfo> {
+    public addComment(content: string): Promise<Comment> {
         const userDid = this.context.getUserDid()
         const channelId = this.getBody().getChannelId()
         const postId = this.getBody().getPostId()
@@ -54,10 +54,10 @@ export class Post {
                 params["updated_at"] = createdAt
                 params["status"] = 0
                 params["creater_did"] = this.context.getUserDid()
-                const commentInfo = CommentInfo.parse(this.getBody().getTargetDid(), params)
-                logger.debug("add comment 'CommentInfo': ", commentInfo)
+                const comment = Comment.parse(this.getBody().getTargetDid(), params)
+                logger.debug("add comment 'CommentInfo': ", comment)
 
-                return commentInfo
+                return comment
             })
             .catch(error => {
                 logger.error("Add coment error : ", error)
