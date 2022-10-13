@@ -33,17 +33,17 @@ export class MyChannel {
      */
     public queryChannelInfo(): Promise<ChannelInfo> {
         const channelId = this.channelInfo.getChannelId()
-        console.log("queryChannelInfo channelId ============================================ ", channelId)
         const filter = {
             "channel_id": channelId
         }
+        logger.debug("query channel information params: ", filter)
 
         return this.vault.queryDBData(CollectionNames.CHANNELS, filter)
             .then(result => {
-                console.log("queryChannelInfo result ============================================ ", result)
+                logger.debug("query channel information success: ", result)
                 return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result[0])
             }).catch(error => {
-                logger.log('Query channel information error: ', error)
+                logger.error('Query channel information error: ', error)
                 throw new error
             })
     }
@@ -80,8 +80,10 @@ export class MyChannel {
                 "nft"   : channelInfo.getNft(),
                 "memo"  : channelInfo.getMmemo(),
             }
+        logger.debug("update channel information params: ", filter)
             const update = { "$set": doc }
         return this.vault.updateOneDBData(collections.CHANNELS, filter, update, new UpdateOptions(false, true)).then(result => {
+            logger.debug("update channel information success: ", result)
             return true
         }).catch (error => {
             logger.error('update channel information error', error)
@@ -103,15 +105,19 @@ export class MyChannel {
                 "channel_id": this.channelInfo.getChannelId(),
                 "updated_at": { "$lt": earilerThan }
             }
+        logger.debug("query posts params: ", filter)
         const queryOptions = new FindOptions()
         queryOptions.limit = upperLimit
         return this.vault.queryDBDataWithOptions(CollectionNames.POSTS, filter, queryOptions)
             .then((result: any) => {
+                logger.debug("query posts success: ", result)
             let posts = []
                 result.forEach(item => {
-                const post = Post.parse(this.channelInfo.getOwnerDid(), item)
+                    const post = PostBody.parse(this.channelInfo.getOwnerDid(), item)
                 posts.push(post)
             })
+                logger.debug("query posts 'postBody': ", posts)
+
             return posts
         }).catch (error => {
             logger.error('Query posts error:', error)
@@ -150,15 +156,17 @@ export class MyChannel {
             "channel_id": channelId,
             "updated_at": { $gt: start, $lt: end }
         }
+        logger.debug("query posts by range of time params: ", filter)
+
         return this.vault.queryDBData(CollectionNames.POSTS, filter)
             .then((data: any) => {
-                console.log("queryPostsByRangeOfTime data ==============================", data)
-            let posts = []
-            data.forEach(item => {
-                console.log("queryPostsByRangeOfTime item ==============================", item)
+                logger.debug("query posts by range of time success: ", data)
+                let posts = []
+                data.forEach(item => {
                 const postBody = PostBody.parse(this.channelInfo.getOwnerDid(), item)
                 posts.push(postBody)
             })
+                logger.debug("query posts by range of time 'postBody': ", posts)
             return posts
         }).catch (error => {
             logger.error("Query posts by range of time error:", error)
@@ -194,17 +202,20 @@ export class MyChannel {
             "channel_id": this.channelInfo.getChannelId(),
             "post_id": postId
         }
-        console.log("filter ====== ", filter)
+        logger.debug("query post params: ", filter)
         return this.vault.queryDBData(collections.POSTS, filter)
             .then((data) => {
+                logger.debug("query post success: ", data)
             let posts = []
             data.forEach(item => {
-                const post = Post.parse(this.channelInfo.getOwnerDid(), item)
+                const post = PostBody.parse(this.channelInfo.getOwnerDid(), item)
                 posts.push(post)
             })
+                logger.debug("query post 'PostBody': ", posts)
+
             return posts[0]
         }).catch (error => {
-            logger.error("Query post:", error)
+            logger.error("Query post error:", error)
             throw error
         })
     }
@@ -231,12 +242,13 @@ export class MyChannel {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId()
             }
+        logger.debug("query subscriber count params: ", filter)
         return this.vault.queryDBData(collections.SUBSCRIPTION, filter)
             .then((result: any) => {
-                console.log("querySubscriberCount result ========== ", result)
-            return result.length
+                logger.debug("query subscriber count success: ", result)
+                return result.length
         }).catch ( error => {
-            logger.error("Query script error: ", error)
+            logger.error("Query subscriber count error: ", error)
             throw error
         })
     }
@@ -251,18 +263,21 @@ export class MyChannel {
             "channel_id": this.channelInfo.getChannelId(),
             "updated_at": { "$lt": earilerThan }
         }
+        logger.debug("query subscribers params: ", filter)
         const findOptions = new FindOptions()
         findOptions.limit = upperlimit
         return this.vault.queryDBDataWithOptions(collections.SUBSCRIPTION, filter, findOptions)
             .then((result: any) => {
+                logger.debug("query subscribers success: ", result)
                 let profiles = []
                 result.forEach(item => {
                     const profile = Profile.parse(this.context, this.channelInfo.getOwnerDid(), item)
                     profiles.push(profile)
                 })
+                logger.debug("query subscribers 'Profile': ", profiles)
                 return profiles
             }).catch(error => {
-                logger.error("Query script error: ", error)
+                logger.error("Query subscribers error: ", error)
                 throw error
             })
     }
@@ -302,12 +317,13 @@ export class MyChannel {
             "tag"   : body.getTag(),
             "proof" : body.getProof()
         }
+        logger.debug("post params: ", doc)
         return this.vault.insertDBData(collections.POSTS, doc)
             .then(result => {
-                logger.debug('Post data success: ', result)
+                logger.debug("post success: ", result)
                 return true
             }).catch(error => {
-                logger.error('Post data error: ', error)
+                logger.error('Post error: ', error)
                 throw error
             })
     }
@@ -325,13 +341,14 @@ export class MyChannel {
             "channel_id": this.channelInfo.getChannelId(),
             "post_id": postId
         }
+        logger.debug("delete post params: ", filter)
         const update = { "$set": doc }
         return this.vault.updateOneDBData(collections.POSTS, filter, update, new UpdateOptions(false, true))
             .then(result => {
-                logger.debug('Delete data success: ', result)
+                logger.debug("delete post success: ", result)
                 return true
         }).catch (error => {
-            logger.error('Delete data from postDB error: ', error)
+            logger.error("delete post error: ", error)
             throw error
         })
     }
@@ -342,12 +359,13 @@ export class MyChannel {
             "channel_id": this.channelInfo.getChannelId(),
             "post_id": postId
         }
+        logger.debug("remove post params: ", filter)
         return this.vault.deleateOneDBData(collections.POSTS, filter)
             .then(result => {
-                console.log("result ====== ", result)
+                logger.debug("remove post success: ", result)
                 return true
             }).catch(error => {
-                logger.error('Remove data from postDB error: ', error)
+                logger.error("remove post error: ", error)
                 throw error
             })
     }

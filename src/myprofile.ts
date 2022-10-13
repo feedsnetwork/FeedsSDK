@@ -257,6 +257,7 @@ export class MyProfile implements ProfileHandler {
             "target_did": targetDid,
             "channel_id": channelId
         }
+        logger.debug("subscribe channel backup params: ", doc)
         return this.vault.insertDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc).catch(error => {
             logger.error("Subscribe channel backup error:", error)
             throw error
@@ -268,6 +269,7 @@ export class MyProfile implements ProfileHandler {
             "target_did": targetDid,
             "channel_id": channelId
         }
+        logger.debug("unsubscribe channel backup params: ", doc)
         return this.vault.deleateOneDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
             .catch(error => {
                 logger.error("Unsubscribe channel backup error:", error)
