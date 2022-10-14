@@ -49,7 +49,7 @@ export class Logger {
      * Generates a unique ID to be used as a correlation id to link multiple related things.
      */
     public initializeCID(): string {
-        // Math.random should be unique because of its seeding algorithm.
+        // Math.random hould be unique because of its seeding algorithm.
         // Convert it to base 36 (numbers + letters), and grab the first 9 characters
         // after the decimal.
         this.cid = Math.random().toString(36).substring(2, 9);
@@ -66,48 +66,45 @@ export class Logger {
 
     public log(...data: any) {
         if (this.getLevel().id <= Logger.INFO.id) {
-            console.log(this.format(Logger.INFO, data));
+            this.format(Logger.INFO, data)
         }
     }
 
     public info(...data: any) {
         if (this.getLevel().id <= Logger.INFO.id) {
-            console.log(this.format(Logger.INFO, data));
+            this.format(Logger.INFO, data)
         }
     }
 
     public debug(...data: any) {
         if (this.getLevel().id <= Logger.DEBUG.id) {
-            console.log(this.format(Logger.DEBUG, data));
+            this.format(Logger.DEBUG, data)
         }
     }
 
     public trace(...data: any) {
         if (this.getLevel().id <= Logger.TRACE.id) {
-            console.log(this.format(Logger.TRACE, data));
+            this.format(Logger.TRACE, data)
         }
     }
 
     public warn(...data: any) {
         if (this.getLevel().id <= Logger.WARNING.id) {
-            console.log(this.format(Logger.WARNING, data));
+            this.format(Logger.WARNING, data)
         }
     }
 
     public error(...data: any) {
         if (this.getLevel().id <= Logger.ERROR.id) {
-            console.log(this.format(Logger.ERROR, data));
+            this.format(Logger.ERROR, data)
         }
     }
 
-    private format(level: LogLevel, data: any[]): string {
-        let logLine = (new Date()).toISOString() + " " + level.name.toUpperCase() + " " + this.context + " " + (this.cid ? "(" + this.cid + ") " : "");
-        if (!data || data.length < 1)
-            return logLine;
-        let content = String(data[0]);
-        for (let i = 1; i < data.length; i++) {
-            content = content.replace(/\{\}/, String(data[i]));
-        }
-        return logLine + " " + content;
+    private format(level: LogLevel, data: any[]) {
+
+        const logLine = (new Date()).toISOString() + " " + level.name + ": " + this.context + " "
+        const content = [logLine]
+        const contents = content.concat(data)
+        console.log.apply(null, contents);
     }
 }
