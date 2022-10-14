@@ -139,7 +139,7 @@ export class MyChannel {
                 dispatcher.dispatch(item)
             })
         }).catch (error => {
-            logger.error("Query posts error")
+            logger.error("Query posts error: ", error)
             throw new Error(error)
         })
     }

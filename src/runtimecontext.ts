@@ -62,11 +62,9 @@ export class RuntimeContext {
         this.sInstance = new RuntimeContext(applicationDid, networkType, localDataDir, resolveCache)
         HiveLogger.setLevel(HiveLogger.TRACE)
         try {
-            console.log("resolver ============= ", networkType)
-            console.log("resolveCache ============= ", resolveCache)
             AppContext.setupResolver(networkType, resolveCache)
         } catch (error) {
-            console.log("AppContext.setupResolver error ====== ", error)
+            logger.info(`Initalized DIDBackend with resolver URL: error`, error)
         }
         logger.info(`Initalized DIDBackend with resolver URL: ${networkType}`)
     }
@@ -177,7 +175,6 @@ export class RuntimeContext {
     async generateHiveAuthPresentationJWT(challeng: string) {
 
         if (challeng === null || challeng === undefined || challeng === '') {
-            console.log('Params error')
             // throw error // todo
         }
 

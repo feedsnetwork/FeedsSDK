@@ -36,15 +36,6 @@ export class Profile implements ProfileHandler {
         return this.displayName
     }
 
-    public getOwnedChannelCount(): Promise<number> {
-        throw new Error("Method not implemented.");
-    }
-
-    //创建的channel
-    public getOwnedChannels(): Promise<Channel[]> {
-        throw new Error("Method not implemented.");
-    }
-
     // 新增 1 已讨论 // find_message.total
     public queryOwnedChannelCount(): Promise<number> {
         const filter = {}
