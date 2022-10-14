@@ -8,6 +8,7 @@ import { Profile } from './profile'
 import { RuntimeContext } from './runtimecontext'
 import { ScriptingNames as scripts } from './vault/constants'
 import { CommentInfo } from './commentInfo'
+import { Likeinfo } from './Likeinfo'
 
 const logger = new Logger("Channel")
 /**
@@ -349,6 +350,29 @@ class Channel implements ChannelHandler {
             .catch(error => {
                 logger.error('query comment by channel error:', error)
                 throw new Error(error);
+            })
+    }
+
+    // 需订阅才能调用 同步feeds api //
+    public queryLikeByChannel(targetDid: string): Promise<Likeinfo[]> {
+        const params = {
+            "channel_id": this.getChannelInfo().getChannelId(),
+            "status": 0 // available
+        }
+        return this.vault.callScript(scripts.SCRIPT_QUERY_LIKE_BY_CHANNEL, params, targetDid, this.context.getAppDid()).then(result => {
+            logger.debug("query like by channel  success: ", result)
+            return result.find_message.items
+        }).then(result => {
+            let likes = []
+            result.forEach(item => {
+                const like = Likeinfo.parse(targetDid, item)
+                likes.push(like)
+            })
+            return likes
+        })
+            .catch(error => {
+                logger.error('Query like by channel error:', error)
+                throw new Error(error)
             })
     }
 

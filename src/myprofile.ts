@@ -21,16 +21,18 @@ export class MyProfile implements ProfileHandler {
     private userDid: string;
     private nameCredential: VerifiableCredential;
     private vault: VaultService;
+    private descCredential: VerifiableCredential;
+    private walletAddress: string;
 
     public constructor(context: RuntimeContext, userDid: string, name: VerifiableCredential,
-        description: VerifiableCredential) {
-
+        description: VerifiableCredential, walletAddress: string) {  
         logger.info(`User Did: ${userDid}`);
         logger.info(`Name credential: ${JSON.stringify(name.toJSON())}`)
         if (description != null) {
             logger.info(`Description credential: ${JSON.stringify(description.toJSON())}`)
         }
-
+        this.descCredential = description;
+        this.walletAddress = walletAddress;  
         this.context = context;
         this.userDid = userDid;
         this.nameCredential = name;
@@ -43,6 +45,22 @@ export class MyProfile implements ProfileHandler {
 
     public getName(): string {
         return this.nameCredential ? this.nameCredential.getSubject().getProperty('name'): this.userDid;
+    }
+
+    public getDescription(): string {
+        return this.descCredential ? this.descCredential.getSubject().getProperty('description') : '';
+    }
+
+    public getWalletAddress(): string {
+        return this.walletAddress;
+    }
+
+    public getOwnedChannelCount(): number {
+        throw new Error("Method not implemented.");
+    }
+
+    public getOwnedChannels(): Channel[] {
+        throw new Error("Method not implemented.");
     }
 
     public queryOwnedChannelCount(): Promise<number> {
@@ -80,7 +98,7 @@ export class MyProfile implements ProfileHandler {
             throw new Error(error)
         })
     }
-
+    
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         const filter = { "channel_id": channelId }
         return this.vault.queryDBData(CollectionNames.CHANNELS, filter).then(result => {
@@ -98,6 +116,10 @@ export class MyProfile implements ProfileHandler {
         }).catch (error => {
             throw new Error(error)
         })
+    }
+
+    public getSubscriptionCount(): number {
+        throw new Error("Method not implemented.");
     }
 
     /**
@@ -165,6 +187,42 @@ export class MyProfile implements ProfileHandler {
         }).catch(error => {
             throw new Error(error)
         })
+    }
+    
+    // 为了测试：删除测试channel
+    public async deleteChannel(channelId: string): Promise<void> {
+        let filter = { "channel_id": channelId }
+        return await this.vault.deleateOneDBData(CollectionNames.CHANNELS, filter)
+    }
+
+    /**
+     * purge channel
+     *
+     * @param myChannel
+     * @returns
+     */
+    public purgeChannel(_channelId: string): Promise<void> {
+        throw new Error("Method not implemented");
+    }
+
+    /**
+     * Publish channel onto Feeds channel registry contract, which is an ERC721 compatbile
+     * contract as Feeds channel collection.
+     *
+     * @param channelId the channel Identifier to be published on registry contract.
+     * @returns
+     */
+    public publishChannel(_myChannel: MyChannel): Promise<void> {
+        throw new Error("Method not implemented");
+    }
+
+    /**
+     *
+     * @param _channelId
+     * @returns
+     */
+    public unpublishChannel(_channelId: string): Promise<void> {
+        throw new Error("Method not implemented");
     }
 
     /**
