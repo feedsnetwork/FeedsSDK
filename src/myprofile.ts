@@ -194,11 +194,11 @@ export class MyProfile implements ProfileHandler {
             }
         logger.debug("create channel param: ", doc)
         return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(result => {
-            logger.debug("query subscriptions success: ", result)
+            logger.debug("create channel success: ", result)
 
             return MyChannel.parse(this.userDid, this.context, [doc])
         }).catch(error => {
-            logger.error("query subscriptions error: ", error)
+            logger.error("create channel error: ", error)
             throw new Error(error)
         })
     }
