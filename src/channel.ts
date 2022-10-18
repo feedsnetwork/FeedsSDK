@@ -37,7 +37,7 @@ class Channel implements ChannelHandler {
      * Query the channel infomation from remote channel on Vault.
      * @returns An promise object that contains channel information.
      */
-    public async queryChannelInfo() {
+    public async queryChannelInfo(): Promise<ChannelInfo> {
         try {
             const channelId = this.getChannelInfo().getChannelId()
             const params = {
@@ -64,7 +64,7 @@ class Channel implements ChannelHandler {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns An promise object that contains a list of posts.
      */
-    public async queryPosts(earilerThan: number, upperLimit: number) {
+    public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
         try {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
@@ -96,7 +96,7 @@ class Channel implements ChannelHandler {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public async queryPostsByRangeOfTime(start: number, end: number) {
+    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
         try {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
@@ -128,7 +128,7 @@ class Channel implements ChannelHandler {
      * @param postId The post id
      * @returns An promise object that contains the post.
      */
-    public async queryPost(postId: string) {
+    public async queryPost(postId: string): Promise<PostBody> {
         try {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
@@ -158,7 +158,7 @@ class Channel implements ChannelHandler {
      * Query the subscriber count of this channel.
      * @returns An promise object that contains the number of subscribers to this channel.
      */
-    public async querySubscriberCount() {
+    public async querySubscriberCount(): Promise<number> {
         try {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
@@ -183,7 +183,7 @@ class Channel implements ChannelHandler {
      * @param earilerThan The timestamp
      * @param upperlimit The maximum number of subscribers for this query.
      */
-    public async querySubscribers(earilerThan: number, upperLimit: number) {
+    public async querySubscribers(earilerThan: number, upperLimit: number): Promise<Profile[]> {
         try {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
@@ -215,7 +215,7 @@ class Channel implements ChannelHandler {
  *
  * @returns Query all post information under the specified channelId
  */
-    public async queryPostByChannelId() {
+    public async queryPostByChannelId(): Promise<PostBody[]> {
         try {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
@@ -242,7 +242,7 @@ class Channel implements ChannelHandler {
  * 需订阅才能调用 同步feeds api
  * @returns Query all comment information under the specified channelId
  */
-    public async queryCommentByChannel() {
+    public async queryCommentByChannel(): Promise<CommentInfo[]> {
         try {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),

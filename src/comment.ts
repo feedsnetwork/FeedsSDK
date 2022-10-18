@@ -47,7 +47,7 @@ export class Comment {
  * add comment
  * @param content： comment content
  */
-    public async addComment(content: string) {
+    public async addComment(content: string): Promise<Comment> {
         try {
             const userDid = this.context.getUserDid()
             const channelId = this.getCommentInfo().getChannelId()
@@ -82,7 +82,7 @@ export class Comment {
  * update comment
  * @param content：comment content
  */
-    public async updateComment(content: string) {
+    public async updateComment(content: string): Promise<boolean> {
         try {
             const updatedAt = (new Date()).getTime()
             const channelId = this.getCommentInfo().getChannelId()
@@ -108,7 +108,7 @@ export class Comment {
 /**
  * deleteComment
  */
-    public async deleteComment() {
+    public async deleteComment(): Promise<boolean> {
         try {
             const params = {
                 "channel_id": this.getCommentInfo().getChannelId(),
@@ -131,7 +131,7 @@ export class Comment {
 /**
  * Query the comments of the specified comment id
  */
-    public async queryCommentById() {
+    public async queryCommentById(): Promise<Comment[]> {
         try {
             const params = {
                 "channel_id": this.getCommentInfo().getChannelId(),
