@@ -58,6 +58,13 @@ export class RuntimeContext {
         return this.scriptRunners[userDid]
     }
 
+/**
+ * initialization RuntimeContext
+ * @param applicationDid： application did：
+ * @param networkType: mainnet/testnet
+ * @param localDataDir: The path to store the hive local cache
+ * @param resolveCache: The path to store did local cache
+ */
     public static initialize(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
         this.sInstance = new RuntimeContext(applicationDid, networkType, localDataDir, resolveCache)
         HiveLogger.setLevel(HiveLogger.TRACE)
@@ -69,6 +76,7 @@ export class RuntimeContext {
         logger.info(`Initalized DIDBackend with resolver URL: ${networkType}`)
     }
 
+    // Get RuntimeContext instance
     public static getInstance(): RuntimeContext {
         if (this.sInstance == null) {
             throw new Error("The AppContext was not initialized. Please call AppContext.initialize(applicationDid, currentNet)")
@@ -76,18 +84,22 @@ export class RuntimeContext {
         return this.sInstance
     }
 
+    // Whether the RuntimeContext is initialized
     public static isInitialized(): boolean {
         return this.sInstance !== null
     }
 
+    // Get the path to store did local cache
     public getResolveCache(): string {
         return this.resolveCache
     }
 
+    // Get the path to store the hive local cache
     public getLocalDataDir(): string {
         return this.localDataDir
     }
 
+    // login essential
     public async signin() {
         let myProfile: MyProfile
         let self = this
@@ -101,14 +113,17 @@ export class RuntimeContext {
         })
     }
 
+    // log out essential
     public signout() {
         return signout()
     }
 
+    // Check if you are logged in to essential
     public checkSignin() {
         return checkSignin()
     }
 
+    // login hive
     public signHive(): Promise<void> {
         let self = this
         return self.register.prepareConnectHive().then(()=> {

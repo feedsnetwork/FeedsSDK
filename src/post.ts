@@ -22,6 +22,7 @@ export class Post {
         this.vault = new VaultService()
     }
 
+    // Get post information
     public getBody(): PostBody {
         return this.body;
     }
@@ -30,6 +31,10 @@ export class Post {
         return utils.generateCommentId(did, postId, refCommentId, commentContent)
     }
 
+/**
+ * add comment to post
+ * @param content: Comment content
+ */
     public addComment(content: string): Promise<Comment> {
         const userDid = this.context.getUserDid()
         const channelId = this.getBody().getChannelId()
@@ -65,6 +70,11 @@ export class Post {
             })
     }
     
+/**
+ * Update the comment for the specified postid
+ * @param commentId：comment id
+ * @param content：comment content
+ */
     public updateComment(commentId: string, content: string): Promise<boolean> {
         const updatedAt = (new Date()).getTime()
         const channelId = this.getBody().getChannelId()
@@ -90,6 +100,10 @@ export class Post {
             })
     }
 
+/**
+ * Delete the comment with the specified commentid
+ * @param commentId：comment id
+ */
     public deleteComment(commentId: string) {
         const params = {
             "channel_id": this.getBody().getChannelId(),
@@ -112,6 +126,11 @@ export class Post {
     }
 
     // 新增
+/**
+ * Query the comment under the specified conditions under this post
+ * @param earlierThan： end time
+ * @param maximum：Maximum number of comments returned
+ */
     public queryComments(earlierThan: number, maximum: number): Promise<CommentInfo[]> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
@@ -149,7 +168,11 @@ export class Post {
         })
     }
 
-    //post下的评论: 包含子评论
+/** Return up to 100 entries，Include sub-comments
+ * Query the comments in the between paragraphs under this post
+ * @param begin： start time
+ * @param end: end time
+ */
     public queryCommentsRangeOfTime(begin: number, end: number): Promise<Comment[]> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
@@ -191,6 +214,10 @@ export class Post {
         })
     }
 
+/**
+ * Query the comment information of the specified commentId
+ * @param commentId：comment id
+ */
     public queryCommentById(commentId: string): Promise<Comment> {
             const params = {
                 "channel_id": this.getBody().getChannelId(),
@@ -227,7 +254,7 @@ export class Post {
         })
     }
 
-    // 同步feeds api
+    // Query all comments under this post, including sub-comments, return up to 100...
     public queryCommentByPostId(): Promise<Comment[]> {
         const params = {
             "channel_id": this.getBody().getChannelId(),
@@ -253,7 +280,12 @@ export class Post {
                 throw new Error(error);
             })
     }
-
+/**
+ * generate like id
+ * @param postId: post id
+ * @param commentId: commnet id
+ * @param userDid: user did
+ */
     public static generateLikeId(postId: string, commentId: string, userDid: string): string {
         return utils.generateLikeId(postId, commentId, userDid)
     }

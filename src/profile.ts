@@ -16,6 +16,12 @@ export class Profile implements ProfileHandler {
     private readonly displayName: string
     private vault: VaultService
 
+/**
+ * @param context: RuntimeContext instance
+ * @param userDid: user did
+ * @param targetDid: owner of this profile
+ * @param displayName: Display name for this profile
+ */
     public constructor(context: RuntimeContext, userDid: string, targetDid: string, displayName: string) {
         this.context = context;
         this.userDid = userDid;
@@ -24,19 +30,25 @@ export class Profile implements ProfileHandler {
         this.vault = new VaultService()
     }
 
+    // Get user did
     public getUserDid(): string {
         return this.userDid
     }
 
+    // Get owner of this profile 
     public getTargetDid(): string {
         return this.targetDid
     }
 
+    // Get display name for this profile
     public getDisplayName(): string {
         return this.displayName
     }
 
-    // 新增 1 已讨论 // find_message.total
+/**
+ * 新增 1 已讨论 // find_message.total
+ * Query the number of all channels created by this profile
+ */
     public queryOwnedChannelCount(): Promise<number> {
         const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
@@ -48,7 +60,10 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    // 新增 已讨论 // 1
+/**
+ * 新增 已讨论 // 1
+ * Query all channels created by this profile
+ */
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
         const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
@@ -78,7 +93,10 @@ export class Profile implements ProfileHandler {
             throw new Error(error)
         })
     }
-
+/**
+ * Query the channel information of the specified channelid under this profile
+ * @param channelId：specified channel id
+ */
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         const filter = {
             "channel_id": channelId,
@@ -108,8 +126,11 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    //新增
-    // 查询自己订阅了哪些频道  //先过了，暂时不管
+
+/**
+ * //新增
+ * Query the number of channels subscribed by this profile
+ */
     public querySubscriptionCount(): Promise<number> {
         const filter = {}
         return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
@@ -121,8 +142,10 @@ export class Profile implements ProfileHandler {
         })
     }
 
-    // 新增
-    // 订阅的channels // 同上
+/**
+ * 新增
+ * Query the channels subscribed to by this profile
+ */
     public querySubscriptions(): Promise<ChannelInfo[]> {
         const filter = {
         }
