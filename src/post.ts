@@ -1,7 +1,6 @@
 import { RuntimeContext } from './runtimecontext';
 import { Logger } from './utils/logger'
 import { PostBody } from './postbody'
-import { Dispatcher } from './dispatcher';
 import { Comment } from './comment'
 import { hiveService } from "./hiveService"
 import { utils } from "./utils/utils"
