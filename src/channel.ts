@@ -92,6 +92,7 @@ class Channel implements ChannelHandler {
     /**
      * Query the list of Posts from this channel by a speific range of time.
      *
+     * Return up to 30
      * @param start The beginning timestamp
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
@@ -169,7 +170,8 @@ class Channel implements ChannelHandler {
                 this.channelInfo.getOwnerDid(), this.context.getAppDid())
             logger.debug("query subscriber count success: ", results)
 
-            return results.find_message.items.length
+            return results.find_message.total
+
         } catch (error) {
             logger.error("Query subscriber count: ", error)
             throw new Error(error)

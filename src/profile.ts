@@ -115,7 +115,7 @@ export class Profile implements ProfileHandler {
             const filter = {}
             const result = await this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid())
             logger.debug("query subscription Count success: ", result)
-            return result.find_message.items.length
+            return result.find_message.total
         } catch (error) {
             logger.error("query subscription Count error: ", error)
             throw new Error(error)
