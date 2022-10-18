@@ -37,38 +37,25 @@ class Channel implements ChannelHandler {
      * Query the channel infomation from remote channel on Vault.
      * @returns An promise object that contains channel information.
      */
-    public queryChannelInfo(): Promise<ChannelInfo> {            
-        const channelId = this.getChannelInfo().getChannelId()
-        const params = {
-            "channel_id": channelId
-        }
-        logger.debug("query channel information params: ", params)
-        return this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
-            this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
-            .then(result => {
+    public async queryChannelInfo() {
+        try {
+            const channelId = this.getChannelInfo().getChannelId()
+            const params = {
+                "channel_id": channelId
+            }
+            logger.debug("query channel information params: ", params)
+            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
+                this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
                 logger.debug("query channel information success: ", result)
-                return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result.find_message.items[0])
-        }).catch(error => {
+            return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result.find_message.items[0])
+        } catch (error) {
             logger.error('Query channel information error: ', error)
             throw new Error(error)
-        })
+        }
     }
 
     /**
-     * Query this channel information and dispatch it to a routine.
-     *
-     * @param dispatcher The dispatcher routine to deal with channel information
-     */
-    public queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
-        return this.queryChannelInfo().then( channelInfo => {
-            dispatcher.dispatch(channelInfo)
-        }).catch(error => {
-            logger.log('query and dispatch channel information error: ', error);
-            throw new Error(error)
-        })
-    }
-
-    /**
+     * // 新增
      * fetch a list of Posts with timestamps that are earlier than specific timestamp
      * and limited number of this list too.
      *
@@ -77,51 +64,29 @@ class Channel implements ChannelHandler {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns An promise object that contains a list of posts.
      */
-    // 新增 // 已讨论 // 2
-    public queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
+    public async queryPosts(earilerThan: number, upperLimit: number) {
+        try {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "limit": upperLimit,
                 "end": earilerThan, 
             }
-        logger.debug("query posts params: ", params)
-        return this.vault.callScript(scripts.SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT, params,
-            this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
-            .then((result: any) => {
-                logger.debug("query posts success: ", result)
+            logger.debug("query posts params: ", params)
+            const result = await this.vault.callScript(scripts.SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT, params,
+                this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
+            logger.debug("query posts success: ", result)
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
-                result.find_message.items.forEach(item => {
+            result.find_message.items.forEach(item => {
                 const post = PostBody.parse(targetDid, item)
                 posts.push(post)
             })
-                logger.debug("query posts 'postBodys': ", posts)
+            logger.debug("query posts 'postBodys': ", posts)
             return posts
-        }).catch(error => {
+        } catch (error) {
             logger.error('Query posts error:', error)
             throw new Error(error)
-        })
-    }
-
-    /**
-     * Query the list of posts from this channel and dispatch them one by one to
-     * customized dispatcher routine.
-     *
-     * @param earlierThan The timestamp
-     * @param upperLimit The maximum number of posts in this query request.
-     * @param dispatcher The dispatcher routine to deal with a post.
-     */
-    public queryAndDispatchPosts(earlierThan: number, upperLimit: number,
-        dispatcher: Dispatcher<PostBody>) {
-
-        return this.queryPosts(earlierThan, upperLimit).then (posts => {
-            posts.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch(error => {
-            logger.error("Query posts error")
-            throw new Error(error)
-        })
+        }
     }
 
     /**
@@ -131,53 +96,30 @@ class Channel implements ChannelHandler {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
+    public async queryPostsByRangeOfTime(start: number, end: number) {
+        try {
             const params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "start": start,
                 "end": end
             }
-        logger.debug("query posts by range of time params: ", params)
+            logger.debug("query posts by range of time params: ", params)
 
-        return this.vault.callScript(scripts.QUERY_PUBLIC_SOMETIME_POST, params,
+            const result = await this.vault.callScript(scripts.QUERY_PUBLIC_SOMETIME_POST, params,
                 this.channelInfo.getOwnerDid(), this.context.getAppDid())
-            .then((result: any) => {
-                logger.debug("query posts by range of time success: ", result)
+            logger.debug("query posts by range of time success: ", result)
             const targetDid = this.channelInfo.getOwnerDid()
             let posts = []
-                result.find_message.items.forEach(item => {
-                    const post = PostBody.parse(targetDid, item)
+            result.find_message.items.forEach(item => {
+                const post = PostBody.parse(targetDid, item)
                 posts.push(post)
             })
-                logger.debug("query posts by range of time 'postBodys': ", posts)
-
+            logger.debug("query posts by range of time 'postBodys': ", posts)
             return posts
-        }).catch(error => {
+        } catch (error) {
             logger.error("Query posts error: ", error)
             throw new Error(error)
-        })
-    }
-
-    /**
-     * Query the list of posts from this channel and dispatch them one by one to
-     * customized dispatcher routine.
-     *
-     * @param start The begining timestamp
-     * @param end The end timestamp
-     * @param upperLimit The maximum number of this query
-     * @param dispatcher The dispatcher routine to deal with a post
-     */
-    public queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
-        dispatcher: Dispatcher<PostBody>) {
-
-        return this.queryPostsByRangeOfTime(start, end).then (posts => {
-            posts.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch (error => {
-            logger.error("Query posts error")
-            throw new Error(error)
-        })
+        }
     }
 
     /**
@@ -186,117 +128,86 @@ class Channel implements ChannelHandler {
      * @param postId The post id
      * @returns An promise object that contains the post.
      */
-    public queryPost(postId: string): Promise<PostBody> {
+    public async queryPost(postId: string) {
+        try {
             const params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
         logger.debug("query post params: ", params)
-        return this.vault.callScript(scripts.QUERY_PUBLIC_SPECIFIED_POST, params,
-            this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
-                return result.find_message.items
-            }).then((result) => {
-                logger.debug("query post success: ", result)
+            const results = await this.vault.callScript(scripts.QUERY_PUBLIC_SPECIFIED_POST, params,
+                this.channelInfo.getOwnerDid(), this.context.getAppDid())
+            const result = results.find_message.items
+            logger.debug("query post success: ", result)
             let posts = []
-                for (let index = 0; index < result.length; index++) {
-                    const item = result[index]
-                    const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
-                    posts.push(post)
-                }
-                logger.debug("query post 'postBody': ", posts)
+            for (let index = 0; index < result.length; index++) {
+                const item = result[index]
+                const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
+                posts.push(post)
+            }
+            logger.debug("query post 'postBody': ", posts)
             return posts[0]
-        }).catch (error => {
+        }
+        catch (error) {
             logger.error("Query post error:", error)
             throw new Error(error)
-        })
-    }
-
-    /**
-     * Query a post and dispatch it to the routine.
-     *
-     * @param postId The post id
-     * @param dispatcher The routine to deal with the queried post
-     */
-    public queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostBody>) {
-        return this.queryPost(postId).then (post => {
-            dispatcher.dispatch(post)
-        }).catch (error => {
-            logger.error("Query post:", error)
-            throw new Error(error)
-        })
+        }
     }
 
     /**
      * Query the subscriber count of this channel.
      * @returns An promise object that contains the number of subscribers to this channel.
      */
-    public querySubscriberCount(): Promise<number> {
-        const params = {
-            "channel_id": this.getChannelInfo().getChannelId(),
-            "status": 0
+    public async querySubscriberCount() {
+        try {
+            const params = {
+                "channel_id": this.getChannelInfo().getChannelId(),
+                "status": 0
+            }
+            logger.debug("query subscriber count params: ", params)
+            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, params,
+                this.channelInfo.getOwnerDid(), this.context.getAppDid())
+            logger.debug("query subscriber count success: ", results)
+
+            return results.find_message.items.length
+        } catch (error) {
+            logger.error("Query subscriber count: ", error)
+            throw new Error(error)
         }
-        logger.debug("query subscriber count params: ", params)
-        return this.vault.callScript(scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, params,
-            this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
-                logger.debug("query subscriber count success: ", result)
-                return result.find_message.items.length
-            }).catch(error => {
-                logger.error("Query subscriber count: ", error)
-                throw new Error(error)
-            })
     }
     
     /**
+     * 新增：
      * Query the list of subscribers to this channel.
      *
      * @param earilerThan The timestamp
      * @param upperlimit The maximum number of subscribers for this query.
      */
-    // 新增：需讨论1
-    public querySubscribers(earilerThan: number, upperLimit: number): Promise<Profile[]> {
-        const params = {
-            "channel_id": this.getChannelInfo().getChannelId(),
-            "limit": upperLimit,
-            "end": earilerThan,
-        }
-        logger.debug("query subscriber count params: ", params)
-
-        return this.vault.callScript(scripts.SCRIPT_CHANNEL_SUBSCRIBERS, params,
-            this.channelInfo.getOwnerDid(), this.context.getAppDid()).then(result => {
-                logger.debug("query subscriber count success: ", result)
-                return result.find_message.items
-            }).then((result) => {
-                let profiles = []
-                for (let index = 0; index < result.length; index++) {
-                    const item = result[index]
-                    const profile = Profile.parse(this.context, this.getChannelInfo().getOwnerDid(), item)
-                    profiles.push(profile)
-                }
-                logger.debug("query subscriber count 'profiles': ", profiles)
-                return profiles
-            })
-            .catch(error => {
-                logger.error("Query ubscribers error : ", error)
-                throw new Error(error)
-            })
-    }
-
-    /**
-     *
-     * @param earilerThan The timestamp
-     * @param upperlimit The maximum number of subscribers for this query.
-     * @param dispatcher： The routine to deal with the queried subscribers
-     */
-    public queryAndDispatchSubscribers(earilerThan: number, upperLimit: number,
-        dispatcher: Dispatcher<Profile>): Promise<void> {
-        return this.querySubscribers(earilerThan, upperLimit).then(profiles => {
-            profiles.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch(error => {
-            logger.error("Query and dispatch subscribers error :", error)
+    public async querySubscribers(earilerThan: number, upperLimit: number) {
+        try {
+            const params = {
+                "channel_id": this.getChannelInfo().getChannelId(),
+                "limit": upperLimit,
+                "end": earilerThan,
+            }
+            logger.debug("query subscriber count params: ", params)
+    
+            const results = await this.vault.callScript(scripts.SCRIPT_CHANNEL_SUBSCRIBERS, params,
+                this.channelInfo.getOwnerDid(), this.context.getAppDid())
+            logger.debug("query subscriber count success: ", results)
+            const result = results.find_message.items
+            let profiles = []
+            for (let index = 0; index < result.length; index++) {
+                const item = result[index]
+                const profile = Profile.parse(this.context, this.getChannelInfo().getOwnerDid(), item)
+                profiles.push(profile)
+            }
+            logger.debug("query subscriber count 'profiles': ", profiles)
+            return profiles
+        } catch (error) {
+            logger.error("Query ubscribers error : ", error)
             throw new Error(error)
-        })
+        }
     }
 
 /**
@@ -304,60 +215,54 @@ class Channel implements ChannelHandler {
  *
  * @returns Query all post information under the specified channelId
  */
-    public queryPostByChannelId(): Promise<PostBody[]> {
-        const params = {
-            "channel_id": this.getChannelInfo().getChannelId(),
+    public async queryPostByChannelId() {
+        try {
+            const params = {
+                "channel_id": this.getChannelInfo().getChannelId(),
+            }
+            logger.debug("query post by channel id params: ", params)
+            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
+                this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
+            logger.debug("query post by channel id success: ", results)
+            const result = results.find_message.items
+            let posts = []
+            result.forEach(item => {
+                const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
+                posts.push(post)
+            })
+            logger.debug("query post by channel id 'postBodys': ", posts)
+            return posts
+        } catch (error) {
+            logger.error('Query post by channelId error:', error)
+            throw new Error(error)
         }
-        logger.debug("query post by channel id params: ", params)
-        return this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
-            this.getChannelInfo().getOwnerDid(), this.context.getAppDid()).then(result => {
-                logger.debug("query post by channel id success: ", result)
-                return result.find_message.items
-            })
-            .then(result => {
-                let posts = []
-                result.forEach(item => {
-                    const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
-                    posts.push(post)
-                })
-                logger.debug("query post by channel id 'postBodys': ", posts)
-
-                return posts
-            })
-            .catch(error => {
-                logger.error('Query post by channelId error:', error)
-                throw new Error(error)
-            })
     }
 
-    //需订阅才能调用 同步feeds api // targetDid: 订阅者的did
 /** Subscription required to call
- *
+ * 需订阅才能调用 同步feeds api
  * @returns Query all comment information under the specified channelId
  */
-    public queryCommentByChannel(): Promise<CommentInfo[]> {
-        const params = {
-            "channel_id": this.getChannelInfo().getChannelId(),
+    public async queryCommentByChannel() {
+        try {
+            const params = {
+                "channel_id": this.getChannelInfo().getChannelId(),
+            }
+            logger.debug("query comment by channel params: ", params)
+            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID, params,
+                this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
+            logger.debug("query comment by channel success: ", results)
+            const result = results.find_message.items
+            let comments = []
+            result.forEach(item => {
+                const comment = CommentInfo.parse(this.getChannelInfo().getOwnerDid(), item)
+                comments.push(comment)
+            })
+            logger.debug("query comment by channel 'commentInfo': ", comments)
+            return comments
+        } catch (error) {
+            logger.error('query comment by channel error:', error)
+            throw new Error(error);
         }
-        logger.debug("query comment by channel params: ", params)
-        return this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID, params,
-            this.getChannelInfo().getOwnerDid(), this.context.getAppDid()).then(result => {
-                logger.debug("query comment by channel success: ", result)
-                return result.find_message.items
-            })
-            .then(result => {
-                let comments = []
-                result.forEach(item => {
-                    const comment = CommentInfo.parse(this.getChannelInfo().getOwnerDid(), item)
-                    comments.push(comment)
-                })
-                logger.debug("query comment by channel 'commentInfo': ", comments)
-                return comments
-            })
-            .catch(error => {
-                logger.error('query comment by channel error:', error)
-                throw new Error(error);
-            })
     }
 
     static parse(targetDid: string, item: any): Channel {
