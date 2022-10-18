@@ -35,35 +35,21 @@ export class MyChannel {
      * Fetch channel property information from remote chanenl.
      * @returns The promise object containing the channel information
      */
-    public queryChannelInfo(): Promise<ChannelInfo> {
-        const channelId = this.channelInfo.getChannelId()
-        const filter = {
-            "channel_id": channelId
+    public async queryChannelInfo(): Promise<ChannelInfo> {
+        try {
+            const channelId = this.channelInfo.getChannelId()
+            const filter = {
+                "channel_id": channelId
+            }
+            logger.debug("query channel information params: ", filter)
+    
+            const result = await this.vault.queryDBData(CollectionNames.CHANNELS, filter)
+            logger.debug("query channel information success: ", result)
+            return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result[0])
+        } catch (error) {
+            logger.error('Query channel information error: ', error)
+            throw error
         }
-        logger.debug("query channel information params: ", filter)
-
-        return this.vault.queryDBData(CollectionNames.CHANNELS, filter)
-            .then(result => {
-                logger.debug("query channel information success: ", result)
-                return ChannelInfo.parse(this.channelInfo.getOwnerDid(), result[0])
-            }).catch(error => {
-                logger.error('Query channel information error: ', error)
-                throw new error
-            })
-    }
-
-    /**
-     * Fetch channel property information and send it to dispatcher routine.
-     *
-     * @param dispatcher the dispatch routine to deal with channel infomration;
-     */
-    public queryAndDispatchChannelInfo(dispatcher: Dispatcher<ChannelInfo>) {
-        return this.queryChannelInfo().then (channelInfo => {
-            dispatcher.dispatch(channelInfo)
-        }).catch ( error => {
-            logger.log('Query channel information error: ', error);
-            throw new Error(error)
-        })
     }
 
     /**
@@ -71,8 +57,8 @@ export class MyChannel {
      * @param channelInfo new channel information to be updated.
      * @returns The promise of whether updated in success or failure
      */
-    public updateChannelInfo(channelInfo: ChannelInfo): Promise<boolean> {
-
+    public async updateChannelInfo(channelInfo: ChannelInfo): Promise<boolean> {
+        try {
             const filter = { "channel_id": channelInfo.getChannelId() }
             const doc = {
                 "display_name": channelInfo.getDisplayName(),
@@ -84,15 +70,15 @@ export class MyChannel {
                 "nft"   : channelInfo.getNft(),
                 "memo"  : channelInfo.getMmemo(),
             }
-        logger.debug("update channel information params: ", filter)
+            logger.debug("update channel information params: ", filter)
             const update = { "$set": doc }
-        return this.vault.updateOneDBData(collections.CHANNELS, filter, update, new UpdateOptions(false, true)).then(result => {
+            const result = await this.vault.updateOneDBData(collections.CHANNELS, filter, update, new UpdateOptions(false, true))
             logger.debug("update channel information success: ", result)
             return true
-        }).catch (error => {
+        } catch (error) {
             logger.error('update channel information error', error)
             throw new Error(error)
-        })
+        }
     }
 
     /**
@@ -104,49 +90,31 @@ export class MyChannel {
      * @param upperLimit The max limit of the posts in this transaction.
      * @returns
      */
-    public queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
+    public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
+        try {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "updated_at": { "$lt": earilerThan }
             }
-        logger.debug("query posts params: ", filter)
-        const queryOptions = new FindOptions()
-        queryOptions.limit = upperLimit
-        return this.vault.queryDBDataWithOptions(CollectionNames.POSTS, filter, queryOptions)
-            .then((result: any) => {
-                logger.debug("query posts success: ", result)
+            logger.debug("query posts params: ", filter)
+            const queryOptions = new FindOptions()
+            queryOptions.limit = upperLimit
+            const result = await this.vault.queryDBDataWithOptions(CollectionNames.POSTS, filter, queryOptions)
+            logger.debug("query posts success: ", result)
             let posts = []
                 result.forEach(item => {
                     const post = PostBody.parse(this.channelInfo.getOwnerDid(), item)
                 posts.push(post)
             })
-                logger.debug("query posts 'postBody': ", posts)
+            logger.debug("query posts 'postBody': ", posts)
 
             return posts
-        }).catch (error => {
+        } catch (error) {
             logger.error('Query posts error:', error)
             throw error
-        })
+        }
     }
 
-    /**
-     * Query the list of posts from this channel and dispatch them one by one to
-     * customized dispatcher routine.
-     *
-     * @param earlierThan The timestamp
-     * @param upperNumber The maximum number of posts in this query request.
-     * @param dispatcher The dispatcher routine to deal with a post.
-     */
-    public queryAndDispatchPosts(until: number, upperLimit: number, dispatcher: Dispatcher<PostBody>) {
-        return this.queryPosts(until, upperLimit).then (posts => {
-            posts.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch (error => {
-            logger.error("Query posts error: ", error)
-            throw new Error(error)
-        })
-    }
      /**
      * Query the list of Posts from this channel by a speific range of time.
      *
@@ -154,106 +122,74 @@ export class MyChannel {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
-        const channelId = this.channelInfo.getChannelId()
-        const filter = {
-            "channel_id": channelId,
-            "updated_at": { $gt: start, $lt: end }
-        }
-        logger.debug("query posts by range of time params: ", filter)
-
-        return this.vault.queryDBData(CollectionNames.POSTS, filter)
-            .then((data: any) => {
-                logger.debug("query posts by range of time success: ", data)
-                let posts = []
-                data.forEach(item => {
-                const postBody = PostBody.parse(this.channelInfo.getOwnerDid(), item)
-                posts.push(postBody)
-            })
-                logger.debug("query posts by range of time 'postBody': ", posts)
+    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
+        try {
+            const channelId = this.channelInfo.getChannelId()
+            const filter = {
+                "channel_id": channelId,
+                "updated_at": { $gt: start, $lt: end }
+            }
+            logger.debug("query posts by range of time params: ", filter)
+    
+            const result = await this.vault.queryDBData(CollectionNames.POSTS, filter)
+            logger.debug("query posts by range of time success: ", result)
+            let posts = []
+            result.forEach(item => {
+                    const postBody = PostBody.parse(this.channelInfo.getOwnerDid(), item)
+                    posts.push(postBody)
+                })
+            logger.debug("query posts by range of time 'postBody': ", posts)
             return posts
-        }).catch (error => {
+        } catch (error) {
             logger.error("Query posts by range of time error:", error)
             throw error
-        })
-    }
-
-    /**
-     * Return up to 100 entries
-     * @param start: start time
-     * @param end: end time
-     * @param dispatcher
-     */
-    public queryAndDispatchPostsByRangeOfTime(start: number, end: number,
-        dispatcher: Dispatcher<PostBody>) {
-        return this.queryPostsByRangeOfTime(start, end).then (posts => {
-            posts.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch (error => {
-            logger.error("Query posts by range of time error:", error)
-            throw new Error(error)
-        })
+        }
     }
 
     /**
      * Query post information by specifying postid
      * @param postId：specify postid
      */
-    public queryPost(postId: string): Promise<PostBody> {
-        const filter = {
-            "channel_id": this.channelInfo.getChannelId(),
-            "post_id": postId
-        }
-        logger.debug("query post params: ", filter)
-        return this.vault.queryDBData(collections.POSTS, filter)
-            .then((data) => {
-                logger.debug("query post success: ", data)
+    public async queryPost(postId: string): Promise<PostBody> {
+        try {
+            const filter = {
+                "channel_id": this.channelInfo.getChannelId(),
+                "post_id": postId
+            }
+            logger.debug("query post params: ", filter)
+            const result = await this.vault.queryDBData(collections.POSTS, filter)
+            logger.debug("query post success: ", result)
             let posts = []
-            data.forEach(item => {
+            result.forEach(item => {
                 const post = PostBody.parse(this.channelInfo.getOwnerDid(), item)
                 posts.push(post)
             })
-                logger.debug("query post 'PostBody': ", posts)
-
+            logger.debug("query post 'PostBody': ", posts)
+    
             return posts[0]
-        }).catch (error => {
+        } catch (error) {
             logger.error("Query post error:", error)
             throw error
-        })
-    }
-
-    /**
-     * Query post information by specifying postid
-     * @param postId：specify postid
-     * @param dispatcher
-     */
-    public queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostBody>) {
-        return this.queryPost(postId).then (post => {
-            dispatcher.dispatch(post)
-        }).catch (error => {
-            logger.error("Query post:", error)
-            throw new Error(error)
-        })
+        }
     }
 
     /**
      * Query subscribed channels
      * @returns subscribed channel
      */
-    public querySubscriberCount(): Promise<number> {
+    public async querySubscriberCount(): Promise<number> {
+        try {
             const filter = {
                 "channel_id": this.channelInfo.getChannelId()
             }
-        logger.debug("query subscriber count params: ", filter)
-        return this.vault.queryDBData(collections.SUBSCRIPTION, filter)
-            .then((result: any) => {
-                logger.debug("query subscriber count success: ", result)
-                return result.length
-        }).catch ( error => {
+            logger.debug("query subscriber count params: ", filter)
+            const result = await this.vault.queryDBData(collections.SUBSCRIPTION, filter)
+            logger.debug("query subscriber count success: ", result)
+            return result.length
+        } catch (error) {
             logger.error("Query subscriber count error: ", error)
             throw error
-        })
+        }
     }
 
     /**
@@ -261,116 +197,99 @@ export class MyChannel {
      * @param earilerThan： end time
      * @param upperlimit：Maximum number of returns
      */
-    public querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
-        const filter = {
-            "channel_id": this.channelInfo.getChannelId(),
-            "updated_at": { "$lt": earilerThan }
+    public async querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
+        try {
+            const filter = {
+                "channel_id": this.channelInfo.getChannelId(),
+                "updated_at": { "$lt": earilerThan }
+            }
+            logger.debug("query subscribers params: ", filter)
+            const findOptions = new FindOptions()
+            findOptions.limit = upperlimit
+            const result = await this.vault.queryDBDataWithOptions(collections.SUBSCRIPTION, filter, findOptions)
+            logger.debug("query subscribers success: ", result)
+            let profiles = []
+            result.forEach(item => {
+                const profile = Profile.parse(this.context, this.channelInfo.getOwnerDid(), item)
+                profiles.push(profile)
+            })
+            logger.debug("query subscribers 'Profile': ", profiles)
+            return profiles
+        } catch (error) {
+            logger.error("Query subscribers error: ", error)
+            throw error
         }
-        logger.debug("query subscribers params: ", filter)
-        const findOptions = new FindOptions()
-        findOptions.limit = upperlimit
-        return this.vault.queryDBDataWithOptions(collections.SUBSCRIPTION, filter, findOptions)
-            .then((result: any) => {
-                logger.debug("query subscribers success: ", result)
-                let profiles = []
-                result.forEach(item => {
-                    const profile = Profile.parse(this.context, this.channelInfo.getOwnerDid(), item)
-                    profiles.push(profile)
-                })
-                logger.debug("query subscribers 'Profile': ", profiles)
-                return profiles
-            }).catch(error => {
-                logger.error("Query subscribers error: ", error)
-                throw error
-            })
-    }
-
-    /**
-     * Query subscribed channels
-     * @param earilerThan： end time
-     * @param upperLimit：Maximum number of returns
-     * @param dispatcher
-     */
-    public queryAndDispatchSubscribers(earilerThan: number, upperLimit: number, dispatcher: Dispatcher<Profile>): Promise<void> {
-        return this.querySubscribers(earilerThan, upperLimit).then(profiles => {
-            profiles.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch(error => {
-            logger.log('query and dispatch subscribers error: ', error)
-            throw new Error(error)
-        })
     }
 
     /**
      * send post
      * @param postBody： post information
      */
-    public post(post: Post) {
-        const body = post.getBody()
-        const doc = {
-            "channel_id": body.getChannelId(),
-            "post_id"   : body.getPostId(),
-            "created_at": body.getCreatedAt(),
-            "updated_at": body.getUpdatedAt(),
-            "content": body.getContent().toString(),
-            "status"    : body.getStatus(),
-            "memo"  : body.getMemo(),
-            "type"  : body.getType(),
-            "tag"   : body.getTag(),
-            "proof" : body.getProof()
+    public async post(post: Post): Promise<boolean> {
+        try {
+            const body = post.getBody()
+            const doc = {
+                "channel_id": body.getChannelId(),
+                "post_id"   : body.getPostId(),
+                "created_at": body.getCreatedAt(),
+                "updated_at": body.getUpdatedAt(),
+                "content": body.getContent().toString(),
+                "status"    : body.getStatus(),
+                "memo"  : body.getMemo(),
+                "type"  : body.getType(),
+                "tag"   : body.getTag(),
+                "proof" : body.getProof()
+            }
+            logger.debug("post params: ", doc)
+            const result = await this.vault.insertDBData(collections.POSTS, doc)
+            logger.debug("post success: ", result)
+            return true
+        } catch (error) {
+            logger.error('Post error: ', error)
+            throw error
         }
-        logger.debug("post params: ", doc)
-        return this.vault.insertDBData(collections.POSTS, doc)
-            .then(result => {
-                logger.debug("post success: ", result)
-                return true
-            }).catch(error => {
-                logger.error('Post error: ', error)
-                throw error
-            })
     }
 
     /**
      * delete post
      * @param postId： post id
      */
-    public deletePost(postId: string): Promise<boolean> {
-        const doc = {
-            "updated_at": new Date().getTime(),
-            "status": 1,
-        }
-        const filter = {
-            "channel_id": this.channelInfo.getChannelId(),
-            "post_id": postId
-        }
-        logger.debug("delete post params: ", filter)
-        const update = { "$set": doc }
-        return this.vault.updateOneDBData(collections.POSTS, filter, update, new UpdateOptions(false, true))
-            .then(result => {
-                logger.debug("delete post success: ", result)
-                return true
-        }).catch (error => {
+    public async deletePost(postId: string): Promise<boolean> {
+        try {
+            const doc = {
+                "updated_at": new Date().getTime(),
+                "status": 1,
+            }
+            const filter = {
+                "channel_id": this.channelInfo.getChannelId(),
+                "post_id": postId
+            }
+            logger.debug("delete post params: ", filter)
+            const update = { "$set": doc }
+            const result = await this.vault.updateOneDBData(collections.POSTS, filter, update, new UpdateOptions(false, true))
+            logger.debug("delete post success: ", result)
+            return true
+        } catch (error) {
             logger.error("delete post error: ", error)
             throw error
-        })
+        }
     }
 
     // 为了测试提供： 硬删除
-    public removePost(postId: string): Promise<boolean> {
-        const filter = {
-            "channel_id": this.channelInfo.getChannelId(),
-            "post_id": postId
+    public async removePost(postId: string): Promise<boolean> {
+        try {
+            const filter = {
+                "channel_id": this.channelInfo.getChannelId(),
+                "post_id": postId
+            }
+            logger.debug("remove post params: ", filter)
+            const result = await this.vault.deleateOneDBData(collections.POSTS, filter)
+            logger.debug("remove post success: ", result)
+            return true
+        } catch (error) {
+            logger.error("remove post error: ", error)
+            throw error
         }
-        logger.debug("remove post params: ", filter)
-        return this.vault.deleateOneDBData(collections.POSTS, filter)
-            .then(result => {
-                logger.debug("remove post success: ", result)
-                return true
-            }).catch(error => {
-                logger.error("remove post error: ", error)
-                throw error
-            })
     }
 
     static parse(targetDid: string, context: RuntimeContext, channel: any): MyChannel {
