@@ -16,7 +16,11 @@ export class MyChannel {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
     private vault: VaultService
-
+/**
+ *
+ * @param context: RuntimeContext instance
+ * @param channelInfo: ChannelInfo
+ */
     public constructor(context: RuntimeContext, channelInfo: ChannelInfo) {
         this.context = context
         this.channelInfo = channelInfo
@@ -175,13 +179,12 @@ export class MyChannel {
     }
 
     /**
-     *
-     * @param start
-     * @param end
-     * @param upperLimit
+     * Return up to 100 entries
+     * @param start: start time
+     * @param end: end time
      * @param dispatcher
      */
-    public queryAndDispatchPostsByRangeOfTime(start: number, end: number, upperLimit: number,
+    public queryAndDispatchPostsByRangeOfTime(start: number, end: number,
         dispatcher: Dispatcher<PostBody>) {
         return this.queryPostsByRangeOfTime(start, end).then (posts => {
             posts.forEach(item => {
@@ -194,8 +197,8 @@ export class MyChannel {
     }
 
     /**
-     *
-     * @param postId
+     * Query post information by specifying postid
+     * @param postId：specify postid
      */
     public queryPost(postId: string): Promise<PostBody> {
         const filter = {
@@ -221,8 +224,8 @@ export class MyChannel {
     }
 
     /**
-     *
-     * @param postId
+     * Query post information by specifying postid
+     * @param postId：specify postid
      * @param dispatcher
      */
     public queryAndDispatchPost(postId: string, dispatcher: Dispatcher<PostBody>) {
@@ -235,8 +238,8 @@ export class MyChannel {
     }
 
     /**
-     *
-     * @returns
+     * Query subscribed channels
+     * @returns subscribed channel
      */
     public querySubscriberCount(): Promise<number> {
             const filter = {
@@ -254,9 +257,9 @@ export class MyChannel {
     }
 
     /**
-     *
-     * @param earilerThan
-     * @param upperlimit
+     * Query subscribed channels
+     * @param earilerThan： end time
+     * @param upperlimit：Maximum number of returns
      */
     public querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
         const filter = {
@@ -283,9 +286,9 @@ export class MyChannel {
     }
 
     /**
-     *
-     * @param until
-     * @param upperLimit
+     * Query subscribed channels
+     * @param earilerThan： end time
+     * @param upperLimit：Maximum number of returns
      * @param dispatcher
      */
     public queryAndDispatchSubscribers(earilerThan: number, upperLimit: number, dispatcher: Dispatcher<Profile>): Promise<void> {
@@ -300,8 +303,8 @@ export class MyChannel {
     }
 
     /**
-     *
-     * @param postBody
+     * send post
+     * @param postBody： post information
      */
     public post(post: Post) {
         const body = post.getBody()
@@ -329,8 +332,8 @@ export class MyChannel {
     }
 
     /**
-     *
-     * @param postId
+     * delete post
+     * @param postId： post id
      */
     public deletePost(postId: string): Promise<boolean> {
         const doc = {

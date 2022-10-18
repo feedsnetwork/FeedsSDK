@@ -283,9 +283,9 @@ class Channel implements ChannelHandler {
 
     /**
      *
-     * @param until
-     * @param upperLimit
-     * @param dispatcher
+     * @param earilerThan The timestamp
+     * @param upperlimit The maximum number of subscribers for this query.
+     * @param dispatcher： The routine to deal with the queried subscribers
      */
     public queryAndDispatchSubscribers(earilerThan: number, upperLimit: number,
         dispatcher: Dispatcher<Profile>): Promise<void> {
@@ -299,7 +299,11 @@ class Channel implements ChannelHandler {
         })
     }
 
-    //需订阅才能调用 同步feeds api 
+/**
+ * Subscription required to call， 同步feeds api
+ *
+ * @returns Query all post information under the specified channelId
+ */
     public queryPostByChannelId(): Promise<PostBody[]> {
         const params = {
             "channel_id": this.getChannelInfo().getChannelId(),
@@ -327,6 +331,10 @@ class Channel implements ChannelHandler {
     }
 
     //需订阅才能调用 同步feeds api // targetDid: 订阅者的did
+/** Subscription required to call
+ *
+ * @returns Query all comment information under the specified channelId
+ */
     public queryCommentByChannel(): Promise<CommentInfo[]> {
         const params = {
             "channel_id": this.getChannelInfo().getChannelId(),

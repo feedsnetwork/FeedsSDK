@@ -21,7 +21,13 @@ export class MyProfile implements ProfileHandler {
     private userDid: string;
     private nameCredential: VerifiableCredential;
     private vault: VaultService;
-
+/**
+ *
+ * @param context： RuntimeContext
+ * @param userDid：user did
+ * @param name：user name
+ * @param description：VerifiableCredential
+ */
     public constructor(context: RuntimeContext, userDid: string, name: VerifiableCredential,
         description: VerifiableCredential) {
 
@@ -36,15 +42,17 @@ export class MyProfile implements ProfileHandler {
         this.nameCredential = name;
         this.vault = new VaultService()
     }
-
+// Get user did
     public getUserDid(): string {
         return this.userDid;
     }
 
+    // get user name
     public getName(): string {
         return this.nameCredential ? this.nameCredential.getSubject().getProperty('name'): this.userDid;
     }
 
+    // Get the number of channels created by yourself
     public queryOwnedChannelCount(): Promise<number> {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
             logger.debug(`query owned channel count success: `, result);
@@ -55,6 +63,7 @@ export class MyProfile implements ProfileHandler {
         })
     }
 
+    // Get the channel created by yourself
     public queryOwnedChannels(): Promise<ChannelInfo[]> {
         return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
             logger.debug(`query owned channels success: `, result);
@@ -71,6 +80,10 @@ export class MyProfile implements ProfileHandler {
         })
     }
 
+/**
+ * Get the channel created by yourself
+ * @param dispatcher
+ */
     public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannels().then (channels => {
             channels.forEach(item => {
@@ -81,6 +94,10 @@ export class MyProfile implements ProfileHandler {
         })
     }
 
+/**
+ * Get the information of the specified channelId
+ * @param channelId： specified channelId
+ */
     public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         const filter = { "channel_id": channelId }
         return this.vault.queryDBData(CollectionNames.CHANNELS, filter).then(result => {
@@ -92,6 +109,11 @@ export class MyProfile implements ProfileHandler {
         })
     }
 
+/**
+ * Get the information of the specified channelId
+ * @param channelId： specified channelId
+ * @param dispatcher
+ */
     public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
         return this.queryOwnedChannnelById(channelId).then (channel => {
             dispatcher.dispatch(channel)
@@ -117,10 +139,6 @@ export class MyProfile implements ProfileHandler {
 
     /**
       * Query a list of channels subscribed by this profile.
-      *
-      * @param earlierThan // 旧的：（这个时间点之前的数据，比如earlierThan = 9月19号，拿到的就是9月19号之前的，比如能拿到9月10号的数据）
-      * @param maximum
-      * @param upperLimit
       */
     public querySubscriptions(): Promise<ChannelInfo[]> {
         const filter = {}
@@ -151,10 +169,6 @@ export class MyProfile implements ProfileHandler {
     /**
       * Query a list of channels subscribed by this profile and dispatch them to customized routine
       * to handle.
-      *
-      * @param earlierThan
-      * @param maximum
-      * @param upperLimit
       */
     public queryAndDispatchSubscriptions(dispatcher: Dispatcher<ChannelInfo>) {
 
@@ -204,9 +218,9 @@ export class MyProfile implements ProfileHandler {
     }
 
     /**
-     * TODO:
+     * Subscribe to channel
      *
-     * @param channel
+     * @param channel：Information about the subscribed channel
      * @returns
      */
     public subscribeChannel(channelEntry: ChannelEntry) {
@@ -232,9 +246,9 @@ export class MyProfile implements ProfileHandler {
     }
 
     /**
-     * TODO:
+     * unsubscribe channel
      *
-     * @param channel
+     * @param channel：Unsubscribed channel information
      * @returns
      */
     public unsubscribeChannel(channelEntry: ChannelEntry): Promise<void> {

@@ -13,25 +13,40 @@ export class Comment {
     private vault: VaultService
     private targetDid: string
 
+/**
+ *
+ * @param targetDid：the creator of the post
+ * @param commentInfo：Comment details
+ */
     constructor(targetDid: string, commentInfo: CommentInfo) {
         this.context = RuntimeContext.getInstance()
         this.commentInfo = commentInfo
         this.vault = new VaultService()
         this.targetDid = targetDid
     }
-
+// generate comment id
     private generateCommentId(did: string, postId: string, refCommentId: string, commentContent: string): string {
         return utils.generateCommentId(did, postId, refCommentId, commentContent)
     }
 
+/**
+ * Get review details
+ */
     public getCommentInfo(): CommentInfo {
         return this.commentInfo
     }
 
+/**
+ * Get the creator of the post
+ */
     public getTargetDid(): string {
         return this.targetDid
     }
 
+/**
+ * add comment
+ * @param content： comment content
+ */
     public addComment(content: string): Promise<Comment> {
         const userDid = this.context.getUserDid()
         const channelId = this.getCommentInfo().getChannelId()
@@ -63,7 +78,10 @@ export class Comment {
                 throw new Error(error)
             })
     }
-
+/**
+ * update comment
+ * @param content：comment content
+ */
     public updateComment(content: string): Promise<boolean> {
         const updatedAt = (new Date()).getTime()
         const channelId = this.getCommentInfo().getChannelId()
@@ -87,7 +105,9 @@ export class Comment {
                 throw new Error(error)
             })
     }
-
+/**
+ * deleteComment
+ */
     public deleteComment() {
         const params = {
             "channel_id": this.getCommentInfo().getChannelId(),
@@ -109,6 +129,9 @@ export class Comment {
             })
     }
 
+/**
+ * Query the comments of the specified comment id
+ */
     public queryCommentById(): Promise<Comment> {
         const params = {
             "channel_id": this.getCommentInfo().getChannelId(),
