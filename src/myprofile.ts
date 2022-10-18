@@ -24,6 +24,13 @@ export class MyProfile implements ProfileHandler {
     private descCredential: VerifiableCredential;
     private walletAddress: string;
 
+    /**
+    *
+    * @param context： RuntimeContext
+    * @param userDid：user did
+    * @param name：user name
+    * @param description：VerifiableCredential
+    */
     public constructor(context: RuntimeContext, userDid: string, name: VerifiableCredential,
         description: VerifiableCredential, walletAddress: string) {  
         logger.info(`User Did: ${userDid}`);
@@ -39,10 +46,12 @@ export class MyProfile implements ProfileHandler {
         this.vault = new VaultService()
     }
 
+    // Get user did
     public getUserDid(): string {
         return this.userDid;
     }
 
+    // get user name
     public getName(): string {
         return this.nameCredential ? this.nameCredential.getSubject().getProperty('name'): this.userDid;
     }
@@ -63,18 +72,22 @@ export class MyProfile implements ProfileHandler {
         throw new Error("Method not implemented.");
     }
 
-    public queryOwnedChannelCount(): Promise<number> {
-        return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
+    // Get the number of channels created by yourself
+    public async queryOwnedChannelCount(): Promise<number> {
+        try {
+            const result = await this.vault.queryDBData(CollectionNames.CHANNELS, {})
             logger.debug(`query owned channel count success: `, result);
             return result.length
-        }).catch(error => {
+        } catch (error) {
             logger.error(`query owned channel count error: `, error);
             throw new Error(error)
-        })
+        }
     }
 
-    public queryOwnedChannels(): Promise<ChannelInfo[]> {
-        return this.vault.queryDBData(CollectionNames.CHANNELS, {}).then(result => {
+    // Get the channel created by yourself
+    public async queryOwnedChannels(): Promise<ChannelInfo[]> {
+        try {
+            const result = await this.vault.queryDBData(CollectionNames.CHANNELS, {})
             logger.debug(`query owned channels success: `, result);
             let myChannelInfos = []
             result.forEach(item => {
@@ -83,43 +96,26 @@ export class MyProfile implements ProfileHandler {
             })
             logger.debug(`query owned channels infos: `, myChannelInfos);
             return myChannelInfos
-        }).catch(error => {
+        } catch (error) {
             logger.error(`query owned channels error: `, error);
             throw new Error(error)
-        })
+        }
     }
 
-    public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
-        return this.queryOwnedChannels().then (channels => {
-            channels.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch (error => {
-            throw new Error(error)
-        })
-    }
-    
-    public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-        const filter = { "channel_id": channelId }
-        return this.vault.queryDBData(CollectionNames.CHANNELS, filter).then(result => {
+    /**
+    * Get the information of the specified channelId
+    * @param channelId： specified channelId
+    */
+    public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
+        try {
+            const filter = { "channel_id": channelId }
+            const result = await this.vault.queryDBData(CollectionNames.CHANNELS, filter)
             logger.debug("query owned channnel by id success: ", result)
             return ChannelInfo.parse(this.userDid, result[0])
-        }).catch(error => {
+        } catch (error) {
             logger.error("query owned channnel by id error: ", error)
             throw new Error(error)
-        })
-    }
-
-    public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
-        return this.queryOwnedChannnelById(channelId).then (channel => {
-            dispatcher.dispatch(channel)
-        }).catch (error => {
-            throw new Error(error)
-        })
-    }
-
-    public getSubscriptionCount(): number {
-        throw new Error("Method not implemented.");
+        }
     }
 
     /**
@@ -127,27 +123,25 @@ export class MyProfile implements ProfileHandler {
      *
      * @returns A promise object that contains the number of subscribed channels.
      */
-    public querySubscriptionCount(): Promise<number> {
-        return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {}).then(result => {
+    public async querySubscriptionCount(): Promise<number> {
+        try {
+            const result = await this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {})
             logger.debug("query subscription count success: ", result)
             return result.length
-        }).catch(error => {
+        } catch (error) {
             logger.error("query subscription count error: ", error)
             throw new Error(error)
-        })
+        }
     }
 
     /**
       * Query a list of channels subscribed by this profile.
-      *
-      * @param earlierThan // 旧的：（这个时间点之前的数据，比如earlierThan = 9月19号，拿到的就是9月19号之前的，比如能拿到9月10号的数据）
-      * @param maximum
-      * @param upperLimit
       */
-    public querySubscriptions(): Promise<ChannelInfo[]> {
-        const filter = {}
+    public async querySubscriptions(): Promise<ChannelInfo[]> {
+        try {
+            const filter = {}
 
-        return this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter).then(async result => {
+            const result = await this.vault.queryDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, filter)
             logger.debug("query subscriptions success: ", result)
             let results = []
             for (let index = 0; index < result.length; index++) {
@@ -162,33 +156,14 @@ export class MyProfile implements ProfileHandler {
                 results.push(channelInfo)
             }
             logger.debug("query subscriptions channelInfo: ", results)
-
+    
             return results
-        }).catch(error => {
+        } catch (error) {
             logger.error("query subscriptions error: ", error)
             throw new Error(error)
-        })
+        }
     }
 
-    /**
-      * Query a list of channels subscribed by this profile and dispatch them to customized routine
-      * to handle.
-      *
-      * @param earlierThan
-      * @param maximum
-      * @param upperLimit
-      */
-    public queryAndDispatchSubscriptions(dispatcher: Dispatcher<ChannelInfo>) {
-
-        return this.querySubscriptions().then(channels => {
-            channels.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch(error => {
-            throw new Error(error)
-        })
-    }
-    
     // 为了测试：删除测试channel
     public async deleteChannel(channelId: string): Promise<void> {
         let filter = { "channel_id": channelId }
@@ -234,7 +209,8 @@ export class MyProfile implements ProfileHandler {
      * @param category channel category
      * @param proof [option] sigature to the channel metadata
      */
-    public createChannel(channelInfo: ChannelInfo): Promise<MyChannel> {
+    public async createChannel(channelInfo: ChannelInfo): Promise<MyChannel> {
+        try {
             const doc = {
                 "channel_id": channelInfo.getChannelId(),
                 "name"      : channelInfo.getName(),
@@ -250,24 +226,25 @@ export class MyProfile implements ProfileHandler {
                 "category"  : channelInfo.getCategory(),
                 "proof"     : channelInfo.getProof()
             }
-        logger.debug("create channel param: ", doc)
-        return this.vault.insertDBData(CollectionNames.CHANNELS, doc).then(result => {
+            logger.debug("create channel param: ", doc)
+            const result = await this.vault.insertDBData(CollectionNames.CHANNELS, doc)
             logger.debug("create channel success: ", result)
 
             return MyChannel.parse(this.userDid, this.context, [doc])
-        }).catch(error => {
+        } catch (error) {
             logger.error("create channel error: ", error)
             throw new Error(error)
-        })
+        }
     }
 
     /**
-     * TODO:
+     * Subscribe to channel
      *
-     * @param channel
+     * @param channel：Information about the subscribed channel
      * @returns
      */
-    public subscribeChannel(channelEntry: ChannelEntry) {
+    public async subscribeChannel(channelEntry: ChannelEntry) {
+        try {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
                 "created_at": channelEntry.getCreatedAt(),
@@ -275,63 +252,67 @@ export class MyProfile implements ProfileHandler {
                 "updated_at": channelEntry.getUpdatedAt(),
                 "status"    : channelEntry.getStatus()
             }
-        logger.debug("subscribe channel params: ", params)
-        const targetDid = channelEntry.getTargetDid()
-        const appDid = this.context.getAppDid()
-        return this.vault.callScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, params,
-            targetDid, appDid).then(result => {
-                logger.debug("subscribe channel success: ", result)
+            logger.debug("subscribe channel params: ", params)
+            const targetDid = channelEntry.getTargetDid()
+            const appDid = this.context.getAppDid()
+            const result = await this.vault.callScript(ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL, params,
+                targetDid, appDid)
+            logger.debug("subscribe channel success: ", result)
 
-                return this.subscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
-            }).catch(error => {
-                logger.error("Sbuscribe channel error:", error)
-                throw error
-        })
+            return this.subscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
+        } catch (error) {
+            logger.error("Sbuscribe channel error:", error)
+            throw error
+        }
     }
 
     /**
-     * TODO:
+     * unsubscribe channel
      *
-     * @param channel
+     * @param channel：Unsubscribed channel information
      * @returns
      */
-    public unsubscribeChannel(channelEntry: ChannelEntry): Promise<void> {
+    public async unsubscribeChannel(channelEntry: ChannelEntry): Promise<void> {
+        try {
             const params = {
                 "channel_id": channelEntry.getChannelId(),
             }
-        logger.debug("unsubscribe channel params: ", params)
-        return this.vault.callScript(ScriptingNames.SCRIPT_UNSUBSCRIBE_CHANNEL, params,
-            channelEntry.getTargetDid(), this.context.getAppDid()).then(result => {
-                logger.debug("unsubscribe channel success: ", result)
-                return this.unsubscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
-            }).catch(error => {
-                logger.error("Unsbuscribe channel error:", error)
-                throw error
-            })
+            logger.debug("unsubscribe channel params: ", params)
+            const result = await this.vault.callScript(ScriptingNames.SCRIPT_UNSUBSCRIBE_CHANNEL, params,
+                channelEntry.getTargetDid(), this.context.getAppDid())
+            logger.debug("unsubscribe channel success: ", result)
+            return this.unsubscribeChannelBackup(channelEntry.getTargetDid(), channelEntry.getChannelId())
+        } catch (error) {
+            logger.error("Unsbuscribe channel error:", error)
+            throw error
+        }
     }
 
-    private subscribeChannelBackup(targetDid: string, channelId: string): Promise<InsertResult> {
-        const doc = {
-            "target_did": targetDid,
-            "channel_id": channelId
-        }
-        logger.debug("subscribe channel backup params: ", doc)
-        return this.vault.insertDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc).catch(error => {
+    private async subscribeChannelBackup(targetDid: string, channelId: string): Promise<InsertResult> {
+        try {
+            const doc = {
+                "target_did": targetDid,
+                "channel_id": channelId
+            }
+            logger.debug("subscribe channel backup params: ", doc)
+            return await this.vault.insertDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
+        } catch (error) {
             logger.error("Subscribe channel backup error:", error)
             throw error
-        })
+        }
     }
 
-    private unsubscribeChannelBackup(targetDid: string, channelId: string): Promise<void> {
-        const doc = {
-            "target_did": targetDid,
-            "channel_id": channelId
+    private async unsubscribeChannelBackup(targetDid: string, channelId: string): Promise<void> {
+        try {
+            const doc = {
+                "target_did": targetDid,
+                "channel_id": channelId
+            }
+            logger.debug("unsubscribe channel backup params: ", doc)
+            return await this.vault.deleateOneDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
+        } catch (error) {
+            logger.error("Unsubscribe channel backup error:", error)
+            throw error
         }
-        logger.debug("unsubscribe channel backup params: ", doc)
-        return this.vault.deleateOneDBData(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
-            .catch(error => {
-                logger.error("Unsubscribe channel backup error:", error)
-                throw error
-            })
     }
 }

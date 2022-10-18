@@ -9,14 +9,14 @@ export enum MediaType {
 
 export class MediaData {
     private kind: string           //"image/video/audio"
-    private originMediaPath: string
+    private originMediaPath: string // eg: 68eacbf862f696300cba2efe5fa3a162@feeds/data/68eacbf862f696300cba2efe5fa3a162
     private type: string           //"image/jpg",
-    private size: number           //origin file size
-    private thumbnailPath: string    //"thumbnailCid"
-    private duration: number
-    private imageIndex: number
-    private additionalInfo: any
-    private memo: any
+    private size: number           //origin file size， eg: 8014599
+    private thumbnailPath: string    //"thumbnailCid" eg: 7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24
+    private duration: number // 0
+    private imageIndex: number // 0
+    private additionalInfo: any // {}
+    private memo: any // {}
 
     private constructor() {
     }
@@ -25,6 +25,7 @@ export class MediaData {
         this.kind = kind
     }
 
+    // Media kind:  "image/video/audio"
     public getKind() {
         return this.kind
     }
@@ -33,6 +34,7 @@ export class MediaData {
         this.originMediaPath = originMediaPath
     }
 
+    // eg: 68eacbf862f696300cba2efe5fa3a162@feeds/data/68eacbf862f696300cba2efe5fa3a162
     public getOriginMediaPath() {
         return this.originMediaPath
     }
@@ -41,6 +43,7 @@ export class MediaData {
         this.type = type
     }
 
+    // eg: "image/jpg"
     public getType() {
         return this.type
     }
@@ -49,6 +52,7 @@ export class MediaData {
         this.size = size
     }
 
+    // Get media size
     public getSize() {
         return this.size
     }
@@ -56,7 +60,9 @@ export class MediaData {
     private setThumbnailPath(thumbnailPath: string) {
         this.thumbnailPath = thumbnailPath
     }
-
+    
+    // "thumbnailCid" 
+    // eg: 7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24
     public getThumbnailPath() {
         return this.thumbnailPath
     }

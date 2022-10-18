@@ -1,5 +1,4 @@
 import { ChannelInfo } from "./channelinfo";
-import { Dispatcher } from "./dispatcher";
 
 interface ProfileHandler {
     /**
@@ -15,24 +14,11 @@ interface ProfileHandler {
     queryOwnedChannels(): Promise<ChannelInfo[]>;
 
     /**
-     * Query a list of owned channels and send it to dispatcher routine one by one.
-     *
-     * @param dispatcher The disptach routine to handle a channel.
-     */
-    queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>);
-
-    /**
      * Query specific owned channel by channel identifier
      * @param channelId
      * @returns A promise object that contains Channel
      */
     queryOwnedChannnelById(channelId: string): Promise<ChannelInfo>;
-
-    /**
-     * Query specific owned channel by channelid and send it to dispatcher routine.
-     * @param dispatcher The dispatcher routine to handle the channel
-     */
-    queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>): Promise<void>
 
     /**
      * Query the total acount of subscribed channels.
@@ -46,16 +32,7 @@ interface ProfileHandler {
       * @param maximum
       * @param upperLimit
       */
-    querySubscriptions(): Promise<ChannelInfo[]>;
-
-     /**
-      * Query a list of subscribed channesl and sent it to dispatcher routine to handle.
-      *
-      * @param earlierThan
-      * @param maximum
-      * @param dispatcher
-      */
-    queryAndDispatchSubscriptions(dispatcher: Dispatcher<ChannelInfo>): Promise<void>
+  querySubscriptions(): Promise<ChannelInfo[]>;
 }
 
 export type {
