@@ -49,27 +49,28 @@ export class Profile implements ProfileHandler {
  * 新增 1 已讨论 // find_message.total
  * Query the number of all channels created by this profile
  */
-    public queryOwnedChannelCount(): Promise<number> {
-        const filter = {}
-        return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+    public async queryOwnedChannelCount(): Promise<number> {
+        try {
+            const filter = {}
+            const result = await this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid())
             logger.debug("query owned channel count success: ", result)
             return result.find_message.total
-        }).catch(error => {
+        } catch (error) {
             logger.error('query owned channels count error: ', error)
             throw new Error(error)
-        })
+        }
     }
 
 /**
  * 新增 已讨论 // 1
  * Query all channels created by this profile
  */
-    public queryOwnedChannels(): Promise<ChannelInfo[]> {
-        const filter = {}
-        return this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid()).then(result => {
-            logger.debug("query owned channels success: ", result)
-            return result.find_message.items
-        }).then(result => {
+    public async queryOwnedChannels(): Promise<ChannelInfo[]> {
+        try {
+            const filter = {}
+            const results = await this.vault.callScript(scripts.SCRIPT_PRIFILE_CHANNELS, filter, this.targetDid, this.context.getAppDid())
+            logger.debug("query owned channels success: ", results)
+            const result = results.find_message.items
             let channelInfos = []
             result.forEach(item => {
                 const channelInfo = ChannelInfo.parse(this.targetDid, item)
@@ -77,83 +78,61 @@ export class Profile implements ProfileHandler {
             })
             logger.debug("query owned channels 'ChannelInfo': ", channelInfos)
             return channelInfos
-        }).catch(error => {
+        } catch (error) {
             logger.error('query owned channels error: ', error)
             throw new Error(error)
-        })
+        }
     }
 
-    public queryAndDispatchOwnedChannels(dispatcher: Dispatcher<ChannelInfo>) {
-        return this.queryOwnedChannels().then (channels => {
-            channels.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch (error => {
-            logger.error("query and dispatch owned channels error: ", error)
-            throw new Error(error)
-        })
-    }
 /**
  * Query the channel information of the specified channelid under this profile
  * @param channelId：specified channel id
  */
-    public queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
-        const filter = {
-            "channel_id": channelId,
-        }
-        logger.debug("query owned channel by id params: ", filter)
-        return this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, filter, this.targetDid, this.context.getAppDid())
-            .then(result => {
-                logger.debug("query owned channel by id success: ", result)
-                return result.find_message.items
-            })
-            .then(result => {
-                const channelInfo = ChannelInfo.parse(this.targetDid, result[0])
-                logger.debug("query owned channel by id 'ChannelInfo': ", channelInfo)
-                return channelInfo
-            }).catch(error => {
-                logger.error("query owned channel by id error: ", error)
-                throw new Error(error)
-            })
-
-    }
-
-    public queryAndDispatchOwnedChannelById(channelId: string, dispatcher: Dispatcher<ChannelInfo>) {
-        return this.queryOwnedChannnelById(channelId).then (channel => {
-            dispatcher.dispatch(channel)
-        }).catch (error => {
+    public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
+        try {
+            const filter = {
+                "channel_id": channelId,
+            }
+            logger.debug("query owned channel by id params: ", filter)
+            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, filter, this.targetDid, this.context.getAppDid())
+            logger.debug("query owned channel by id success: ", results)
+            const result = results.find_message.items
+            const channelInfo = ChannelInfo.parse(this.targetDid, result[0])
+            logger.debug("query owned channel by id 'ChannelInfo': ", channelInfo)
+            return channelInfo
+        } catch (error) {
+            logger.error("query owned channel by id error: ", error)
             throw new Error(error)
-        })
+        }
     }
-
 
 /**
  * //新增
  * Query the number of channels subscribed by this profile
  */
-    public querySubscriptionCount(): Promise<number> {
-        const filter = {}
-        return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
+    public async querySubscriptionCount(): Promise<number> {
+        try {
+            const filter = {}
+            const result = await this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid())
             logger.debug("query subscription Count success: ", result)
             return result.find_message.items.length
-        }).catch(error => {
+        } catch (error) {
             logger.error("query subscription Count error: ", error)
             throw new Error(error)
-        })
+        }
     }
 
 /**
  * 新增
  * Query the channels subscribed to by this profile
  */
-    public querySubscriptions(): Promise<ChannelInfo[]> {
-        const filter = {
-        }
-        return this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid()).then(result => {
-            logger.debug("query subscriptions success: ", result)
-            return result.find_message.items
-        }).then(async result => {
-            let results = []
+    public async querySubscriptions(): Promise<ChannelInfo[]> {
+        try {
+            const filter = {}
+            const results = await this.vault.callScript(scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, filter, this.targetDid, this.context.getAppDid())
+            logger.debug("query subscriptions success: ", results)
+            const result = results.find_message.items
+            let subscriptions = []
             for (let index = 0; index < result.length; index++) {
                 const item = result[index]
                 const channel_id = item.channel_id
@@ -163,26 +142,15 @@ export class Profile implements ProfileHandler {
                 }
                 const callScriptResult = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params, target_did, this.context.getAppDid())
                 const channelInfo = ChannelInfo.parse(target_did, callScriptResult.find_message.items[0])
-                results.push(channelInfo)
+                subscriptions.push(channelInfo)
             }
             logger.debug("query subscriptions 'ChannelInfo': ", results)
-
-            return results
-        }).catch(error => {
+    
+            return subscriptions
+        } catch (error) {
             logger.error('query subscription channels error: ', error)
             throw new Error(error)
-        })
-    }
-
-    public queryAndDispatchSubscriptions(dispatcher: Dispatcher<ChannelInfo>) {
-
-        return this.querySubscriptions().then(channels => {
-            channels.forEach(item => {
-                dispatcher.dispatch(item)
-            })
-        }).catch (error => {
-            throw new Error(error)
-        })
+        }
     }
 
     public static parse(context: RuntimeContext, userDid: string, result: any): Profile {
