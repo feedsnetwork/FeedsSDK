@@ -1,5 +1,4 @@
 import { Logger } from './utils/logger'
-import { Dispatcher } from './dispatcher'
 import { ChannelInfo } from './channelinfo'
 import { Post } from './post';
 import { ChannelHandler } from './channelhandler';

@@ -5,7 +5,6 @@ import { InsertResult } from "@elastosfoundation/hive-js-sdk"
 import { RuntimeContext } from "./runtimecontext";
 import { Channel } from "./channel";
 import { ChannelInfo } from "./channelinfo";
-import { Dispatcher } from "./dispatcher";
 import { Logger } from "./utils/logger";
 import { hiveService as VaultService } from "./hiveService"
 import { CollectionNames, ScriptingNames } from "./vault/constants"

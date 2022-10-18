@@ -1,5 +1,4 @@
 import { ChannelInfo } from "./channelinfo"
-import { Dispatcher } from "./dispatcher"
 import { PostBody } from "./postbody"
 import { Profile } from "./profile";
 

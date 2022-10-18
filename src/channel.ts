@@ -1,6 +1,5 @@
 import { Logger } from './utils/logger'
 import { ChannelInfo } from './channelinfo'
-import { Dispatcher } from './dispatcher'
 import { ChannelHandler } from './channelhandler'
 import { PostBody } from './postbody'
 import { hiveService as VaultService } from "./hiveService"
