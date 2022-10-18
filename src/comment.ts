@@ -13,40 +13,41 @@ export class Comment {
     private vault: VaultService
     private targetDid: string
 
-/**
- *
- * @param targetDid：the creator of the post
- * @param commentInfo：Comment details
- */
+    /**
+    *
+    * @param targetDid：the creator of the post
+    * @param commentInfo：Comment details
+    */
     constructor(targetDid: string, commentInfo: CommentInfo) {
         this.context = RuntimeContext.getInstance()
         this.commentInfo = commentInfo
         this.vault = new VaultService()
         this.targetDid = targetDid
     }
-// generate comment id
+
+    // generate comment id
     private generateCommentId(did: string, postId: string, refCommentId: string, commentContent: string): string {
         return utils.generateCommentId(did, postId, refCommentId, commentContent)
     }
 
-/**
- * Get review details
- */
+    /**
+    * Get review details
+    */
     public getCommentInfo(): CommentInfo {
         return this.commentInfo
     }
 
-/**
- * Get the creator of the post
- */
+    /**
+    * Get the creator of the post
+    */
     public getTargetDid(): string {
         return this.targetDid
     }
 
-/**
- * add comment
- * @param content： comment content
- */
+    /**
+    * add comment
+    * @param content： comment content
+    */
     public async addComment(content: string): Promise<Comment> {
         try {
             const userDid = this.context.getUserDid()
@@ -78,10 +79,11 @@ export class Comment {
             throw new Error(error)
         }
     }
-/**
- * update comment
- * @param content：comment content
- */
+
+    /**
+    * update comment
+    * @param content：comment content
+    */
     public async updateComment(content: string): Promise<boolean> {
         try {
             const updatedAt = (new Date()).getTime()
@@ -105,9 +107,10 @@ export class Comment {
             throw new Error(error)
         }
     }
-/**
- * deleteComment
- */
+
+    /**
+    * deleteComment
+    */
     public async deleteComment(): Promise<boolean> {
         try {
             const params = {
@@ -128,9 +131,9 @@ export class Comment {
         }
     }
 
-/**
- * Query the comments of the specified comment id
- */
+    /**
+    * Query the comments of the specified comment id
+    */
     public async queryCommentById(): Promise<Comment[]> {
         try {
             const params = {

@@ -31,10 +31,10 @@ export class Post {
         return utils.generateCommentId(did, postId, refCommentId, commentContent)
     }
 
-/**
- * add comment to post
- * @param content: Comment content
- */
+    /**
+    * add comment to post
+    * @param content: Comment content
+    */
     public async addComment(content: string): Promise<Comment> {
         try {
             const userDid = this.context.getUserDid()
@@ -70,11 +70,11 @@ export class Post {
         }
     }
     
-/**
- * Update the comment for the specified postid
- * @param commentId：comment id
- * @param content：comment content
- */
+    /**
+    * Update the comment for the specified postid
+    * @param commentId：comment id
+    * @param content：comment content
+    */
     public async updateComment(commentId: string, content: string): Promise<boolean> {
         try {
             const updatedAt = (new Date()).getTime()
@@ -100,10 +100,10 @@ export class Post {
         }
     }
 
-/**
- * Delete the comment with the specified commentid
- * @param commentId：comment id
- */
+    /**
+    * Delete the comment with the specified commentid
+    * @param commentId：comment id
+    */
     public async deleteComment(commentId: string) {
         try {
             const params = {
@@ -125,11 +125,11 @@ export class Post {
     }
 
 
-/** // 新增
- * Query the comment under the specified conditions under this post
- * @param earlierThan： end time
- * @param maximum：Maximum number of comments returned
- */
+    /** // 新增
+    * Query the comment under the specified conditions under this post
+    * @param earlierThan： end time
+    * @param maximum：Maximum number of comments returned
+    */
     public async queryComments(earlierThan: number, maximum: number): Promise<CommentInfo[]> {
         try {
             const params = {
@@ -156,11 +156,11 @@ export class Post {
         }
     }
 
-/** Return up to 100 entries，Include sub-comments
- * Query the comments in the between paragraphs under this post
- * @param begin： start time
- * @param end: end time
- */
+    /** Return up to 100 entries，Include sub-comments
+    * Query the comments in the between paragraphs under this post
+    * @param begin： start time
+    * @param end: end time
+    */
     public async queryCommentsRangeOfTime(begin: number, end: number): Promise<Comment[]> {
         try {
             const params = {
@@ -188,10 +188,10 @@ export class Post {
         }
     }
 
-/**
- * Query the comment information of the specified commentId
- * @param commentId：comment id
- */
+    /**
+    * Query the comment information of the specified commentId
+    * @param commentId：comment id
+    */
     public async queryCommentById(commentId: string): Promise<Comment> {
         try {
             const params = {
@@ -242,12 +242,13 @@ export class Post {
             throw new Error(error);
         }
     }
-/**
- * generate like id
- * @param postId: post id
- * @param commentId: commnet id
- * @param userDid: user did
- */
+
+    /**
+    * generate like id
+    * @param postId: post id
+    * @param commentId: commnet id
+    * @param userDid: user did
+    */
     public static generateLikeId(postId: string, commentId: string, userDid: string): string {
         return utils.generateLikeId(postId, commentId, userDid)
     }

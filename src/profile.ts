@@ -16,12 +16,12 @@ export class Profile implements ProfileHandler {
     private readonly displayName: string
     private vault: VaultService
 
-/**
- * @param context: RuntimeContext instance
- * @param userDid: user did
- * @param targetDid: owner of this profile
- * @param displayName: Display name for this profile
- */
+    /**
+    * @param context: RuntimeContext instance
+    * @param userDid: user did
+    * @param targetDid: owner of this profile
+    * @param displayName: Display name for this profile
+    */
     public constructor(context: RuntimeContext, userDid: string, targetDid: string, displayName: string) {
         this.context = context;
         this.userDid = userDid;
@@ -45,10 +45,10 @@ export class Profile implements ProfileHandler {
         return this.displayName
     }
 
-/**
- * 新增 1 已讨论 // find_message.total
- * Query the number of all channels created by this profile
- */
+    /**
+    * 新增 1 已讨论 // find_message.total
+    * Query the number of all channels created by this profile
+    */
     public async queryOwnedChannelCount(): Promise<number> {
         try {
             const filter = {}
@@ -61,10 +61,10 @@ export class Profile implements ProfileHandler {
         }
     }
 
-/**
- * 新增 已讨论 // 1
- * Query all channels created by this profile
- */
+    /**
+    * 新增 已讨论 // 1
+    * Query all channels created by this profile
+    */
     public async queryOwnedChannels(): Promise<ChannelInfo[]> {
         try {
             const filter = {}
@@ -84,10 +84,10 @@ export class Profile implements ProfileHandler {
         }
     }
 
-/**
- * Query the channel information of the specified channelid under this profile
- * @param channelId：specified channel id
- */
+    S/**
+    * Query the channel information of the specified channelid under this profile
+    * @param channelId：specified channel id
+    */
     public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         try {
             const filter = {
@@ -106,10 +106,10 @@ export class Profile implements ProfileHandler {
         }
     }
 
-/**
- * //新增
- * Query the number of channels subscribed by this profile
- */
+    /**
+     * //新增
+    * Query the number of channels subscribed by this profile
+    */
     public async querySubscriptionCount(): Promise<number> {
         try {
             const filter = {}
@@ -122,10 +122,10 @@ export class Profile implements ProfileHandler {
         }
     }
 
-/**
- * 新增
- * Query the channels subscribed to by this profile
- */
+    /**
+    * 新增
+    * Query the channels subscribed to by this profile
+    */
     public async querySubscriptions(): Promise<ChannelInfo[]> {
         try {
             const filter = {}

@@ -21,13 +21,13 @@ export class MyProfile implements ProfileHandler {
     private userDid: string;
     private nameCredential: VerifiableCredential;
     private vault: VaultService;
-/**
- *
- * @param context： RuntimeContext
- * @param userDid：user did
- * @param name：user name
- * @param description：VerifiableCredential
- */
+    /**
+    *
+    * @param context： RuntimeContext
+    * @param userDid：user did
+    * @param name：user name
+    * @param description：VerifiableCredential
+    */
     public constructor(context: RuntimeContext, userDid: string, name: VerifiableCredential,
         description: VerifiableCredential) {
 
@@ -42,7 +42,8 @@ export class MyProfile implements ProfileHandler {
         this.nameCredential = name;
         this.vault = new VaultService()
     }
-// Get user did
+
+    // Get user did
     public getUserDid(): string {
         return this.userDid;
     }
@@ -82,10 +83,10 @@ export class MyProfile implements ProfileHandler {
         }
     }
 
-/**
- * Get the information of the specified channelId
- * @param channelId： specified channelId
- */
+    /**
+    * Get the information of the specified channelId
+    * @param channelId： specified channelId
+    */
     public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         try {
             const filter = { "channel_id": channelId }

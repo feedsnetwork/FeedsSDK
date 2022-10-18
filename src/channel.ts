@@ -10,10 +10,10 @@ import { ScriptingNames as scripts } from './vault/constants'
 import { CommentInfo } from './commentInfo'
 
 const logger = new Logger("Channel")
-/**
- * This class represent the channel owned by others. Users can only read posts
- * from this channel.
- */
+    /**
+    * This class represent the channel owned by others. Users can only read posts
+    * from this channel.
+    */
 class Channel implements ChannelHandler {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
@@ -210,11 +210,11 @@ class Channel implements ChannelHandler {
         }
     }
 
-/**
- * Subscription required to call， 同步feeds api
- *
- * @returns Query all post information under the specified channelId
- */
+    /**
+    * Subscription required to call， 同步feeds api
+    *
+    * @returns Query all post information under the specified channelId
+    */
     public async queryPostByChannelId(): Promise<PostBody[]> {
         try {
             const params = {
@@ -238,10 +238,10 @@ class Channel implements ChannelHandler {
         }
     }
 
-/** Subscription required to call
- * 需订阅才能调用 同步feeds api
- * @returns Query all comment information under the specified channelId
- */
+    /** Subscription required to call
+    * 需订阅才能调用 同步feeds api
+    * @returns Query all comment information under the specified channelId
+    */
     public async queryCommentByChannel(): Promise<CommentInfo[]> {
         try {
             const params = {

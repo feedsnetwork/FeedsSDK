@@ -16,11 +16,11 @@ export class MyChannel {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
     private vault: VaultService
-/**
- *
- * @param context: RuntimeContext instance
- * @param channelInfo: ChannelInfo
- */
+    /**
+    *
+    * @param context: RuntimeContext instance
+    * @param channelInfo: ChannelInfo
+    */
     public constructor(context: RuntimeContext, channelInfo: ChannelInfo) {
         this.context = context
         this.channelInfo = channelInfo

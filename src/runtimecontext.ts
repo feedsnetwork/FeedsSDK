@@ -58,13 +58,13 @@ export class RuntimeContext {
         return this.scriptRunners[userDid]
     }
 
-/**
- * initialization RuntimeContext
- * @param applicationDid： application did：
- * @param networkType: mainnet/testnet
- * @param localDataDir: The path to store the hive local cache
- * @param resolveCache: The path to store did local cache
- */
+    /**
+    * initialization RuntimeContext
+    * @param applicationDid： application did：
+    * @param networkType: mainnet/testnet
+    * @param localDataDir: The path to store the hive local cache
+    * @param resolveCache: The path to store did local cache
+    */
     public static initialize(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
         this.sInstance = new RuntimeContext(applicationDid, networkType, localDataDir, resolveCache)
         HiveLogger.setLevel(HiveLogger.TRACE)

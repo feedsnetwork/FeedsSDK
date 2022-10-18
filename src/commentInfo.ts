@@ -14,35 +14,36 @@ export class CommentInfo {
     private createdAt: number
     private proof: string
     private memo: string
-/**
- *
- * @param channelId： channel id
- * @param postId： postId
- * @param commentId： commentId
- */
+    /**
+    *
+    * @param channelId： channel id
+    * @param postId： postId
+    * @param commentId： commentId
+    */
     constructor(channelId: string, postId: string, commentId: string) {
         this.channelId = channelId
         this.postId = postId
         this.commentId = commentId
     }
-/**
- * Set the creator of the post
- * @param targetDid the creator of the post
- */
+
+    /**
+    * Set the creator of the post
+    * @param targetDid the creator of the post
+    */
     setTargetDid(targetDid: string): CommentInfo {
         this.targetDid = targetDid
         return this
     }
 
-// Get the creator of the post
+    // Get the creator of the post
     public getTargetDidDid() {
         return this.targetDid
     }
 
-/**
- * Set the creator of the comment
- * @param createrDid： the creator of the comment
- */
+    /**
+    * Set the creator of the comment
+    * @param createrDid： the creator of the comment
+    */
     setCreaterDid(createrDid: string): CommentInfo {
         this.createrDid = createrDid
         return this
@@ -53,10 +54,10 @@ export class CommentInfo {
         return this.createrDid
     }
 
-/**
- * Set channel id
- * @param channelId： channle id
- */
+    /**
+    * Set channel id
+    * @param channelId： channle id
+    */
     setChannelId(channelId: string): CommentInfo {
         this.channelId = channelId
         return this
@@ -67,10 +68,10 @@ export class CommentInfo {
         return this.channelId
     }
 
-/**
- * Set post id
- * @param postId：post id
- */
+    /**
+    * Set post id
+    * @param postId：post id
+    */
     setPostId(postId: string): CommentInfo {
         this.postId = postId
         return this
@@ -81,10 +82,10 @@ export class CommentInfo {
         return this.postId
     }
 
-/**
- * Set comment id
- * @param commentId：comment id
- */
+    /**
+    * Set comment id
+    * @param commentId：comment id
+    */
     setCommentId(commentId: string): CommentInfo {
         this.commentId = commentId
         return this
@@ -95,10 +96,10 @@ export class CommentInfo {
         return this.commentId
     }
 
-/**
- * Set refcomment id
- * @param refcommentId: refcomment id
- */
+    /**
+    * Set refcomment id
+    * @param refcommentId: refcomment id
+    */
     setRefcommentId(refcommentId: string): CommentInfo {
         this.refcommentId = refcommentId
         return this
@@ -109,10 +110,10 @@ export class CommentInfo {
         return this.refcommentId
     }
 
-/***
- * Set comment content
- * @param content: comment content
- */
+    /***
+    * Set comment content
+    * @param content: comment content
+    */
     setContent(content: string): CommentInfo {
         this.content = content
         return this
@@ -123,10 +124,10 @@ export class CommentInfo {
         return this.content
     }
 
-/**
- * Set comment statue
- * @param status:  0: available， 1： delete，2： edited
- */
+    /**
+    * Set comment statue
+    * @param status:  0: available， 1： delete，2： edited
+    */
     setStatus(status: string): CommentInfo {
         this.status = status
         return this

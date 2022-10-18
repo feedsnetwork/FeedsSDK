@@ -25,7 +25,7 @@ export class MediaData {
         this.kind = kind
     }
 
-// Media kind:  "image/video/audio"
+    // Media kind:  "image/video/audio"
     public getKind() {
         return this.kind
     }
@@ -61,8 +61,8 @@ export class MediaData {
         this.thumbnailPath = thumbnailPath
     }
     
-// "thumbnailCid" 
-// eg: 7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24
+    // "thumbnailCid" 
+    // eg: 7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24
     public getThumbnailPath() {
         return this.thumbnailPath
     }
