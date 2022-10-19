@@ -2,23 +2,22 @@ import { RuntimeContext } from './runtimecontext';
 import { Logger } from './utils/logger'
 import { PostBody } from './postbody'
 import { Comment } from './comment'
-import { hiveService } from "./hiveService"
 import { utils } from "./utils/utils"
 import { CommentInfo } from "./commentInfo"
-import { hiveService as VaultService } from "./hiveService"
 import { ScriptingNames as scripts } from './vault/constants';
+import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Post")
 
 export class Post {
     private body: PostBody;
-    private vault: hiveService
     private context: RuntimeContext
+    private scriptingService: ScriptRunner;
 
-    public constructor(body: PostBody) {
+    private constructor(appContext: RuntimeContext, body: PostBody) {
         this.body = body;
-        this.context = RuntimeContext.getInstance()
-        this.vault = new VaultService()
+        this.context = appContext;
+        this.scriptingService = new ScriptRunner(appContext);
     }
 
     // Get post information
@@ -51,24 +50,24 @@ export class Post {
                 "created_at": createdAt,
             }
             logger.debug("add comment params: ", params)
-    
-            const result = await this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
+
+            const result = await this.scriptingService.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
                 this.getBody().getTargetDid(), this.context.getAppDid())
             logger.debug("add comment success: ", result)
-    
+
             params["updated_at"] = createdAt
             params["status"] = 0
             params["creater_did"] = this.context.getUserDid()
             const comment = Comment.parse(this.getBody().getTargetDid(), params)
             logger.debug("add comment 'CommentInfo': ", comment)
-    
+
             return comment
         } catch (error) {
             logger.error("Add coment error : ", error)
             throw new Error(error)
         }
     }
-    
+
     /**
     * Update the comment for the specified postid
     * @param commentId：comment id
@@ -79,7 +78,7 @@ export class Post {
             const updatedAt = (new Date()).getTime()
             const channelId = this.getBody().getChannelId()
             const postId = this.getBody().getPostId()
-    
+
             const params = {
                 "channel_id": channelId,
                 "post_id": postId,
@@ -88,8 +87,8 @@ export class Post {
                 "updated_at": updatedAt
             }
             logger.debug("update comment params: ", params)
-    
-            const result = await this.vault.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
+
+            const result = await this.scriptingService.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
                 this.getBody().getTargetDid(), this.context.getAppDid())
             logger.debug("update comment success: ", result)
             return true
@@ -112,8 +111,8 @@ export class Post {
                 }
             const targetDid = this.getBody().getTargetDid()
             logger.debug("delete comment params: ", params)
-    
-            const result = await this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
+
+            const result = await this.scriptingService.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
                 targetDid, this.context.getAppDid())
             logger.debug("delete comment success: ", result)
             return true
@@ -135,10 +134,10 @@ export class Post {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id": this.getBody().getPostId(),
                 "limit": maximum,
-                "end": earlierThan 
+                "end": earlierThan
             }
             logger.debug("query comment params: ", params)
-            const results = await this.vault.callScript(scripts.SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT, params,
+            const results = await this.scriptingService.callScript(scripts.SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT, params,
                 this.getBody().getTargetDid(), this.context.getAppDid())
             logger.debug("query comment success: ", results)
 
@@ -170,7 +169,7 @@ export class Post {
                 "status": 0
             }
             logger.log("query comments range of time params: ", params)
-            const results = await this.vault.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
+            const results = await this.scriptingService.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
                 this.getBody().getTargetDid(), this.context.getAppDid())
             logger.debug("query comments range of time success: ", results)
             const result = results.find_message.items
@@ -200,7 +199,7 @@ export class Post {
             }
             logger.debug("query comment by id params: ", params)
 
-            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
+            const results = await this.scriptingService.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
                 this.getBody().getTargetDid(), this.context.getAppDid())
             logger.debug("query comment by id success: ", results)
             const result = results.find_message.items
@@ -225,7 +224,7 @@ export class Post {
                 "post_id": this.getBody().getPostId(),
             }
             logger.debug("query comment by post id params: ", params)
-            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
+            const results = await this.scriptingService.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
                 this.getBody().getTargetDid(), this.context.getAppDid())
             logger.debug("query comment by post id success: ", results)
             const result = results.find_message.items
@@ -255,7 +254,7 @@ export class Post {
     public static parse(targetDid: string, result: any): Post {
         try {
             const postChun = PostBody.parse(targetDid, result)
-            const post = new Post(postChun)
+            const post = new Post(RuntimeContext.getInstance(), postChun)
             return post
         } catch (error) {
             logger.error('Parse post result error: ', error)

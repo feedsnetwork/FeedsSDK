@@ -4,25 +4,26 @@ import { RuntimeContext } from './runtimecontext'
 import { hiveService as VaultService } from "./hiveService"
 import { utils } from "./utils/utils"
 import { ScriptingNames as scripts } from './vault/constants';
+import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Comment")
 
 export class Comment {
     private commentInfo: CommentInfo
     private context: RuntimeContext
-    private vault: VaultService
     private targetDid: string
+    private scriptingService: ScriptRunner;
 
     /**
     *
     * @param targetDid：the creator of the post
     * @param commentInfo：Comment details
     */
-    constructor(targetDid: string, commentInfo: CommentInfo) {
-        this.context = RuntimeContext.getInstance()
+    constructor(appContext: RuntimeContext, targetDid: string, commentInfo: CommentInfo) {
+        this.context = appContext
         this.commentInfo = commentInfo
-        this.vault = new VaultService()
         this.targetDid = targetDid
+        this.scriptingService = new ScriptRunner(appContext)
     }
 
     // generate comment id
@@ -65,8 +66,8 @@ export class Comment {
                 "created_at": createdAt,
             }
             logger.debug("add comment params: ", params)
-    
-            const result = await this.vault.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
+
+            const result = await this.scriptingService.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
                 this.getCommentInfo().getTargetDidDid(), this.context.getAppDid())
             logger.debug("add comment success: ", result)
             params["updated_at"] = createdAt
@@ -89,7 +90,7 @@ export class Comment {
             const updatedAt = (new Date()).getTime()
             const channelId = this.getCommentInfo().getChannelId()
             const postId = this.getCommentInfo().getPostId()
-    
+
             const params = {
                 "channel_id": channelId,
                 "post_id": postId,
@@ -98,7 +99,7 @@ export class Comment {
                 "updated_at": updatedAt
             }
             logger.debug("update comment params: ", params)
-            const result = await this.vault.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
+            const result = await this.scriptingService.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
                 this.getCommentInfo().getTargetDidDid(), this.context.getAppDid())
             logger.debug("update comment success: ", result)
             return true
@@ -120,8 +121,8 @@ export class Comment {
             }
             logger.debug("delete comment params: ", params)
             const targetDid = this.getCommentInfo().getTargetDidDid()
-    
-            const result = await this.vault.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
+
+            const result = await this.scriptingService.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
                 targetDid, this.context.getAppDid())
             logger.debug("delete comment success: ", result)
             return true
@@ -142,7 +143,7 @@ export class Comment {
                 "comment_id": this.getCommentInfo().getCommentId()
             }
             logger.debug("query comment byId params: ", params)
-            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
+            const results = await this.scriptingService.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
                 this.getCommentInfo().getTargetDidDid(), this.context.getAppDid())
             logger.debug("query comment byId success: ", results)
             const result = results.find_message.items
@@ -162,8 +163,8 @@ export class Comment {
 
     public static parse(targetDid: string, data: any): Comment {
         const commentInfo = CommentInfo.parse(targetDid, data)
-        const comment = new Comment(targetDid, commentInfo)
+        const comment = new Comment(RuntimeContext.getInstance(), targetDid, commentInfo)
         return comment
     }
-} 
+}
 

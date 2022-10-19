@@ -2,11 +2,10 @@ import { Logger } from './utils/logger'
 import { ChannelInfo } from './channelinfo'
 import { ChannelHandler } from './channelhandler'
 import { PostBody } from './postbody'
-import { hiveService as VaultService } from "./hiveService"
 import { Profile } from './profile'
 import { RuntimeContext } from './runtimecontext'
-import { ScriptingNames as scripts } from './vault/constants'
 import { CommentInfo } from './commentInfo'
+import { ScriptingNames as scripts } from './vault/constants'
 import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Channel")

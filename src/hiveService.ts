@@ -3,7 +3,7 @@ import { JSONObject } from '@elastosfoundation/did-js-sdk'
 import { RuntimeContext } from './runtimecontext'
 
 export class hiveService {
-  private scriptRunner: ScriptRunner 
+  private scriptRunner: ScriptRunner
 
   constructor() { }
 
