@@ -1,7 +1,6 @@
 import { Logger } from './utils/logger'
 import { CommentInfo } from './commentInfo'
 import { RuntimeContext } from './runtimecontext'
-import { hiveService as VaultService } from "./hiveService"
 import { utils } from "./utils/utils"
 import { ScriptingNames as scripts } from './vault/constants';
 import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
@@ -26,11 +25,6 @@ export class Comment {
         this.scriptingService = new ScriptRunner(appContext)
     }
 
-    // generate comment id
-    private generateCommentId(did: string, postId: string, refCommentId: string, commentContent: string): string {
-        return utils.generateCommentId(did, postId, refCommentId, commentContent)
-    }
-
     /**
     * Get review details
     */
@@ -51,12 +45,12 @@ export class Comment {
     */
     public async addComment(content: string): Promise<Comment> {
         try {
-            const userDid = this.context.getUserDid()
-            const channelId = this.getCommentInfo().getChannelId()
-            const postId = this.getCommentInfo().getPostId()
-            const refcommentId = this.getCommentInfo().getCommentId()
-            const commentId = this.generateCommentId(userDid, postId, refcommentId, content)
-            const createdAt = (new Date()).getTime()
+            let userDid = this.context.getUserDid()
+            let channelId = this.getCommentInfo().getChannelId()
+            let postId = this.getCommentInfo().getPostId()
+            let refcommentId = this.getCommentInfo().getCommentId()
+            let commentId = utils.generateCommentId(userDid, postId, refcommentId, content);
+            let createdAt = new Date().getTime()
             let params = {
                 "comment_id": commentId,
                 "channel_id": channelId,
@@ -65,16 +59,19 @@ export class Comment {
                 "content": content,
                 "created_at": createdAt,
             }
-            logger.debug("add comment params: ", params)
 
-            const result = await this.scriptingService.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
-                this.getCommentInfo().getTargetDidDid(), this.context.getAppDid())
-            logger.debug("add comment success: ", result)
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_CREATE_COMMENT,
+                params,
+                this.getCommentInfo().getTargetDidDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to create comment : ${result}`)
+
             params["updated_at"] = createdAt
             params["status"] = 0
             params["creater_did"] = this.context.getUserDid()
-            const comment = Comment.parse(this.targetDid, params)
-            return comment
+            return Comment.parse(this.targetDid, params)
         } catch (error) {
             logger.error("Add comment error : ", error)
             throw new Error(error)
@@ -85,24 +82,23 @@ export class Comment {
     * update comment
     * @param content：comment content
     */
-    public async updateComment(content: string): Promise<boolean> {
+    public async updateComment(content: string) {
         try {
-            const updatedAt = (new Date()).getTime()
-            const channelId = this.getCommentInfo().getChannelId()
-            const postId = this.getCommentInfo().getPostId()
-
-            const params = {
-                "channel_id": channelId,
-                "post_id": postId,
+            let params = {
+                "channel_id": this.getCommentInfo().getChannelId(),
+                "post_id"   : this.getCommentInfo().getPostId(),
                 "comment_id": this.getCommentInfo().getCommentId(),
-                "content": content,
-                "updated_at": updatedAt
+                "content"   : content,
+                "updated_at": new Date().getTime()
             }
-            logger.debug("update comment params: ", params)
-            const result = await this.scriptingService.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
-                this.getCommentInfo().getTargetDidDid(), this.context.getAppDid())
-            logger.debug("update comment success: ", result)
-            return true
+
+            const result = await this.scriptingService.callScript(
+                scripts.SCRIPT_UPDATE_COMMENT,
+                params,
+                this.getCommentInfo().getTargetDidDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to update comment: ${result}`);
         } catch (error) {
             logger.error("Update comment error : ", error)
             throw new Error(error)
@@ -112,20 +108,20 @@ export class Comment {
     /**
     * deleteComment
     */
-    public async deleteComment(): Promise<boolean> {
+    public async deleteComment() {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getCommentInfo().getChannelId(),
-                "post_id": this.getCommentInfo().getPostId(),
+                "post_id"   : this.getCommentInfo().getPostId(),
                 "comment_id": this.getCommentInfo().getCommentId()
             }
-            logger.debug("delete comment params: ", params)
-            const targetDid = this.getCommentInfo().getTargetDidDid()
-
-            const result = await this.scriptingService.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
-                targetDid, this.context.getAppDid())
-            logger.debug("delete comment success: ", result)
-            return true
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_DELETE_COMMENT,
+                params,
+                this.getCommentInfo().getTargetDidDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to delete comment: ${result}`);
         } catch (error) {
             logger.error("delete comment error : ", error)
             throw new Error(error)
@@ -137,23 +133,25 @@ export class Comment {
     */
     public async queryCommentById(): Promise<Comment[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getCommentInfo().getChannelId(),
-                "post_id": this.getCommentInfo().getPostId(),
+                "post_id"   : this.getCommentInfo().getPostId(),
                 "comment_id": this.getCommentInfo().getCommentId()
             }
-            logger.debug("query comment byId params: ", params)
-            const results = await this.scriptingService.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
-                this.getCommentInfo().getTargetDidDid(), this.context.getAppDid())
-            logger.debug("query comment byId success: ", results)
-            const result = results.find_message.items
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID,
+                params,
+                this.getCommentInfo().getTargetDidDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query comment: ${result}`);
 
+            const items = result.find_message.items
             let comments = []
-            result.forEach(item => {
-                const comment = Comment.parse(this.targetDid, item)
-                comments.push(comment)
+            result.forEach((item: any) => {
+                comments.push(Comment.parse(this.targetDid, item))
             })
-            logger.debug("query comment by id 'comments': ", comments)
+            logger.debug(`Got comment by Id: ${comments}`);
             return comments[0]
         } catch (error) {
             logger.error('query comment by id error:', error)
