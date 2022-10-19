@@ -123,8 +123,26 @@ export class RuntimeContext {
         return checkSignin()
     }
 
+    public async signToHive(userDid: string): Promise<MyProfile> {
+        try {
+            let self = this
+            await self.register.prepareConnectHive()
+            logger.debug('sign to Hive success')
+            try {
+            await self.register.checkCreateAndRregiste(true) // 注册 创建
+            } catch (error) {
+                //ignore
+            }
+            const myProfile = new MyProfile(this, userDid, null, null)
+            return myProfile
+        } catch (error) {
+            logger.error('sign to Hive error: ', error)
+            throw error
+        }
+    }
+
     // login hive
-    public signHive(): Promise<void> {
+    signHive(): Promise<void> {
         let self = this
         return self.register.prepareConnectHive().then(()=> {
             return self.register.checkCreateAndRregiste(true) // 注册 创建
@@ -133,7 +151,7 @@ export class RuntimeContext {
         })
     }
 
-    public signIntoVault(userDid: string, appInstanceDIDDocument: DIDDocument): Promise<AppContext> {
+    signIntoVault(userDid: string, appInstanceDIDDocument: DIDDocument): Promise<AppContext> {
         let self = this
         return AppContext.build({
             getLocalDataDir: (): string => this.getLocalDataDir(),
