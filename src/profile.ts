@@ -20,7 +20,11 @@ export class Profile implements ProfileHandler {
     * @param targetDid: owner of this profile
     * @param displayName: Display name for this profile
     */
-    public constructor(context: RuntimeContext, userDid: string, targetDid: string, displayName: string) {
+    public constructor(context: RuntimeContext,
+        userDid: string,
+        targetDid: string,
+        displayName: string) {
+
         this.context = context;
         this.userDid = userDid;
         this.targetDid = targetDid
