@@ -99,4 +99,8 @@ export class hiveService {
     return this.registerScript(scriptName, executable, null, false);
   }
 
+  async delete(remotePath: string): Promise<void> {
+    return (await this.getFilesService()).delete(remotePath)
+  }
+
 }

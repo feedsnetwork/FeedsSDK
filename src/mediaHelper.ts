@@ -7,7 +7,7 @@ import { hiveService as VaultService } from "./hiveService"
 import SparkMD5 from 'spark-md5'
 import { } from "@elastosfoundation/hive-js-sdk"
 
-const logger = new Logger("Post")
+const logger = new Logger("MediaHelper")
 
 export class MediaHelper {
     private vault: hiveService
