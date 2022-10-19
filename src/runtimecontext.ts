@@ -142,7 +142,7 @@ export class RuntimeContext {
     }
 
     // login hive
-    signHive(): Promise<void> {
+    private signHive(): Promise<void> {
         let self = this
         return self.register.prepareConnectHive().then(()=> {
             return self.register.checkCreateAndRregiste(true) // 注册 创建
@@ -151,7 +151,7 @@ export class RuntimeContext {
         })
     }
 
-    signIntoVault(userDid: string, appInstanceDIDDocument: DIDDocument): Promise<AppContext> {
+    private signIntoVault(userDid: string, appInstanceDIDDocument: DIDDocument): Promise<AppContext> {
         let self = this
         return AppContext.build({
             getLocalDataDir: (): string => this.getLocalDataDir(),
@@ -175,14 +175,14 @@ export class RuntimeContext {
         })
     }
 
-    async getAppInstanceDIDDoc() {
+    private async getAppInstanceDIDDoc() {
         const didAccess = new ConDID.DIDAccess()
         const info = await didAccess.getOrCreateAppInstanceDID()
         const instanceDIDDocument = await info.didStore.loadDid(info.did.toString())
         return instanceDIDDocument
     }
 
-    async issueDiplomaFor() {
+    private async issueDiplomaFor() {
         const applicationDID = RuntimeContext.getInstance().getAppDid()
         connectivity.setApplicationDID(applicationDID)
         const didAccess = new ConDID.DIDAccess()
@@ -196,7 +196,7 @@ export class RuntimeContext {
         }
     }
 
-    async createPresentation(vc, hiveDid, nonce) {
+    private async createPresentation(vc, hiveDid, nonce) {
         const access = new ConDID.DIDAccess()
         const info = await access.getOrCreateAppInstanceDID()
         const info2 = await access.getExistingAppInstanceDIDInfo()
@@ -205,7 +205,7 @@ export class RuntimeContext {
         return vp
     }
 
-    async generateHiveAuthPresentationJWT(challeng: string) {
+    private async generateHiveAuthPresentationJWT(challeng: string) {
 
         if (challeng === null || challeng === undefined || challeng === '') {
             // throw error // todo
@@ -228,7 +228,7 @@ export class RuntimeContext {
         return token
     }
 
-    async createChallengeResponse(vp, hiveDid) {
+    private async createChallengeResponse(vp, hiveDid) {
         const exp = new Date()
         const iat = new Date().getTime()
         exp.setFullYear(exp.getFullYear() + 2)

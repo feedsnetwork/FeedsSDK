@@ -1,10 +1,97 @@
 import { JSONObject } from "@elastosfoundation/did-js-sdk"
 import { utils } from "./utils/utils"
+import { MediaHelper } from "./mediaHelper"
 
 export enum MediaType {
     noMeida = 0,
     containsImg = 1,
     containsVideo = 2,
+}
+
+export class VideoData {
+    private video: string
+    private thumbnail: string
+    private duration: number
+
+    private constructor() {
+    }
+
+    private setVideo(video: string) {
+        this.video = video
+    }
+
+    public getVideo() {
+        return this.video
+    }
+
+    private setThumbnail(thumbnail: string) {
+        this.thumbnail = thumbnail
+    }
+
+    public getThumbnail() {
+        return this.thumbnail
+    }
+
+    private setDuration(duration: number) {
+        this.duration = duration
+    }
+
+    public getDuration() {
+        return this.duration
+    }
+
+    public static parse(data: any): VideoData {
+
+        const videoData = new VideoData()
+        videoData.setVideo(data.video)
+        videoData.setThumbnail(data.thumbnail)
+        videoData.setDuration(data.duration)
+
+        return videoData
+    }
+}
+
+export class OriginMediaData {
+    private size: number
+    private type: string
+    private medaPath: string
+
+    private constructor() {
+    }
+
+    private setSize(size: number) {
+        this.size = size
+    }
+
+    public getSize() {
+        return this.size
+    }
+
+    private setType(type: string) {
+        this.type = type
+    }
+
+    public getType() {
+        return this.type
+    }
+
+    private setMedaPath(medaPath: string) {
+        this.medaPath = medaPath
+    }
+
+    public getMedaPath() {
+        return this.medaPath
+    }
+
+    public static parse(data: any): OriginMediaData {
+
+        const originMediaData = new OriginMediaData()
+        originMediaData.setSize(data.video)
+        originMediaData.setType(data.thumbnail)
+        originMediaData.setMedaPath(data.duration)
+
+        return originMediaData
+    }
 }
 
 export class MediaData {
@@ -99,7 +186,7 @@ export class MediaData {
         return this.memo
     }
 
-    static parse(data: any): MediaData {
+    public static parse(data: any): MediaData {
 
         const mediaData = new MediaData()
         mediaData.setKind(data.kind)
@@ -138,7 +225,7 @@ export class PostContent {
     private mediaData: MediaData[]// 已经上传的到hive(size/type/scriptName@path)
     private mediaType: MediaType
 
-    constructor(version: string, content: string, mediaData: MediaData[], mediaType: MediaType) {
+    public constructor(version: string, content: string, mediaData: MediaData[], mediaType: MediaType) {
         this.version = version
         this.content = content
         this.mediaData = mediaData
@@ -189,8 +276,9 @@ export class PostBody {
     private tag: string;
     private proof: string;
     private memo: string;
+    private mediaHelper: MediaHelper
 
-    private constructor(targetDid: string, postId: string, channelId: string) {
+    public constructor(targetDid: string, postId: string, channelId: string) {
         this.targetDid = targetDid;
         this.postId = postId;
         this.channelId = channelId;
@@ -200,7 +288,7 @@ export class PostBody {
         this.tag = ''
         this.proof = ''
         this.memo = ''
-
+        this.mediaHelper = new MediaHelper()
     }
 
     static generatePostId(did: string, channelId: string, postContent: string) {
@@ -301,6 +389,12 @@ export class PostBody {
 
     public getMemo(): string {
         return this.memo;
+    }
+
+    public async progressPostContent(postText: string, newImagesBase64: string[], newVideoData: VideoData): Promise<PostContent> {
+        const postContent = await this.mediaHelper.progressMediaData(postText, newImagesBase64, newVideoData)
+        this.setContent(postContent)
+        return postContent
     }
 
     public static parse(targetDid: string, post: any): PostBody {

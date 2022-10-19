@@ -240,4 +240,97 @@ export class utils {
   public static getCurrentTimeNum(): number {
     return new Date().getTime()
   }
+
+  public static base64ToBlob(base64Data: string): Blob {
+    const defaultType = 'image/png';
+    let arr = base64Data.split(',');
+    let mime = arr[0].match(/:(.*?);/)[1] || defaultType;
+    let bytes = atob(arr[1]);
+    let n = bytes.length || 0;
+
+    let u8Array = new Uint8Array(n);
+    while (n--) {
+      u8Array[n] = bytes.charCodeAt(n);
+    }
+
+    return new Blob([u8Array], {
+      type: mime
+    });
+  }
+
+  public static compress(imgData: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (imgData.length < 50 * 1000) {
+        resolve(imgData);
+        return;
+      }
+      let image = new Image(); //新建一个img标签（不嵌入DOM节点，仅做canvas操作)
+      image.src = imgData; //让该标签加载base64格式的原图
+      image.onload = () => {
+        let maxWidth = image.width / 4;
+        let maxHeight = image.height / 4;
+        let imgBase64 = utils.resizeImg(image, maxWidth, maxHeight, 1);
+        resolve(imgBase64);
+      };
+    });
+  }
+
+
+  /**
+  * 压缩图片
+  * @param img img对象
+  * @param maxWidth 最大宽
+  * @param maxHeight 最大高
+  * @param quality 压缩质量
+  * @returns {string|*} 返回base64
+  */
+  public static resizeImg(img: any, maxWidth: any, maxHeight: any, quality = 1): any {
+    const imageData: string = img.src;
+    if (!imageData.startsWith("https") && imageData.length < maxWidth * maxHeight) {
+      return imageData;
+    }
+    const imgWidth = img.width;
+    const imgHeight = img.height;
+    if (imgWidth <= 0 || imgHeight <= 0) {
+      return imageData;
+    }
+    const canvasSize = this.zoomImgSize(imgWidth, imgHeight, maxWidth, maxHeight);
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasSize[0];
+    canvas.height = canvasSize[1];
+    canvas.getContext('2d')
+      .drawImage(img, 0, 0, canvas.width,
+        canvas.height);
+    return canvas.toDataURL('image/*', quality);
+  };
+
+  /**
+  * 计算缩放宽高
+  * @param imgWidth 图片宽
+  * @param imgHeight 图片高
+  * @param maxWidth 期望的最大宽
+  * @param maxHeight 期望的最大高
+  * @returns [number,number] 宽高
+  */
+  public static zoomImgSize(imgWidth: any, imgHeight: any, maxWidth: any, maxHeight: any) {
+    let newWidth = imgWidth,
+      newHeight = imgHeight;
+    if (imgWidth / imgHeight >= maxWidth / maxHeight) {
+      if (imgWidth > maxWidth) {
+        newWidth = maxWidth;
+        newHeight = (imgHeight * maxWidth) / imgWidth;
+      }
+    } else {
+      if (imgHeight > maxHeight) {
+        newHeight = maxHeight;
+        newWidth = (imgWidth * maxHeight) / imgHeight;
+      }
+    }
+    if (newWidth > maxWidth || newHeight > maxHeight) {
+      //不满足预期,递归再次计算
+      return this.zoomImgSize(newWidth, newHeight, maxWidth, maxHeight);
+    }
+    return [newWidth, newHeight];
+  };
+
 }

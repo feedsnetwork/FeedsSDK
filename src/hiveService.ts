@@ -1,4 +1,4 @@
-import { Executable, InsertOptions, ScriptRunner, Vault, Logger as HiveLogger, UpdateResult, UpdateOptions, Condition, InsertResult, DatabaseService, ScriptingService, FilesService } from "@elastosfoundation/hive-js-sdk"
+import { FileDownloadExecutable, Executable, InsertOptions, ScriptRunner, Vault, Logger as HiveLogger, UpdateResult, UpdateOptions, Condition, InsertResult, DatabaseService, ScriptingService, FilesService } from "@elastosfoundation/hive-js-sdk"
 import { JSONObject } from '@elastosfoundation/did-js-sdk'
 import { RuntimeContext } from './runtimecontext'
 
@@ -46,24 +46,24 @@ export class hiveService {
     return (await this.getScriptRunner(targetDid)).callScript<any>(scriptName, document, targetDid, appid)
   }
 
-  uploadScriting(transactionId: string, data: string): Promise<void> {
-    return this.scriptRunner.uploadFile(transactionId, data)
+  async uploadScriting(targetDid: string, transactionId: string, data: string): Promise<void> {
+    return (await this.getScriptRunner(targetDid)).uploadFile(transactionId, data)
   }
 
-  downloadScripting(transaction_id: string): Promise<Buffer> {
-    return this.scriptRunner.downloadFile(transaction_id)
+  async downloadScripting(targetDid: string, transaction_id: string): Promise<Buffer> {
+    return (await this.getScriptRunner(targetDid)).downloadFile(transaction_id)
   }
 
   async downloadFile(remotePath: string): Promise<Buffer> {
     return (await this.getFilesService()).download(remotePath)
   }
 
-  getUploadDataFromScript(transactionId: string, img: any): Promise<void> {
-    return this.scriptRunner.uploadFile(transactionId, img)
+  async getUploadDataFromScript(targetDid: string, transactionId: string, img: any): Promise<void> {
+    return (await this.getScriptRunner(targetDid)).uploadFile(transactionId, img)
   }
 
-  uploadDataFromScript(transactionId: string, img: any): Promise<void> {
-    return this.scriptRunner.uploadFile(transactionId, img)
+  async uploadDataFromScript(targetDid: string, transactionId: string, img: any): Promise<void> {
+    return (await this.getScriptRunner(targetDid)).uploadFile(transactionId, img)
   }
 
   async uploadScriptWithBuffer(remotePath: string, img: Buffer): Promise<string> {
@@ -93,4 +93,10 @@ export class hiveService {
   async queryDBDataWithOptions(collectionName: string, filter: any, options: any): Promise<JSONObject[]> {
     return (await this.getDatabaseService()).findMany(collectionName, filter, options)
   }
+
+  async registerFileDownloadScripting(scriptName: string): Promise<void> {
+    const executable = new FileDownloadExecutable(scriptName).setOutput(true);
+    return this.registerScript(scriptName, executable, null, false);
+  }
+
 }

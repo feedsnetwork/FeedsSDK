@@ -15,7 +15,7 @@ export class Post {
     private vault: hiveService
     private context: RuntimeContext
 
-    private constructor(body: PostBody) {
+    public constructor(body: PostBody) {
         this.body = body;
         this.context = RuntimeContext.getInstance()
         this.vault = new VaultService()
