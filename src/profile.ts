@@ -1,9 +1,9 @@
 import { RuntimeContext } from "./runtimecontext";
 import { ChannelInfo } from "./channelinfo";
 import { ProfileHandler } from "./profilehandler";
-import { hiveService as VaultService } from "./hiveService"
-import { CollectionNames as collections, ScriptingNames as scripts } from "./vault/constants"
+import { ScriptingNames as scripts } from "./vault/constants"
 import { Logger } from './utils/logger'
+import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Profile")
 
@@ -12,7 +12,7 @@ export class Profile implements ProfileHandler {
     private readonly targetDid: string;
     private readonly userDid: string;
     private readonly displayName: string
-    private vault: VaultService
+    private scriptingService: ScriptRunner;
 
     /**
     * @param context: RuntimeContext instance
@@ -25,7 +25,7 @@ export class Profile implements ProfileHandler {
         this.userDid = userDid;
         this.targetDid = targetDid
         this.displayName = displayName
-        this.vault = new VaultService()
+        this.scriptingService = new ScriptRunner(this.context);
     }
 
     // Get user did
@@ -48,7 +48,7 @@ export class Profile implements ProfileHandler {
     */
     public async queryOwnedChannelCount(): Promise<number> {
         try {
-            const result = await this.vault.callScript(
+            const result = await this.scriptingService.callScript(
                 scripts.SCRIPT_PRIFILE_CHANNELS,
                 {},
                 this.targetDid,
@@ -70,7 +70,7 @@ export class Profile implements ProfileHandler {
     */
     public async queryOwnedChannels(): Promise<ChannelInfo[]> {
         try {
-            let result = await this.vault.callScript(
+            let result = await this.scriptingService.callScript(
                 scripts.SCRIPT_PRIFILE_CHANNELS,
                 {},
                 this.targetDid,
@@ -98,7 +98,7 @@ export class Profile implements ProfileHandler {
     */
     public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         try {
-            const result = await this.vault.callScript(
+            const result = await this.scriptingService.callScript(
                 scripts.SCRIPT_QUERY_CHANNEL_INFO,
                 {"channel_id": channelId,},
                 this.targetDid,
@@ -122,7 +122,7 @@ export class Profile implements ProfileHandler {
     */
     public async querySubscriptionCount(): Promise<number> {
         try {
-            let result = await this.vault.callScript(
+            let result = await this.scriptingService.callScript(
                 scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS,
                 {},
                 this.targetDid,
@@ -144,7 +144,7 @@ export class Profile implements ProfileHandler {
     */
     public async querySubscriptions(): Promise<ChannelInfo[]> {
         try {
-            const result = await this.vault.callScript(
+            const result = await this.scriptingService.callScript(
                 scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS,
                 {},
                 this.targetDid,
@@ -160,7 +160,7 @@ export class Profile implements ProfileHandler {
                 const channel_id = item.channel_id
                 const target_did = item.target_did.toString()
 
-                const info = await this.vault.callScript(
+                const info = await this.scriptingService.callScript(
                     scripts.SCRIPT_QUERY_CHANNEL_INFO,
                     { "channel_id": channel_id },
                     channel_id,
