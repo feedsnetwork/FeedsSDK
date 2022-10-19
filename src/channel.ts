@@ -7,6 +7,7 @@ import { Profile } from './profile'
 import { RuntimeContext } from './runtimecontext'
 import { ScriptingNames as scripts } from './vault/constants'
 import { CommentInfo } from './commentInfo'
+import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Channel")
     /**
@@ -16,12 +17,12 @@ const logger = new Logger("Channel")
 class Channel implements ChannelHandler {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
-    private vault: VaultService
+    private scriptingService: ScriptRunner;
 
-    public constructor(channelInfo: ChannelInfo) {
-        this.channelInfo = channelInfo;
-        this.vault = new VaultService()
-        this.context = RuntimeContext.getInstance()
+    public constructor(appContext: RuntimeContext, channelInfo: ChannelInfo) {
+        this.context = appContext
+        this.channelInfo = channelInfo
+        this.scriptingService = new ScriptRunner(appContext);
     }
 
     /**
@@ -38,15 +39,21 @@ class Channel implements ChannelHandler {
      */
     public async queryChannelInfo(): Promise<ChannelInfo> {
         try {
-            const channelId = this.getChannelInfo().getChannelId()
-            const params = {
-                "channel_id": channelId
-            }
-            logger.debug("query channel information params: ", params)
-            const result = await this.vault.callScript(scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
-                this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
-                logger.debug("query channel information success: ", result)
-            return ChannelInfo.parse(this.getChannelInfo().getOwnerDid(), result.find_message.items[0])
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_QUERY_CHANNEL_INFO,
+                { "channel_id": this.getChannelInfo().getChannelId() },
+                this.getChannelInfo().getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query channel info: ${result}`);
+
+            let channelInfo = ChannelInfo.parse(
+                this.getChannelInfo().getOwnerDid(),
+                result.find_message.items[0]
+            )
+            logger.debug(`Got this channel information: ${channelInfo}`);
+            return channelInfo;
+
         } catch (error) {
             logger.error('Query channel information error: ', error)
             throw new Error(error)
@@ -65,22 +72,25 @@ class Channel implements ChannelHandler {
      */
     public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "limit": upperLimit,
-                "end": earilerThan, 
+                "end": earilerThan,
             }
-            logger.debug("query posts params: ", params)
-            const result = await this.vault.callScript(scripts.SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT, params,
-                this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
-            logger.debug("query posts success: ", result)
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT,
+                params,
+                this.getChannelInfo().getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query posts: ${result}`);
+
             let targetDid = this.getChannelInfo().getOwnerDid()
             let posts = []
-            result.find_message.items.forEach(item => {
-                const post = PostBody.parse(targetDid, item)
-                posts.push(post)
+            result.find_message.items.forEach((item: any) => {
+                posts.push(PostBody.parse(targetDid, item))
             })
-            logger.debug("query posts 'postBodys': ", posts)
+            logger.debug(`Got posts: ${posts}`);
             return posts
         } catch (error) {
             logger.error('Query posts error:', error)
@@ -98,23 +108,25 @@ class Channel implements ChannelHandler {
      */
     public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.channelInfo.getChannelId(),
                 "start": start,
                 "end": end
             }
-            logger.debug("query posts by range of time params: ", params)
+            let result = await this.scriptingService.callScript(
+                scripts.QUERY_PUBLIC_SOMETIME_POST,
+                params,
+                this.channelInfo.getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query posts by range of time: ${result}`);
 
-            const result = await this.vault.callScript(scripts.QUERY_PUBLIC_SOMETIME_POST, params,
-                this.channelInfo.getOwnerDid(), this.context.getAppDid())
-            logger.debug("query posts by range of time success: ", result)
-            const targetDid = this.channelInfo.getOwnerDid()
+            let targetDid = this.channelInfo.getOwnerDid()
             let posts = []
-            result.find_message.items.forEach(item => {
-                const post = PostBody.parse(targetDid, item)
-                posts.push(post)
+            result.find_message.items.forEach((item: any) => {
+                posts.push(PostBody.parse(targetDid, item))
             })
-            logger.debug("query posts by range of time 'postBodys': ", posts)
+            logger.debug(`Got posts by range of time: ${posts}`)
             return posts
         } catch (error) {
             logger.error("Query posts error: ", error)
@@ -130,22 +142,27 @@ class Channel implements ChannelHandler {
      */
     public async queryPost(postId: string): Promise<PostBody> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "post_id": postId
             }
-        logger.debug("query post params: ", params)
-            const results = await this.vault.callScript(scripts.QUERY_PUBLIC_SPECIFIED_POST, params,
-                this.channelInfo.getOwnerDid(), this.context.getAppDid())
-            const result = results.find_message.items
-            logger.debug("query post success: ", result)
+
+            let result = await this.scriptingService.callScript(
+                scripts.QUERY_PUBLIC_SPECIFIED_POST,
+                params,
+                this.channelInfo.getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query specified post: ${result}`);
+
+            let items = result.find_message.items
             let posts = []
-            for (let index = 0; index < result.length; index++) {
-                const item = result[index]
+            for (let index = 0; index < items.length; index++) {
+                const item = items[index]
                 const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
                 posts.push(post)
             }
-            logger.debug("query post 'postBody': ", posts)
+            logger.log(`Got post with postId ${postId}: ${posts[0]}`)
             return posts[0]
         }
         catch (error) {
@@ -160,23 +177,27 @@ class Channel implements ChannelHandler {
      */
     public async querySubscriberCount(): Promise<number> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "status": 0
             }
-            logger.debug("query subscriber count params: ", params)
-            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID, params,
-                this.channelInfo.getOwnerDid(), this.context.getAppDid())
-            logger.debug("query subscriber count success: ", results)
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID,
+                params,
+                this.channelInfo.getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query subscriber count: ${result}`)
 
-            return results.find_message.total
-
+            let count = result.find_message.total;
+            logger.log(`Got subscriber count: ${count}`)
+            return count
         } catch (error) {
             logger.error("Query subscriber count: ", error)
             throw new Error(error)
         }
     }
-    
+
     /**
      * 新增：
      * Query the list of subscribers to this channel.
@@ -186,24 +207,30 @@ class Channel implements ChannelHandler {
      */
     public async querySubscribers(earilerThan: number, upperLimit: number): Promise<Profile[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "limit": upperLimit,
                 "end": earilerThan,
             }
-            logger.debug("query subscriber count params: ", params)
-    
-            const results = await this.vault.callScript(scripts.SCRIPT_CHANNEL_SUBSCRIBERS, params,
-                this.channelInfo.getOwnerDid(), this.context.getAppDid())
-            logger.debug("query subscriber count success: ", results)
-            const result = results.find_message.items
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_CHANNEL_SUBSCRIBERS,
+                params,
+                this.channelInfo.getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query subscribers: ${result}`)
+
+            let items = result.find_message.items
             let profiles = []
-            for (let index = 0; index < result.length; index++) {
-                const item = result[index]
-                const profile = Profile.parse(this.context, this.getChannelInfo().getOwnerDid(), item)
+            for (let index = 0; index < items.length; index++) {
+                let profile = Profile.parse(
+                    this.context,
+                    this.getChannelInfo().getOwnerDid(),
+                    items[index]
+                )
                 profiles.push(profile)
             }
-            logger.debug("query subscriber count 'profiles': ", profiles)
+            logger.debug(`Got subscribers: ${profiles}`)
             return profiles
         } catch (error) {
             logger.error("Query ubscribers error : ", error)
@@ -216,22 +243,25 @@ class Channel implements ChannelHandler {
     *
     * @returns Query all post information under the specified channelId
     */
-    public async queryPostByChannelId(): Promise<PostBody[]> {
+    public async queryPostsByChannel(): Promise<PostBody[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
             }
-            logger.debug("query post by channel id params: ", params)
-            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_POST_BY_CHANNEL, params,
-                this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
-            logger.debug("query post by channel id success: ", results)
-            const result = results.find_message.items
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_QUERY_POST_BY_CHANNEL,
+                 params,
+                this.getChannelInfo().getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query posts by channelId: ${result}`)
+
+            let items = result.find_message.items
             let posts = []
-            result.forEach(item => {
-                const post = PostBody.parse(this.getChannelInfo().getOwnerDid(), item)
-                posts.push(post)
+            items.forEach((item: any) => {
+                posts.push(PostBody.parse(this.getChannelInfo().getOwnerDid(), item))
             })
-            logger.debug("query post by channel id 'postBodys': ", posts)
+            logger.debug(`Got posts by channelId: ${posts}`)
             return posts
         } catch (error) {
             logger.error('Query post by channelId error:', error)
@@ -245,20 +275,23 @@ class Channel implements ChannelHandler {
     */
     public async queryCommentByChannel(): Promise<CommentInfo[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
             }
-            logger.debug("query comment by channel params: ", params)
-            const results = await this.vault.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID, params,
-                this.getChannelInfo().getOwnerDid(), this.context.getAppDid())
-            logger.debug("query comment by channel success: ", results)
-            const result = results.find_message.items
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID,
+                params,
+                this.getChannelInfo().getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query comment by channel: ${result}`)
+
+            let items = result.find_message.items
             let comments = []
-            result.forEach(item => {
-                const comment = CommentInfo.parse(this.getChannelInfo().getOwnerDid(), item)
-                comments.push(comment)
+            result.forEach((item: any) => {
+                comments.push(CommentInfo.parse(this.getChannelInfo().getOwnerDid(), item))
             })
-            logger.debug("query comment by channel 'commentInfo': ", comments)
+            logger.debug(`Got comments by channel: ${comments}`)
             return comments
         } catch (error) {
             logger.error('query comment by channel error:', error)
@@ -268,7 +301,7 @@ class Channel implements ChannelHandler {
 
     static parse(targetDid: string, item: any): Channel {
         const channelInfo = ChannelInfo.parse(targetDid, item)
-        const channel = new Channel(channelInfo)
+        const channel = new Channel(RuntimeContext.getInstance(), channelInfo)
         return channel
     }
 }
