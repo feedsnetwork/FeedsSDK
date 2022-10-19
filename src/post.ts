@@ -25,43 +25,39 @@ export class Post {
         return this.body;
     }
 
-    private generateCommentId(did: string, postId: string, refCommentId: string, commentContent: string): string {
-        return utils.generateCommentId(did, postId, refCommentId, commentContent)
-    }
-
     /**
     * add comment to post
     * @param content: Comment content
     */
     public async addComment(content: string): Promise<Comment> {
         try {
-            const userDid = this.context.getUserDid()
-            const channelId = this.getBody().getChannelId()
-            const postId = this.getBody().getPostId()
-            const refcommentId = "0"
-            const commentId = this.generateCommentId(userDid, postId, refcommentId, content)
-            const createdAt = (new Date()).getTime()
+            let userDid   = this.context.getUserDid()
+            let channelId = this.getBody().getChannelId()
+            let postId    = this.getBody().getPostId()
+            let refcommentId = "0"
+            let commentId = utils.generateCommentId(userDid, postId, refcommentId, content)
+            let createdAt = new Date().getTime()
             let params = {
                 "comment_id": commentId,
                 "channel_id": channelId,
-                "post_id": postId,
+                "post_id"   : postId,
                 "refcomment_id": refcommentId,
                 "content": content,
                 "created_at": createdAt,
             }
-            logger.debug("add comment params: ", params)
-
-            const result = await this.scriptingService.callScript(scripts.SCRIPT_CREATE_COMMENT, params,
-                this.getBody().getTargetDid(), this.context.getAppDid())
-            logger.debug("add comment success: ", result)
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_CREATE_COMMENT,
+                params,
+                this.getBody().getTargetDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to add comment : ${result}`)
 
             params["updated_at"] = createdAt
             params["status"] = 0
             params["creater_did"] = this.context.getUserDid()
-            const comment = Comment.parse(this.getBody().getTargetDid(), params)
-            logger.debug("add comment 'CommentInfo': ", comment)
 
-            return comment
+            return Comment.parse(this.getBody().getTargetDid(), params)
         } catch (error) {
             logger.error("Add coment error : ", error)
             throw new Error(error)
@@ -73,25 +69,22 @@ export class Post {
     * @param commentId：comment id
     * @param content：comment content
     */
-    public async updateComment(commentId: string, content: string): Promise<boolean> {
+    public async updateComment(commentId: string, content: string) {
         try {
-            const updatedAt = (new Date()).getTime()
-            const channelId = this.getBody().getChannelId()
-            const postId = this.getBody().getPostId()
-
-            const params = {
-                "channel_id": channelId,
-                "post_id": postId,
+            let params = {
+                "channel_id": this.getBody().getChannelId(),
+                "post_id"   : this.getBody().getPostId(),
                 "comment_id": commentId,
-                "content": content,
-                "updated_at": updatedAt
+                "content"   : content,
+                "updated_at": new Date().getTime()
             }
-            logger.debug("update comment params: ", params)
-
-            const result = await this.scriptingService.callScript(scripts.SCRIPT_UPDATE_COMMENT, params,
-                this.getBody().getTargetDid(), this.context.getAppDid())
-            logger.debug("update comment success: ", result)
-            return true
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_UPDATE_COMMENT,
+                params,
+                this.getBody().getTargetDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to update comment: ${result}`);
         } catch (error) {
             logger.error("Update comment error : ", error)
             throw new Error(error)
@@ -104,18 +97,18 @@ export class Post {
     */
     public async deleteComment(commentId: string) {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getBody().getChannelId(),
-                "post_id": this.getBody().getPostId(),
+                "post_id"   : this.getBody().getPostId(),
                 "comment_id": commentId
                 }
-            const targetDid = this.getBody().getTargetDid()
-            logger.debug("delete comment params: ", params)
-
-            const result = await this.scriptingService.callScript(scripts.SCRIPT_DELETE_COMMENT, params,
-                targetDid, this.context.getAppDid())
-            logger.debug("delete comment success: ", result)
-            return true
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_DELETE_COMMENT,
+                params,
+                this.getBody().getTargetDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to delete comment: ${result}`);
         } catch (error) {
             logger.error("Delete comment error : ", error)
             throw new Error(error)
@@ -130,23 +123,26 @@ export class Post {
     */
     public async queryComments(earlierThan: number, maximum: number): Promise<CommentInfo[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getBody().getChannelId(),
-                "post_id": this.getBody().getPostId(),
-                "limit": maximum,
-                "end": earlierThan
+                "post_id"   : this.getBody().getPostId(),
+                "limit"     : maximum,
+                "end"       : earlierThan
             }
-            logger.debug("query comment params: ", params)
-            const results = await this.scriptingService.callScript(scripts.SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT, params,
-                this.getBody().getTargetDid(), this.context.getAppDid())
-            logger.debug("query comment success: ", results)
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT,
+                params,
+                this.getBody().getTargetDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query comments: ${result}`);
 
-            const result = results.find_message.items
+            let items = result.find_message.items
             let comments = []
-            result.forEach(item => {
-                const com = CommentInfo.parse(this.getBody().getTargetDid(), item)
-                comments.push(com)
+            items.forEach((item: any) => {
+                comments.push(CommentInfo.parse(this.getBody().getTargetDid(), item))
             })
+            logger.debug(`Got comments: ${comments}`)
             return comments
         } catch (error) {
             logger.error("query comment error: ", error)
@@ -159,26 +155,29 @@ export class Post {
     * @param begin： start time
     * @param end: end time
     */
-    public async queryCommentsRangeOfTime(begin: number, end: number): Promise<Comment[]> {
+    public async queryCommentsByRangeOfTime(begin: number, end: number): Promise<Comment[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getBody().getChannelId(),
-                "post_id": this.getBody().getPostId(),
-                "start": begin,
-                "end": end,
-                "status": 0
+                "post_id"   : this.getBody().getPostId(),
+                "start"     : begin,
+                "end"       : end,
+                "status"    : 0
             }
-            logger.log("query comments range of time params: ", params)
-            const results = await this.scriptingService.callScript(scripts.SCRIPT_SOMETIME_COMMENT, params,
-                this.getBody().getTargetDid(), this.context.getAppDid())
-            logger.debug("query comments range of time success: ", results)
-            const result = results.find_message.items
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_SOMETIME_COMMENT,
+                params,
+                this.getBody().getTargetDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query comments by range of time : ${result}`);
+
+            let items = result.find_message.items
             let comments = []
-            result.forEach(item => {
-                const comment = Comment.parse(this.getBody().getTargetDid(), item)
-                comments.push(comment)
+            items.forEach((item: any) => {
+                comments.push(Comment.parse(this.getBody().getTargetDid(), item))
             })
-            logger.debug("query comments range of time 'Comment': ", comments)
+            logger.debug(`Got comments by range of time: ${comments}`)
             return comments
         } catch (error) {
             logger.error('query comments range of time error:', error)
@@ -192,23 +191,25 @@ export class Post {
     */
     public async queryCommentById(commentId: string): Promise<Comment> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getBody().getChannelId(),
-                "post_id": this.getBody().getPostId(),
+                "post_id"   : this.getBody().getPostId(),
                 "comment_id": commentId
             }
-            logger.debug("query comment by id params: ", params)
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID,
+                params,
+                this.getBody().getTargetDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query comment : ${result}`);
 
-            const results = await this.scriptingService.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID, params,
-                this.getBody().getTargetDid(), this.context.getAppDid())
-            logger.debug("query comment by id success: ", results)
-            const result = results.find_message.items
+            const items = result.find_message.items
             let comments = []
-            result.forEach(item => {
-                const comment = Comment.parse(this.getBody().getTargetDid(), item)
-                comments.push(comment)
+            result.forEach((item: any) => {
+                comments.push(Comment.parse(this.getBody().getTargetDid(), item))
             })
-            logger.debug("query comment by id 'Comment': ", comments)
+            logger.debug(`Got comment by Id: ${comments[0]}`)
             return comments[0]
         } catch (error) {
             logger.error('query comment by id error:', error)
@@ -217,23 +218,26 @@ export class Post {
     }
 
     // Query all comments under this post, including sub-comments, return up to 100...
-    public async queryCommentByPostId(): Promise<Comment[]> {
+    public async queryCommentsByPostId(): Promise<Comment[]> {
         try {
-            const params = {
+            let params = {
                 "channel_id": this.getBody().getChannelId(),
-                "post_id": this.getBody().getPostId(),
+                "post_id"   : this.getBody().getPostId(),
             }
-            logger.debug("query comment by post id params: ", params)
-            const results = await this.scriptingService.callScript(scripts.SCRIPT_QUERY_COMMENT_BY_POSTID, params,
-                this.getBody().getTargetDid(), this.context.getAppDid())
-            logger.debug("query comment by post id success: ", results)
-            const result = results.find_message.items
+            let result = await this.scriptingService.callScript(
+                scripts.SCRIPT_QUERY_COMMENT_BY_POSTID,
+                params,
+                this.getBody().getTargetDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query comments by postId : ${result}`);
+
+            const items = result.find_message.items
             let comments = []
-            result.forEach(item => {
-                const comment = Comment.parse(this.getBody().getTargetDid(), item)
-                comments.push(comment)
+            result.forEach((item: any) => {
+                comments.push(Comment.parse(this.getBody().getTargetDid(), item))
             })
-            logger.debug("query comment by post id 'Comment': ", comments)
+            logger.debug(`Got comments by postid: ${comments}`)
             return comments
         } catch (error) {
             logger.error('query comment by post id error:', error)
