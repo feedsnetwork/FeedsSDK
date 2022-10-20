@@ -17,7 +17,8 @@ function SigninEE() {
   const handleSigninEE = async () => {
     const myprofile = await appCtx.signin()
     const currentTime = new Date().getTime()
-     //发送文字
+   
+    /* //发送文字
     const ownedChannels = await myprofile.queryOwnedChannels()
     for (let index = 0; index < ownedChannels.length; index++) {
       const item = ownedChannels[index]
@@ -56,7 +57,7 @@ function SigninEE() {
       const post = new Post(appCtx, postBody)
       await channel.post(post)
       console.log("发送post 成功")
-    }
+    }*/
     
     /*  // 发送图文
     const ownedChannels = await myprofile.queryOwnedChannels()
