@@ -133,10 +133,13 @@ export class MyChannel {
             const result = await this.vault.queryDBData(CollectionNames.POSTS, filter)
             logger.debug("query posts by range of time success: ", result)
             let posts = []
-            result.forEach(item => {
-                    const postBody = PostBody.parse(this.channelInfo.getOwnerDid(), item)
-                    posts.push(postBody)
-                })
+            for (let index = 0; index < result.length; index++) {
+                const item = result[index]
+                console.log("item ======== ", item)
+                const postBody = PostBody.parse(this.channelInfo.getOwnerDid(), item)
+                posts.push(postBody)
+            }
+
             logger.debug("query posts by range of time 'postBody': ", posts)
             return posts
         } catch (error) {
@@ -275,10 +278,10 @@ export class MyChannel {
     }
 
     // 为了测试提供： 硬删除
-    public async removePost(postId: string): Promise<boolean> {
+    public async removePost(channelId: string, postId: string): Promise<boolean> {
         try {
             const filter = {
-                "channel_id": this.channelInfo.getChannelId(),
+                "channel_id": channelId,
                 "post_id": postId
             }
             logger.debug("remove post params: ", filter)

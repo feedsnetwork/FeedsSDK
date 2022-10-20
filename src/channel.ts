@@ -128,7 +128,7 @@ class Channel implements ChannelHandler {
             logger.debug(`Got posts by range of time: ${posts}`)
             return posts
         } catch (error) {
-            logger.error("Query posts error: ", error)
+            logger.error("Got posts by range of time error: ", error)
             throw new Error(error)
         }
     }

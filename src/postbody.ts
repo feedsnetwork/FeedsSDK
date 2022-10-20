@@ -84,11 +84,10 @@ export class OriginMediaData {
     }
 
     public static parse(data: any): OriginMediaData {
-
         const originMediaData = new OriginMediaData()
-        originMediaData.setSize(data.video)
-        originMediaData.setType(data.thumbnail)
-        originMediaData.setMedaPath(data.duration)
+        originMediaData.setSize(data.size)
+        originMediaData.setType(data.type)
+        originMediaData.setMedaPath(data.path)
 
         return originMediaData
     }
@@ -278,9 +277,9 @@ export class PostBody {
     private memo: string;
     private mediaHelper: MediaHelper
 
-    public constructor(targetDid: string, postId: string, channelId: string) {
+    public constructor(targetDid: string, channelId: string) {
         this.targetDid = targetDid;
-        this.postId = postId;
+        // this.postId = postId;
         this.channelId = channelId;
         const time = (new Date()).getTime()
         this.createdAt = time // 默认
@@ -293,6 +292,11 @@ export class PostBody {
 
     static generatePostId(did: string, channelId: string, postContent: string) {
         return utils.generatePostId(did, channelId, postContent)
+    }
+
+    public setPostId(postId: string): PostBody {
+        this.postId = postId;
+        return this;
     }
 
     public setCreatedAt(createdAt: number): PostBody {
@@ -408,9 +412,9 @@ export class PostBody {
         })
 
         const postContent = new PostContent(contents.version, contents.content, mediaDatas, contents.mediaType)
-        const postId = post.post_id
         const channelId = post.channel_id
-        const postBody = new PostBody(targetDid, postId, channelId)
+        const postBody = new PostBody(targetDid, channelId)
+        postBody.setPostId(post.post_id)
         postBody.setCreatedAt(post.created_at)
         postBody.setUpdatedAt(post.updated_at)
         postBody.setContent(postContent)

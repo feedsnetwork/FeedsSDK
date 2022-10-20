@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody } from '@feedsnetwork/feeds-sdk-development';
+import {RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody, PostContent } from '@feedsnetwork/feeds-sdk-development';
 import {
   useNavigate
 } from "react-router-dom";
@@ -16,9 +16,99 @@ function SigninEE() {
 
   const handleSigninEE = async () => {
     const myprofile = await appCtx.signin()
-
     const currentTime = new Date().getTime()
-    const resultSubscriptions = await myprofile.querySubscriptions()
+     //发送文字
+    const ownedChannels = await myprofile.queryOwnedChannels()
+    for (let index = 0; index < ownedChannels.length; index++) {
+      const item = ownedChannels[index]
+      const channel = new MyChannel(appCtx, item)
+    //   const c1 = "50f0854a02059abb941849c5a66d7513091d1bbabec8b9fa582b17bbe3689b1d"
+    //   const p1 = "1bd13ec1794b421c5e22a0df57218aa2a938bd3bb8569bae9042c2a13ccea88d"
+    //   const c2 = "ee74ab5fdbc62b42f45c2af1803ba95b684adbab740c88cf30f9b11c61bc1318"
+    //  const p2 = "34c8f72af9c7afdc12dd028e33b8bd48aa1902e14b1d1942e7a51e46686d1eb4"
+    //  const c3 = "50f0854a02059abb941849c5a66d7513091d1bbabec8b9fa582b17bbe3689b1d"
+    //  const p3 = "2f27b2525620401b4a06233e7439831a12aa77a1c6c8659f3fdcde5e38d73715"
+    //  const c4 = "ee74ab5fdbc62b42f45c2af1803ba95b684adbab740c88cf30f9b11c61bc1318"
+    //  const p4 = "05365251aebcd1fbdac20364597137c1b506ab6ff37788b3b9df54694798ab69"
+    //   await channel.removePost(c1, p1)
+    //   await channel.removePost(c2, p2)
+    //   await channel.removePost(c3, p3)
+    //   await channel.removePost(c4, p4)
+
+      const posts = await channel.queryPostsByRangeOfTime(0, currentTime)
+      console.log("posts result ==================================== ", posts)
+
+      let postBody = new PostBody(appCtx.getUserDid(), item.getChannelId())
+      const text = index + "无图片：测试sdk发送post到feeds"
+      const image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAACYCAYAAACcRMcPAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAA1KADAAQAAAABAAAAmAAAAAAhAQNyAAADeUlEQVR4Ae3TQQ0AIAwEQcC/2wqABA37nAq4x6S7Z+YuR4BAInCSFSMECHwBQXkEAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRF4AFcGwUI07hnwwAAAABJRU5ErkJggg=="
+      const result = await postBody.progressPostContent(text, null, null)
+      console.log("处理图片的结果：result ==================================== ", result)
+      const content = result.toString()
+      console.log("处理图片为string结果：resultStr ==================================== ", content)
+      const postId = PostBody.generatePostId(appCtx.getUserDid(),item.getChannelId(), content)
+      postBody.setPostId(postId)
+      postBody.setContent(result)
+      postBody.setStatus(0)
+      postBody.setType("public")
+      postBody.setTag('')
+      postBody.setProof('')
+      postBody.setMemo('')
+      const post = new Post(appCtx, postBody)
+      await channel.post(post)
+      console.log("发送post 成功")
+    }
+    
+    /*  // 发送图文
+    const ownedChannels = await myprofile.queryOwnedChannels()
+    for (let index = 0; index < ownedChannels.length; index++) {
+      const item = ownedChannels[index]
+      const channel = new MyChannel(appCtx, item)
+      let postBody = new PostBody(appCtx.getUserDid(), item.getChannelId())
+      const text = index + "测试sdk发送post到feeds"
+      const image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAACYCAYAAACcRMcPAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAA1KADAAQAAAABAAAAmAAAAAAhAQNyAAADeUlEQVR4Ae3TQQ0AIAwEQcC/2wqABA37nAq4x6S7Z+YuR4BAInCSFSMECHwBQXkEAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRFQFB+gEAoIKgQ0xQBQfkBAqGAoEJMUwQE5QcIhAKCCjFNERCUHyAQCggqxDRF4AFcGwUI07hnwwAAAABJRU5ErkJggg=="
+      const result = await postBody.progressPostContent(text, [image], null)
+      console.log("处理图片的结果：result ==================================== ", result)
+      const content = result.toString()
+      console.log("处理图片为string结果：resultStr ==================================== ", content)
+      const postId = PostBody.generatePostId(appCtx.getUserDid(),item.getChannelId(), content)
+      postBody.setPostId(postId)
+      postBody.setContent(result)
+      postBody.setStatus(0)
+      postBody.setType("public")
+      postBody.setTag('')
+      postBody.setProof('')
+      postBody.setMemo('')
+      const post = new Post(appCtx, postBody)
+      await channel.post(post)
+      console.log("发送post 成功")
+    }
+    */
+    /*
+    const subscriptions = await myprofile.querySubscriptions()
+
+    for (let index = 0; index < subscriptions.length; index++) {
+      const item = subscriptions[index]
+      console.log(index + "itme ========================================",item)
+        const channel = new Channel(appCtx, item)
+        const postBodys = await channel.queryPosts(currentTime, 100)
+        console.log(index + "channel: all posts0 ========================================", postBodys)
+
+        for (let index = 0; index < postBodys.length; index++) {
+          const postBody = postBodys[index]
+          const post_1 = new Post(appCtx, postBody)
+          const commentsRange = await post_1.queryComments(currentTime, 100)
+          console.log(index + ": 多个 queryComments 0 ========================================", commentsRange)
+
+          for (let index = 0; index < commentsRange.length; index++) {
+            const commentInfo = commentsRange[index]
+            const cId = commentInfo.getCommentId()
+            const comments = await post_1.queryCommentById(cId)
+            console.log(index + "查询 queryCommentById 0 ========================================", comments)
+          }
+        }
+      }
+      */
+    /*
     console.log("resultSubscriptions ======================================== ", resultSubscriptions)
     for (let index = 0; index < resultSubscriptions.length; index++) {
       const item = resultSubscriptions[index]
@@ -45,6 +135,8 @@ function SigninEE() {
         // }
       }
     }
+
+    */
     /*
     for (let index = 0; index < resultSubscriptions.length; index++) {
       const item = resultSubscriptions[index]

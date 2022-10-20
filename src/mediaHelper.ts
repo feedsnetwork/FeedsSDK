@@ -5,7 +5,6 @@ import { hiveService } from "./hiveService"
 import { utils } from "./utils/utils"
 import { hiveService as VaultService } from "./hiveService"
 import SparkMD5 from 'spark-md5'
-import { } from "@elastosfoundation/hive-js-sdk"
 
 const logger = new Logger("MediaHelper")
 
@@ -21,7 +20,10 @@ export class MediaHelper {
     public async progressMediaData(newPostText: string, newImagesBase64: string[], newVideoData: VideoData) {
         const mediaData = await this.prepareMediaData(newImagesBase64, newVideoData)
         let mediaType = MediaType.noMeida
-        if (newImagesBase64.length > 0 && newImagesBase64[0] != null && newImagesBase64[0] != '') {
+        if (newImagesBase64 === null && newVideoData === null) {
+            mediaType = MediaType.noMeida
+        }
+        else if (newImagesBase64.length > 0 && newImagesBase64[0] != null && newImagesBase64[0] != '') {
             mediaType = MediaType.containsImg
         } else if (newVideoData) {
             mediaType = MediaType.containsVideo
@@ -49,6 +51,9 @@ export class MediaHelper {
 
     async processUploadMeidas(imagesBase64: string[], videoData: VideoData): Promise<MediaData[]> {
         try {
+            if (imagesBase64 === null && videoData === null) {
+                return []
+            }
             let mediasData: MediaData[] = []
             if (imagesBase64.length > 0 && imagesBase64[0] != null && imagesBase64[0] != '') {
                 for (let index = 0; index < imagesBase64.length; index++) {
@@ -64,7 +69,7 @@ export class MediaHelper {
                     const thumbnailMediaData = await this.uploadDataToHiveWithString(thumbnail, thumbnailBlob.type)
 
                     if (originMediaData && thumbnailMediaData) {
-                        const mediaData = this.createMediaDataV3("image", originMediaData.getMedaPath(), originMediaData.getType(), originMediaData.getSize(), thumbnailMediaData.getMedaPath(), 0, 0, {}, {})
+                        const mediaData = this.createMediaData("image", originMediaData.getMedaPath(), originMediaData.getType(), originMediaData.getSize(), thumbnailMediaData.getMedaPath(), 0, 0, {}, {})
                         mediasData.push(mediaData)
                     }
                 }
@@ -79,7 +84,7 @@ export class MediaHelper {
                 const thumbnailMediaData = await this.uploadDataToHiveWithString(videoData.getThumbnail(), videoThumbBlob.type)
 
                 if (originMediaData && thumbnailMediaData) {
-                    const mediaData = this.createMediaDataV3("video", originMediaData.getMedaPath(), originMediaData.getType(), originMediaData.getSize(), thumbnailMediaData.getMedaPath(), videoData.getDuration(), 0, {}, {})
+                    const mediaData = this.createMediaData("video", originMediaData.getMedaPath(), originMediaData.getType(), originMediaData.getSize(), thumbnailMediaData.getMedaPath(), videoData.getDuration(), 0, {}, {})
                     mediasData.push(mediaData)
                 }
             }
@@ -97,9 +102,9 @@ export class MediaHelper {
             const size = elementBlob.length
             const path = await this.uploadMediaDataWithString(elementBlob)
             const data = {
-                size,
-                type,
-                path
+                size: size,
+                type: type,
+                path: path
             }
             const originMediaData = OriginMediaData.parse(data)
             return originMediaData
@@ -134,17 +139,17 @@ export class MediaHelper {
         return utils.base64ToBlob(base64Data)
     }
 
-    createMediaDataV3(kind: string, originMediaPath: string, type: string, size: number, thumbnailPath: string, duration: number, index: number, additionalInfo: any, memo: any): MediaData {
+    createMediaData(kind: string, originMediaPath: string, type: string, size: number, thumbnailPath: string, duration: number, index: number, additionalInfo: any, memo: any): MediaData {
         const data = {
-            kind,
-            originMediaPath,
-            type,
-            size,
-            index,
-            thumbnailPath,
-            duration,
-            additionalInfo,
-            memo
+            kind: kind,
+            originMediaPath: originMediaPath,
+            type: type,
+            size: size,
+            imageIndex: index,
+            thumbnailPath: thumbnailPath,
+            duration: duration,
+            additionalInfo: additionalInfo,
+            memo: memo
         }
         const mediaData = MediaData.parse(data)
         return mediaData
