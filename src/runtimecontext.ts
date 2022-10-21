@@ -19,8 +19,10 @@ export class RuntimeContext {
 
     private readonly resolveCache: string
     private readonly localDataDir: string
-    private readonly appInstanceDIDDocument: string // todo
+    private appInstanceDIDDocument: DIDDocument // todo
     private userDid: string
+    private appcontext: AppContext
+    private myProfile: MyProfile
 
     private constructor(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
         this.applicationDid = applicationDid
@@ -42,6 +44,10 @@ export class RuntimeContext {
         return this.userDid
     }
 
+    public getMyProfile(): MyProfile {
+        return this.myProfile
+    }
+
     public getNetwork(): string {
         return this.networkType
     }
@@ -50,8 +56,31 @@ export class RuntimeContext {
         return this.hiveVault
     }
 
-    public getAppInstanceDIDDocument(): string {
-        return this.appInstanceDIDDocument
+    private async getAppcontext() {
+        if (this.appcontext != null && this.appcontext != undefined) {
+            return this.appcontext
+        }
+        let self = this
+        return AppContext.build({
+            getLocalDataDir: (): string => this.localDataDir,
+            getAppInstanceDocument: (): Promise<DIDDocument> => Promise.resolve(this.getAppInstanceDIDDocument()),
+            getAuthorization: (jwtToken: string): Promise<string> => {
+                return new Promise(async (resolve, reject) => {
+                    try {
+                        const authToken = await self.generateHiveAuthPresentationJWT(jwtToken)
+                        resolve(authToken)
+                    } catch (error) {
+                        logger.error("Generate hive auth presentation JWT error: ", error)
+                        reject(error)
+                    }
+                })
+            }
+        }, this.userDid, this.applicationDid).then((context) => {
+            return context
+        }).catch((error) => {
+            logger.error("Build HiveContext error: ", error)
+            throw error
+        })
     }
 
     public getScriptRunners(userDid: string): ScriptRunner {
@@ -99,18 +128,16 @@ export class RuntimeContext {
         return this.localDataDir
     }
 
-    // login essential
+    // login essential and hive
     public async signin() {
-        let myProfile: MyProfile
-        let self = this
-        return signin(this).then(profile => {
-            myProfile = profile
-            return self.signHive()
-        }).then(_ => {
+        try {
+            let self = this
+            const myProfile = await signin(this)
+            await self.signHive()
             return myProfile
-        }).catch(error => {
+        } catch (error) {
             throw error
-        })
+        }
     }
 
     // log out essential
@@ -151,35 +178,15 @@ export class RuntimeContext {
         })
     }
 
-    private signIntoVault(userDid: string, appInstanceDIDDocument: DIDDocument): Promise<AppContext> {
-        let self = this
-        return AppContext.build({
-            getLocalDataDir: (): string => this.getLocalDataDir(),
-            getAppInstanceDocument: (): Promise<DIDDocument> => Promise.resolve(appInstanceDIDDocument),
-            getAuthorization: (jwtToken: string): Promise<string> => {
-                return new Promise(async (resolve, reject) => {
-                    try {
-                        const authToken = await self.generateHiveAuthPresentationJWT(jwtToken)
-                        resolve(authToken)
-                    } catch (error) {
-                        logger.error("Generate hive auth presentation JWT error: ", error)
-                        reject(error)
-                    }
-                })
-            }
-        }, userDid, this.getAppDid()).then((context) => {
-            return context
-        }).catch((error) => {
-            logger.error("Build HiveContext error: ", error)
-            throw error
-        })
-    }
+    private async getAppInstanceDIDDocument() {
+        if (this.appInstanceDIDDocument === null || this.appInstanceDIDDocument === undefined) {
+            const didAccess = new ConDID.DIDAccess()
+            const info = await didAccess.getOrCreateAppInstanceDID()
+            const instanceDIDDocument = await info.didStore.loadDid(info.did.toString())
+            this.appInstanceDIDDocument = instanceDIDDocument
+        }
 
-    private async getAppInstanceDIDDoc() {
-        const didAccess = new ConDID.DIDAccess()
-        const info = await didAccess.getOrCreateAppInstanceDID()
-        const instanceDIDDocument = await info.didStore.loadDid(info.did.toString())
-        return instanceDIDDocument
+        return this.appInstanceDIDDocument
     }
 
     private async issueDiplomaFor() {
@@ -235,7 +242,7 @@ export class RuntimeContext {
         const expTime = exp.getTime()
 
         // Create JWT token with presentation.
-        const doc = await this.getAppInstanceDIDDoc()
+        const doc = await this.getAppInstanceDIDDocument()
         const info = await new ConDID.DIDAccess().getExistingAppInstanceDIDInfo()
         const token = await doc.jwtBuilder()
             .addHeader(JWTHeader.TYPE, JWTHeader.JWT_TYPE)
@@ -249,36 +256,33 @@ export class RuntimeContext {
         return token
     }
 
-    public getScriptRunner(targetDid: string): Promise<ScriptRunner> {
-        if (this.scriptRunners[targetDid] != null && this.scriptRunners[targetDid] != undefined)
-            return Promise.resolve(this.scriptRunners[targetDid]);
-
-        return this.getAppInstanceDIDDoc().then((appInstanceDIDDoc) => {
-            return this.signIntoVault(targetDid, appInstanceDIDDoc);
-        }).then(context => {
-            this.scriptRunners[targetDid] = new ScriptRunner(context);
-            return this.scriptRunners[targetDid];
-        }).catch (error => {
+    public async getScriptRunner(targetDid: string): Promise<ScriptRunner> {
+        try {
+            if (this.scriptRunners[targetDid] != null && this.scriptRunners[targetDid] != undefined)
+                return this.scriptRunners[targetDid]
+            const context = await this.getAppcontext()
+            const providerAddress = await AppContext.getProviderAddressByUserDid(targetDid);
+            const scriptRunner = new ScriptRunner(context, providerAddress)
+            this.scriptRunners[targetDid] = scriptRunner
+            return scriptRunner
+        } catch (error) {
             logger.error(`Create a scriptRunner object for ${targetDid} failed`);
             throw new Error(error);
-        })
-    }
+        }
+    } 
 
-    public getVault(): Promise<Vault> {
-        if (this.vault != null)
-            return Promise.resolve(this.vault);
-
-        const userDid = RuntimeContext.getInstance().getUserDid();
-        return this.getAppInstanceDIDDoc().then((appInstanceDIDDoc) => {
-            return this.signIntoVault(userDid, appInstanceDIDDoc);
-        }).then(context => {
-            this.scriptRunners[userDid] = new ScriptRunner(context);
-            this.vault = new Vault(context);
-            return this.vault;
-        }).catch (error => {
-            logger.error(`Create a vault object for ${userDid} failed`);
+    public async getVault(): Promise<Vault> {
+        try {
+            if (this.vault === undefined || this.vault === null) {
+                const context = await this.getAppcontext()
+                this.vault = new Vault(context)
+            }
+            logger.error(`Get vault object for ${this.userDid} success: vault is `, this.vault);
+            return this.vault
+        } catch (error) {
+            logger.error(`Get vault object for ${this.userDid} failed`);
             throw new Error(error);
-        })
+        }
     }
 }
 
