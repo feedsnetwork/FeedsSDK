@@ -37,7 +37,6 @@ const initConnectivitySDK = async (appDid: string) => {
 
     await connectivity.registerConnector(essentialsConnector).then(async () => {
 
-        const appDid = RuntimeContext.getInstance().getAppDid()
         connectivity.setApplicationDID(appDid)
         connectivityInitialized = true;
 
@@ -67,8 +66,7 @@ const signOutWithEssentials = async () => {
     }
 };
 
-const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile> => {
-    const appDid = RuntimeContext.getInstance().getAppDid()
+const signInWithEssentials = async (appDid: string, appContext: RuntimeContext): Promise<MyProfile> => {
     await initConnectivitySDK(appDid).catch(error => {
         throw new Error(error);
     })
@@ -100,9 +98,7 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
         }
 
         isSignin = true;
-        const runContext = RuntimeContext.getInstance()
-        runContext.setUserDid(userDid)
-        return new MyProfile(context, userDid, nameCredential, bioCredential)
+        return new MyProfile(appContext, userDid, nameCredential, bioCredential)
 
     }).catch(async error => {
         await essentialsConnector.getWalletConnectProvider().disconnect();
@@ -114,7 +110,7 @@ const signInWithEssentials = async (context: RuntimeContext): Promise<MyProfile>
     })
 }
 
-const signin = async (context: RuntimeContext): Promise<MyProfile> => {
+const signin = async (appDid: string, context: RuntimeContext): Promise<MyProfile> => {
     if (isUsingEssentialsConnector()) {
         await signOutWithEssentials();
     }
@@ -123,7 +119,7 @@ const signin = async (context: RuntimeContext): Promise<MyProfile> => {
         await essentialsConnector.disconnectWalletConnect();
     }
 
-    return signInWithEssentials(context);
+    return signInWithEssentials(appDid, context);
 }
 
 const signout = async () => {

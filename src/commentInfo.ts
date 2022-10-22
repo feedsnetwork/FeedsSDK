@@ -1,6 +1,3 @@
-import { JSONObject } from "@elastosfoundation/did-js-sdk"
-import { utils } from "./utils/utils"
-
 export class CommentInfo {
     private targetDid: string
     private createrDid: string
@@ -133,7 +130,7 @@ export class CommentInfo {
         return this
     }
 
-    // Get the status of a comment 
+    // Get the status of a comment
     public getStatus() {
         return this.status
     }
@@ -143,7 +140,7 @@ export class CommentInfo {
         this.updatedAt = updatedAt
         return this
     }
-    
+
     // Get the update timestamp of the comment
     public getUpdatedAt() {
         return this.updatedAt

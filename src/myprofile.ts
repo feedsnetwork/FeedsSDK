@@ -1,9 +1,6 @@
 
 import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
-import { InsertResult } from "@elastosfoundation/hive-js-sdk"
-
 import { RuntimeContext } from "./runtimecontext";
-import { Channel } from "./channel";
 import { ChannelInfo } from "./channelinfo";
 import { Logger } from "./utils/logger";
 import { hiveService as VaultService } from "./hiveService"
