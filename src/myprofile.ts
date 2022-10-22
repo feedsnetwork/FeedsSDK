@@ -3,11 +3,11 @@ import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
 import { RuntimeContext } from "./runtimecontext";
 import { ChannelInfo } from "./channelinfo";
 import { Logger } from "./utils/logger";
-import { hiveService as VaultService } from "./hiveService"
 import { CollectionNames, ScriptingNames } from "./vault/constants"
 import { MyChannel } from "./mychannel";
 import { ChannelEntry } from "./channelentry";
 import { ProfileHandler } from "./profilehandler";
+import { DatabaseService, InsertOptions} from "@elastosfoundation/hive-js-sdk/typings";
 
 const logger = new Logger("MyProfile")
 
@@ -16,7 +16,6 @@ export class MyProfile implements ProfileHandler {
 
     private userDid: string;
     private nameCredential: VerifiableCredential;
-    private vault: VaultService;
     /**
     *
     * @param context： RuntimeContext
@@ -38,7 +37,6 @@ export class MyProfile implements ProfileHandler {
         this.context = context;
         this.userDid = userDid;
         this.nameCredential = name;
-        this.vault = new VaultService()
     }
 
     // Get user did
@@ -51,10 +49,15 @@ export class MyProfile implements ProfileHandler {
         return this.nameCredential ? this.nameCredential.getSubject().getProperty('name'): this.userDid;
     }
 
+    private async getDatabaseService(): Promise<DatabaseService> {
+        return (await this.context.getVault()).getDatabaseService()
+    }
+
     // Get the number of channels created by yourself
     public async queryOwnedChannelCount(): Promise<number> {
         try {
-            let result = await this.vault.queryDBData(CollectionNames.CHANNELS, {})
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(CollectionNames.CHANNELS, {})
             logger.debug(`Got the count of owned channels: ${result.length}`)
             return result.length
         } catch (error) {
@@ -66,7 +69,8 @@ export class MyProfile implements ProfileHandler {
     // Get the channel created by yourself
     public async queryOwnedChannels(): Promise<ChannelInfo[]> {
         try {
-            let result = await this.vault.queryDBData(CollectionNames.CHANNELS, {})
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(CollectionNames.CHANNELS, {})
             logger.debug(`Query owned channels: ${result}`)
 
             let channelInfos = []
@@ -87,8 +91,8 @@ export class MyProfile implements ProfileHandler {
     */
     public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         try {
-            let result = await this.vault.queryDBData(
-                CollectionNames.CHANNELS,
+            let db = await this.getDatabaseService()
+            let result = await db.findMany( CollectionNames.CHANNELS,
                 { "channel_id": channelId }
             )
             logger.debug(`Query owned channel by channelId ${channelId}: ${result}`);
@@ -106,10 +110,8 @@ export class MyProfile implements ProfileHandler {
      */
     public async querySubscriptionCount(): Promise<number> {
         try {
-            let result = await this.vault.queryDBData(
-                CollectionNames.BACKUP_SUBSCRIBEDCHANNELS,
-                {}
-            )
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {})
             logger.debug(`Query subscription count: ${result.length}`)
             return result.length
         } catch (error) {
@@ -123,10 +125,8 @@ export class MyProfile implements ProfileHandler {
       */
     public async querySubscriptions(): Promise<ChannelInfo[]> {
         try {
-            let result = await this.vault.queryDBData(
-                CollectionNames.BACKUP_SUBSCRIBEDCHANNELS,
-                {}
-            )
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {})
             logger.debug(`Query subscriptions result: ${result}`)
 
             let channels = []
@@ -137,12 +137,14 @@ export class MyProfile implements ProfileHandler {
                 const params = {
                     "channel_id": channel_id,
                 }
-                const callResult = await this.vault.callScript(
+
+                let scriptRunner = await this.context.getScriptRunner(target_did)
+                const callResult = await scriptRunner.callScript(
                     ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO,
                     params,
                     target_did,
                     this.context.getAppDid()
-                )
+                ) as any
                 channels.push(ChannelInfo.parse(target_did, callResult.find_message.items[0]))
             }
             logger.debug("query subscriptions channelInfo: ", channels)
@@ -179,7 +181,8 @@ export class MyProfile implements ProfileHandler {
                 "category"  : channelInfo.getCategory(),
                 "proof"     : channelInfo.getProof()
             }
-            await this.vault.insertDBData(CollectionNames.CHANNELS, doc)
+            let db = await this.getDatabaseService()
+            await db.insertOne(CollectionNames.CHANNELS, doc, new InsertOptions(false, true))
             logger.debug(`Create channel in success with channel info: ${doc}`)
 
             return MyChannel.parse(this.userDid, this.context, [doc])
@@ -204,7 +207,8 @@ export class MyProfile implements ProfileHandler {
                 "updated_at": channelEntry.getUpdatedAt(),
                 "status"    : channelEntry.getStatus()
             }
-            await this.vault.callScript(
+            let scriptRunner = await this.context.getScriptRunner(channelEntry.getTargetDid())
+            await scriptRunner.callScript(
                 ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL,
                 channelDoc,
                 channelEntry.getTargetDid(),
@@ -216,10 +220,8 @@ export class MyProfile implements ProfileHandler {
                 "target_did": channelEntry.getTargetDid(),
                 "channel_id": channelEntry.getChannelId()
             }
-            await this.vault.insertDBData(
-                CollectionNames.BACKUP_SUBSCRIBEDCHANNELS,
-                doc
-            )
+            let db = await this.getDatabaseService()
+            await db.insertOne(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc, new InsertOptions(false, true))
         } catch (error) {
             logger.error("Sbuscribe channel error:", error)
             throw error
@@ -234,7 +236,8 @@ export class MyProfile implements ProfileHandler {
      */
     public async unsubscribeChannel(channelEntry: ChannelEntry) {
         try {
-            await this.vault.callScript(
+            let scriptRunner = await this.context.getScriptRunner(channelEntry.getTargetDid())
+            await scriptRunner.callScript(
                 ScriptingNames.SCRIPT_UNSUBSCRIBE_CHANNEL,
                 { "channel_id": channelEntry.getChannelId() },
                 channelEntry.getTargetDid(),
@@ -246,10 +249,9 @@ export class MyProfile implements ProfileHandler {
                 "target_did": channelEntry.getTargetDid(),
                 "channel_id": channelEntry.getChannelId()
             }
-            await this.vault.deleateOneDBData(
-                CollectionNames.BACKUP_SUBSCRIBEDCHANNELS,
-                doc
-            )
+
+            let db = await this.getDatabaseService()
+            await db.deleteOne(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
         } catch (error) {
             logger.error("Unsbuscribe channel error:", error)
             throw error

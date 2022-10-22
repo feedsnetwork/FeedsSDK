@@ -1,19 +1,17 @@
 import { Logger } from './utils/logger'
 import { ChannelInfo } from './channelinfo'
 import { Post } from './post';
-import { hiveService as VaultService } from "./hiveService"
 import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { RuntimeContext } from './runtimecontext';
 import { CollectionNames as collections } from './vault/constants';
-import { UpdateOptions, FindOptions } from "@elastosfoundation/hive-js-sdk"
+import { UpdateOptions, FindOptions, DatabaseService } from "@elastosfoundation/hive-js-sdk"
 
 const logger = new Logger("MyChannel")
 
 export class MyChannel {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
-    private vault: VaultService
     /**
     *
     * @param context: RuntimeContext instance
@@ -22,7 +20,6 @@ export class MyChannel {
     public constructor(context: RuntimeContext, channelInfo: ChannelInfo) {
         this.context = context
         this.channelInfo = channelInfo
-        this.vault = new VaultService()
     }
 
     public getChannelInfo() {
@@ -37,14 +34,18 @@ export class MyChannel {
         return this.channelInfo.getOwnerDid();
     }
 
+    private async getDatabaseService(): Promise<DatabaseService> {
+        return (await this.context.getVault()).getDatabaseService()
+    }
+
     /**
      * Fetch channel property information from remote chanenl.
      * @returns The promise object containing the channel information
      */
     public async queryChannelInfo(): Promise<ChannelInfo> {
         try {
-            let result = await this.vault.queryDBData(
-                collections.CHANNELS,
+            let db = await this.getDatabaseService()
+            let result = await db.findMany( collections.CHANNELS,
                 { "channel_id": this.getChannelId() }
             )
             logger.debug(`Call script to query channel info: ${result}`)
@@ -83,8 +84,8 @@ export class MyChannel {
             }
             let update = { "$set": doc }
 
-            await this.vault.updateOneDBData(
-                collections.CHANNELS,
+            let db = await this.getDatabaseService()
+            await db.updateOne(collections.CHANNELS,
                 filter,
                 update,
                 new UpdateOptions(false, true)
@@ -116,11 +117,8 @@ export class MyChannel {
             let queryOptions = new FindOptions()
             queryOptions.limit = upperLimit
 
-            let result = await this.vault.queryDBDataWithOptions(
-                collections.POSTS,
-                filter,
-                queryOptions
-            )
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(collections.POSTS, filter,queryOptions)
             logger.debug(`Call script to query posts from this channel: ${result}`)
 
             let posts = []
@@ -148,10 +146,9 @@ export class MyChannel {
                 "channel_id": this.getChannelId(),
                 "updated_at": { $gt: start, $lt: end }
             }
-            let result = await this.vault.queryDBData(
-                collections.POSTS,
-                filter
-            )
+
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(collections.POSTS, filter)
             logger.debug(`Call script to query posts by range of Time: ${result}`)
 
             let posts = []
@@ -176,10 +173,9 @@ export class MyChannel {
                 "channel_id": this.getChannelId(),
                 "post_id": postId
             }
-            let result = await this.vault.queryDBData(
-                collections.POSTS,
-                filter
-            )
+
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(collections.POSTS,filter)
             logger.debug(`Call script to query post by postId ${postId}: ${result}`)
             let posts = []
             result.forEach(item => {
@@ -202,10 +198,9 @@ export class MyChannel {
             let filter = {
                 "channel_id": this.getChannelId()
             }
-            let result = await this.vault.queryDBData(
-                collections.SUBSCRIPTION,
-                filter
-            )
+
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(collections.SUBSCRIPTION, filter)
             logger.debug(`Got subscriber count: ${result.length}`)
             return result.length
         } catch (error) {
@@ -230,11 +225,8 @@ export class MyChannel {
             let findOptions = new FindOptions()
             findOptions.limit = upperlimit
 
-            let result = await this.vault.queryDBDataWithOptions(
-                collections.SUBSCRIPTION,
-                filter,
-                findOptions
-            )
+            let db = await this.getDatabaseService()
+            let result = await db.findMany(collections.SUBSCRIPTION, filter, findOptions)
             logger.debug(`Call script to query subscribers: ${result}`)
 
             let profiles = []
@@ -268,7 +260,9 @@ export class MyChannel {
                 "tag"   : body.getTag(),
                 "proof" : body.getProof()
             }
-            await this.vault.insertDBData(collections.POSTS, doc)
+
+            let db = await this.getDatabaseService()
+            await db.insertOne(collections.POSTS, doc)
         } catch (error) {
             logger.error('Post error: ', error)
             throw error
@@ -290,9 +284,9 @@ export class MyChannel {
                 "post_id": postId
             }
             let update = { "$set": doc }
-            await this.vault.updateOneDBData(collections.POSTS,
-                filter,
-                update,
+
+            let db = await this.getDatabaseService()
+            await db.updateOne(collections.POSTS, filter, update,
                 new UpdateOptions(false, true)
             )
         } catch (error) {
@@ -308,7 +302,9 @@ export class MyChannel {
                 "channel_id": this.getChannelId(),
                 "post_id": postId
             }
-            await this.vault.deleateOneDBData(collections.POSTS, filter)
+
+            let db = await this.getDatabaseService()
+            await db.deleteOne(collections.POSTS, filter)
             logger.debug("The post has been removed")
         } catch (error) {
             logger.error("remove post error: ", error)
