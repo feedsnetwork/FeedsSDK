@@ -1,183 +1,81 @@
-import { JWTHeader, JWTParserBuilder, Logger as HiveLogger, DIDDocument, DIDBackend, DefaultDIDAdapter, VerifiablePresentation } from '@elastosfoundation/did-js-sdk'
 import { Logger } from './utils/logger'
-import { signin, signout, checkSignin } from './signin'
-import { Vault, AppContext, ScriptRunner } from '@elastosfoundation/hive-js-sdk'
-import { connectivity, DID as ConDID, Hive } from "@elastosfoundation/elastos-connectivity-sdk-js"
-import { Register } from './register'
-import { MyProfile } from './myprofile'
+import { Logger as HiveLogger } from '@elastosfoundation/hive-js-sdk'
+import { Vault, ScriptRunner, AppContext as HiveContext, AppContextProvider as HiveContextProvider } from '@elastosfoundation/hive-js-sdk'
+import { prepreFeedsVault } from './provision'
 const logger = new Logger("AppContext")
 
 export class RuntimeContext {
     private static sInstance: RuntimeContext = null
+
     private scriptRunners: { [key: string]: ScriptRunner } = {}
-    private vault: Vault = null;
-    private hiveVault: Vault
-    private register: Register
+    private vault: Vault = null
 
     private applicationDid = ""
-    private networkType: string
 
-    private readonly resolveCache: string
-    private readonly localDataDir: string
-    private appInstanceDIDDocument: DIDDocument // todo
     private userDid: string
-    private appcontext: AppContext
-    private myProfile: MyProfile
+    private hiveContext: HiveContext
+    private hiveContextProvider: HiveContextProvider
 
-    private constructor(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
-        this.applicationDid = applicationDid
-        this.networkType = networkType
-        this.localDataDir = localDataDir
-        this.resolveCache = resolveCache
-        this.register = new Register()
+    private constructor(hiveContextProvider: HiveContextProvider, userDid: string) {
+        this.applicationDid = "" // Should be Feeds application DID.
+        this.hiveContextProvider = hiveContextProvider;
+        this.userDid = userDid;
     }
 
     public getAppDid(): string {
         return this.applicationDid
     }
 
-    public setUserDid(userDid: string) {
-        this.userDid = userDid
-    }
-
     public getUserDid(): string {
         return this.userDid
     }
 
-    public getMyProfile(): MyProfile {
-        return this.myProfile
-    }
-
-    public getNetwork(): string {
-        return this.networkType
-    }
-
-    getHiveVault(): Vault {
-        return this.hiveVault
-    }
-
-    private async getAppcontext() {
-        if (this.appcontext != null && this.appcontext != undefined) {
-            return this.appcontext
-        }
-        let self = this
-        return AppContext.build({
-            getLocalDataDir: (): string => this.localDataDir,
-            getAppInstanceDocument: (): Promise<DIDDocument> => Promise.resolve(this.getAppInstanceDIDDocument()),
-            getAuthorization: (jwtToken: string): Promise<string> => {
-                return new Promise(async (resolve, reject) => {
-                    try {
-                        const authToken = await self.generateHiveAuthPresentationJWT(jwtToken)
-                        resolve(authToken)
-                    } catch (error) {
-                        logger.error("Generate hive auth presentation JWT error: ", error)
-                        reject(error)
-                    }
-                })
-            }
-        }, this.userDid, this.applicationDid).then((context) => {
-            return context
-        }).catch((error) => {
-            logger.error("Build HiveContext error: ", error)
-            throw error
-        })
-    }
-
-    public getScriptRunners(userDid: string): ScriptRunner {
-        return this.scriptRunners[userDid]
+    // Get the path to store the hive local cache
+    public getLocalDataDir(): string {
+        return this.hiveContextProvider.getLocalDataDir()
     }
 
     /**
-    * initialization RuntimeContext
-    * @param applicationDid： application did：
-    * @param networkType: mainnet/testnet
-    * @param localDataDir: The path to store the hive local cache
-    * @param resolveCache: The path to store did local cache
-    */
-    public static initialize(applicationDid: string, networkType: string, localDataDir: string, resolveCache: string) {
-        this.sInstance = new RuntimeContext(applicationDid, networkType, localDataDir, resolveCache)
-        HiveLogger.setLevel(HiveLogger.TRACE)
-        try {
-            AppContext.setupResolver(networkType, resolveCache)
-        } catch (error) {
-            logger.info(`Initalized DIDBackend with resolver URL: error`, error)
+     * Initalize RuntimeContext singleton.
+     * @param didResolver DID resolver that be shortcut name: [testnet | mainnet]
+     */
+    public static createInstance(
+        hiveContextProvider: HiveContextProvider,
+        didResolver: string,
+        userDid: string) {
+
+        if (this.sInstance != null) {
+            throw new Error("RuntimeContext singleton has been initalized already, please call AppConctxt.getInstance() to use it");
         }
-        logger.info(`Initalized DIDBackend with resolver URL: ${networkType}`)
+
+        try {
+            this.sInstance = new RuntimeContext(hiveContextProvider, userDid)
+            //HiveLogger.setLevel(HiveLogger.TRACE)
+            HiveContext.setupResolver(
+                didResolver,
+                hiveContextProvider.getLocalDataDir() + ".didCache"
+            )
+
+            logger.info("RuntimeContxt singleton has been initalized.")
+        } catch (error) {
+            logger.info(`RuntimeContext singleton initalized error: ${error}`)
+        }
     }
 
     // Get RuntimeContext instance
     public static getInstance(): RuntimeContext {
         if (this.sInstance == null) {
-            throw new Error("The AppContext was not initialized. Please call AppContext.initialize(applicationDid, currentNet)")
+            throw new Error("The RuntimeContext was not initialized. Please call AppContext.initializeInstance methods to initialize it.")
         }
         return this.sInstance
     }
 
-    // Whether the RuntimeContext is initialized
-    public static isInitialized(): boolean {
-        return this.sInstance !== null
+
+    public async prepareFeedsVault() {
+        return await prepreFeedsVault(await this.getVault(), this.getUserDid(), true)
     }
 
-    // Get the path to store did local cache
-    public getResolveCache(): string {
-        return this.resolveCache
-    }
-
-    // Get the path to store the hive local cache
-    public getLocalDataDir(): string {
-        return this.localDataDir
-    }
-
-    // login essential and hive
-    public async signin() {
-        try {
-            let self = this
-            const myProfile = await signin(this)
-            await self.signHive()
-            return myProfile
-        } catch (error) {
-            throw error
-        }
-    }
-
-    // log out essential
-    public signout() {
-        return signout()
-    }
-
-    // Check if you are logged in to essential
-    public checkSignin() {
-        return checkSignin()
-    }
-
-    public async signToHive(userDid: string): Promise<MyProfile> {
-        try {
-            let self = this
-            await self.register.prepareConnectHive()
-            logger.debug('sign to Hive success')
-            try {
-            await self.register.checkCreateAndRregiste(true) // 注册 创建
-            } catch (error) {
-                //ignore
-            }
-            const myProfile = new MyProfile(this, userDid, null, null)
-            return myProfile
-        } catch (error) {
-            logger.error('sign to Hive error: ', error)
-            throw error
-        }
-    }
-
-    // login hive
-    private signHive(): Promise<void> {
-        let self = this
-        return self.register.prepareConnectHive().then(()=> {
-            return self.register.checkCreateAndRregiste(true) // 注册 创建
-        }).catch(error => {
-            //ignore
-        })
-    }
-
+/*
     private async getAppInstanceDIDDocument() {
         if (this.appInstanceDIDDocument === null || this.appInstanceDIDDocument === undefined) {
             const didAccess = new ConDID.DIDAccess()
@@ -189,98 +87,98 @@ export class RuntimeContext {
         return this.appInstanceDIDDocument
     }
 
-    private async issueDiplomaFor() {
-        const applicationDID = RuntimeContext.getInstance().getAppDid()
-        connectivity.setApplicationDID(applicationDID)
-        const didAccess = new ConDID.DIDAccess()
-        let credential = await didAccess.getExistingAppIdentityCredential()
-        if (credential) {
-            return credential
-        }
-        credential = await didAccess.generateAppIdCredential()
-        if (credential) {
-            return credential
+    private async generateHiveAuthPresentationJWT(challenge: string) {
+
+        try {
+            // Parse this challenge code to be claims.
+            let parsed = await new JWTParserBuilder().build().parse(challenge)
+            let claims = parsed.getBody()
+            if (claims == null) {
+                throw new Error(`Invalid challenge code. ${challenge}`)
+            }
+
+            // abstract issuer/nonce from claims that will be used next.
+            let payload = claims.getJWTPayload()
+            let nonce   = payload['nonce'] as string
+            let issuer  = claims.getIssuer()
+
+            //x Issue VC to appInstanceDid to access Hive/Vault
+            connectivity.setApplicationDID(this.getAppDid())
+            let didAccess = new ConDID.DIDAccess()
+            let vc = await didAccess.getExistingAppIdentityCredential()
+            if (vc != null) {
+                vc = await didAccess.generateAppIdCredential()
+            }
+
+            // Create VP from VC with appInstanceDid as subject
+
+            let info = await didAccess.getOrCreateAppInstanceDID()
+            let info2 = await didAccess.getExistingAppInstanceDIDInfo()
+            let builder = await VerifiablePresentation.createFor(info.did, null, info.didStore)
+            let vp = await builder.credentials(vc)
+                .realm(issuer)
+                .nonce(nonce)
+                .seal(info2.storePassword)
+
+            // Wrapper vp to be jwtcode
+            const exp = new Date()
+            const iat = new Date().getTime()
+            exp.setFullYear(exp.getFullYear() + 2)
+            const expTime = exp.getTime()
+
+            // Create JWT token with presentation.
+            let doc = await this.getAppInstanceDIDDocument()
+            return await doc.jwtBuilder()
+                .addHeader(JWTHeader.TYPE, JWTHeader.JWT_TYPE)
+                .addHeader("version", "1.0")
+                .setSubject("DIDAuthResponse")
+                .setAudience(issuer)
+                .setIssuedAt(iat)
+                .setExpiration(expTime)
+                .claimsWithJson("presentation", vp.toString(true))
+                .sign(info2.storePassword)
+        } catch (error) {
+            throw new Error(`Generating response jwtcode error: ${error}`)
         }
     }
-
-    private async createPresentation(vc, hiveDid, nonce) {
-        const access = new ConDID.DIDAccess()
-        const info = await access.getOrCreateAppInstanceDID()
-        const info2 = await access.getExistingAppInstanceDIDInfo()
-        const vpb = await VerifiablePresentation.createFor(info.did, null, info.didStore)
-        const vp = await vpb.credentials(vc).realm(hiveDid).nonce(nonce).seal(info2.storePassword)
-        return vp
-    }
-
-    private async generateHiveAuthPresentationJWT(challeng: string) {
-
-        if (challeng === null || challeng === undefined || challeng === '') {
-            // throw error // todo
+*/
+    private async getHiveContext(): Promise<HiveContext> {
+        try {
+            if (this.hiveContext == null) {
+                this.hiveContext = await HiveContext.build(this.hiveContextProvider, this.userDid,  this.applicationDid)
+            }
+            return await Promise.resolve(this.hiveContext);
+        } catch (error) {
+            throw new Error(`Build HiveContext instance error: ${error}`)
         }
-
-        // Parse, but verify on chain that this JWT is valid first
-        const JWTParser = new JWTParserBuilder().build()
-        const parseResult = await JWTParser.parse(challeng)
-        const claims = parseResult.getBody()
-        if (claims === undefined) {
-            return // 抛出error
-        }
-        const payload = claims.getJWTPayload()
-        const nonce = payload['nonce'] as string
-        const hiveDid = claims.getIssuer()
-        const appIdCredential = await this.issueDiplomaFor()
-        const presentation = await this.createPresentation(appIdCredential, hiveDid, nonce)
-        const token = await this.createChallengeResponse(presentation, hiveDid)
-
-        return token
-    }
-
-    private async createChallengeResponse(vp, hiveDid) {
-        const exp = new Date()
-        const iat = new Date().getTime()
-        exp.setFullYear(exp.getFullYear() + 2)
-        const expTime = exp.getTime()
-
-        // Create JWT token with presentation.
-        const doc = await this.getAppInstanceDIDDocument()
-        const info = await new ConDID.DIDAccess().getExistingAppInstanceDIDInfo()
-        const token = await doc.jwtBuilder()
-            .addHeader(JWTHeader.TYPE, JWTHeader.JWT_TYPE)
-            .addHeader("version", "1.0")
-            .setSubject("DIDAuthResponse")
-            .setAudience(hiveDid)
-            .setIssuedAt(iat)
-            .setExpiration(expTime)
-            .claimsWithJson("presentation", vp.toString(true))
-            .sign(info.storePassword)
-        return token
     }
 
     public async getScriptRunner(targetDid: string): Promise<ScriptRunner> {
+        if (this.scriptRunners[targetDid] != null)
+            return this.scriptRunners[targetDid]
+
         try {
-            if (this.scriptRunners[targetDid] != null && this.scriptRunners[targetDid] != undefined)
-                return this.scriptRunners[targetDid]
-            const context = await this.getAppcontext()
-            const providerAddress = await AppContext.getProviderAddressByUserDid(targetDid);
-            const scriptRunner = new ScriptRunner(context, providerAddress)
+            let scriptRunner = new ScriptRunner(
+                await this.getHiveContext(),
+                await HiveContext.getProviderAddressByUserDid(targetDid)
+            )
             this.scriptRunners[targetDid] = scriptRunner
             return scriptRunner
         } catch (error) {
-            logger.error(`Create a scriptRunner object for ${targetDid} failed`);
+            logger.error(`Got a scriptRunner object for ${targetDid} error: ${error}`);
             throw new Error(error);
         }
-    } 
+    }
 
     public async getVault(): Promise<Vault> {
+        if (this.vault != null)
+            return this.vault;
+
         try {
-            if (this.vault === undefined || this.vault === null) {
-                const context = await this.getAppcontext()
-                this.vault = new Vault(context)
-            }
-            logger.error(`Get vault object for ${this.userDid} success: vault is `, this.vault);
+            this.vault = new Vault(await this.getHiveContext())
             return this.vault
         } catch (error) {
-            logger.error(`Get vault object for ${this.userDid} failed`);
+            logger.error(`Get vault object for ${this.userDid} error ${error}`);
             throw new Error(error);
         }
     }
