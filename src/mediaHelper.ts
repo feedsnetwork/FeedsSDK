@@ -1,157 +1,137 @@
 import { RuntimeContext } from './runtimecontext'
 import { Logger } from './utils/logger'
 import { MediaType, VideoData, MediaData, PostContent, OriginMediaData } from './postbody'
-import { hiveService } from "./hiveService"
 import { utils } from "./utils/utils"
-import { hiveService as VaultService } from "./hiveService"
 import SparkMD5 from 'spark-md5'
+import { FileDownloadExecutable, Vault } from '@elastosfoundation/hive-js-sdk/typings'
 
 const logger = new Logger("MediaHelper")
 
+const isValidImageBas64 = (base64: string[]): boolean => {
+    return (base64.length > 0 && base64[0] != null && base64[0] != '');
+}
+
 export class MediaHelper {
-    private vault: hiveService
     private context: RuntimeContext
 
     public constructor() {
         this.context = RuntimeContext.getInstance()
-        this.vault = new VaultService()
     }
 
     public async progressMediaData(newPostText: string, newImagesBase64: string[], newVideoData: VideoData) {
-        const mediaData = await this.prepareMediaData(newImagesBase64, newVideoData)
-        let mediaType = MediaType.noMeida
-        if (newImagesBase64 === null && newVideoData === null) {
-            mediaType = MediaType.noMeida
-        }
-        else if (newImagesBase64.length > 0 && newImagesBase64[0] != null && newImagesBase64[0] != '') {
+        let mediaType: MediaType;
+
+        if (isValidImageBas64(newImagesBase64)) {
             mediaType = MediaType.containsImg
         } else if (newVideoData) {
             mediaType = MediaType.containsVideo
+        } else {
+            mediaType = MediaType.noMeida
         }
-        const content = this.preparePublishPostContent(newPostText, mediaData, mediaType)
 
-        return content
+        const mediaData = await this.processUploadMeidas(newImagesBase64, newVideoData)
+        return new PostContent("3.0", newPostText, mediaData, mediaType)
     }
 
-    async prepareMediaData(imagesBase64: string[], videoData: VideoData): Promise<MediaData[]> {
+
+
+    private async processUploadMeidas(imagesBase64: string[], videoData: VideoData): Promise<MediaData[]> {
         try {
-            const mediaDatas: MediaData[] = await this.processUploadMeidas(imagesBase64, videoData)
-            return mediaDatas
-        } catch (error) {
-            const errorMsg = 'Prepare publish post error'
-            logger.error(errorMsg, error)
-            throw error
-        }
-    }
-
-    preparePublishPostContent(postText: string, mediaData: MediaData[], mediaType: MediaType): PostContent {
-        const content = new PostContent("3.0", postText, mediaData, mediaType)
-        return content
-    }
-
-    async processUploadMeidas(imagesBase64: string[], videoData: VideoData): Promise<MediaData[]> {
-        try {
-            if (imagesBase64 === null && videoData === null) {
+            if (imagesBase64 === null && videoData === null)
                 return []
-            }
+
             let mediasData: MediaData[] = []
-            if (imagesBase64.length > 0 && imagesBase64[0] != null && imagesBase64[0] != '') {
+            if (isValidImageBas64(imagesBase64)) {
                 for (let index = 0; index < imagesBase64.length; index++) {
-                    const element = imagesBase64[index]
+                    let element = imagesBase64[index]
                     if (!element || element == '')
                         continue
 
-                    const elementBlob = this.base64ToBlob(element)
-                    const originMediaData = await this.uploadDataToHiveWithString(element, elementBlob.type)
+                    let originalBlob = utils.base64ToBlob(element)
+                    const originalMediaData = await this.uploadMediadataToVault(element, originalBlob.type)
 
-                    const thumbnail = await utils.compress(element)
-                    const thumbnailBlob = this.base64ToBlob(thumbnail)
-                    const thumbnailMediaData = await this.uploadDataToHiveWithString(thumbnail, thumbnailBlob.type)
+                    let thumbnail = await utils.compress(element)
+                    let thumbnailBlob = utils.base64ToBlob(thumbnail)
+                    let thumbnailMediaData = await this.uploadMediadataToVault(thumbnail, thumbnailBlob.type)
 
-                    if (originMediaData && thumbnailMediaData) {
-                        const mediaData = this.createMediaData("image", originMediaData.getMedaPath(), originMediaData.getType(), originMediaData.getSize(), thumbnailMediaData.getMedaPath(), 0, 0, {}, {})
+                    if (originalMediaData && thumbnailMediaData) {
+                        let mediaData = MediaData.parse({
+                            kind: "image",
+                            originMediaPath: originalMediaData.getMedaPath(),
+                            type: originalMediaData.getType(),
+                            size: originalMediaData.getSize(),
+                            imageIndex: 0,
+                            thumbnailPath: thumbnailMediaData.getMedaPath(),
+                            duration: videoData.getDuration(),
+                            additionalInfo: {},
+                            memo: {}
+                        })
                         mediasData.push(mediaData)
                     }
                 }
             }
 
             // process Video data
-            if (videoData) {
-                const videoBlob = this.base64ToBlob(videoData.getVideo())
-                const originMediaData = await this.uploadDataToHiveWithString(videoData.getVideo(), videoBlob.type)
+            if (videoData && videoData.getVideo != null && videoData.getVideo() !== '') {
+                let originalBlob = utils.base64ToBlob(videoData.getVideo())
+                let originalMediaData = await this.uploadMediadataToVault(videoData.getVideo(), originalBlob.type)
 
-                const videoThumbBlob = this.base64ToBlob(videoData.getThumbnail())
-                const thumbnailMediaData = await this.uploadDataToHiveWithString(videoData.getThumbnail(), videoThumbBlob.type)
+                let videoThumbBlob = utils.base64ToBlob(videoData.getThumbnail())
+                let thumbnailMediaData = await this.uploadMediadataToVault(videoData.getThumbnail(), videoThumbBlob.type)
 
-                if (originMediaData && thumbnailMediaData) {
-                    const mediaData = this.createMediaData("video", originMediaData.getMedaPath(), originMediaData.getType(), originMediaData.getSize(), thumbnailMediaData.getMedaPath(), videoData.getDuration(), 0, {}, {})
+                if (originalMediaData && thumbnailMediaData) {
+                    let mediaData = MediaData.parse({
+                        kind: "video",
+                        originMediaPath: originalMediaData.getMedaPath(),
+                        type: originalMediaData.getType(),
+                        size: originalMediaData.getSize(),
+                        imageIndex: 0,
+                        thumbnailPath: thumbnailMediaData.getMedaPath(),
+                        duration: videoData.getDuration(),
+                        additionalInfo: {},
+                        memo: {}
+                    })
                     mediasData.push(mediaData)
                 }
             }
             return mediasData
-        } catch (error) {
 
-            const errorMsg = 'Upload medias error'
-            logger.error(errorMsg, error)
+        } catch (error) {
+            logger.error(`Upload medias error: ${error}`)
             throw error
         }
     }
 
-    async uploadDataToHiveWithString(elementBlob: string, type: string): Promise<OriginMediaData> {
+    private async uploadMediadataToVault(mediaData: string, type: string): Promise<OriginMediaData> {
         try {
-            const size = elementBlob.length
-            const path = await this.uploadMediaDataWithString(elementBlob)
-            const data = {
-                size: size,
+            let vault = await this.context.getVault()
+            return OriginMediaData.parse({
+                size: mediaData.length,
                 type: type,
-                path: path
-            }
-            const originMediaData = OriginMediaData.parse(data)
-            return originMediaData
+                path: await this.uploadMediaDataAndReturnPath(vault, mediaData)
+            })
         } catch (error) {
-            const errorMsg = 'Upload data to hive error'
-            logger.error(errorMsg, error)
+            logger.error(`Upload media data to hive/vault error: ${error}`)
             throw error
         }
     }
 
-    async uploadMediaDataWithString(data: string): Promise<string> {
-        try {
-            const hash = SparkMD5.hash(data)
+    private async uploadMediaDataAndReturnPath(vault: Vault, mediaData: string): Promise<string> {
+        // try {
+            let hash = SparkMD5.hash(mediaData)
 
-            const remoteName = 'feeds/data/' + hash
-            await this.vault.uploadScriptWithString(remoteName, data)
+            let remoteName = 'feeds/data/' + hash
+            await vault.getFilesService().upload('feeds/data/' + hash, Buffer.from(mediaData, 'utf8'))
+
             const scriptName = hash
-            await this.vault.registerFileDownloadScripting(scriptName)
+            const executable = new FileDownloadExecutable(scriptName).setOutput(true);
+            await vault.getScriptingService().registerScript(scriptName, executable, null, false)
+
             let avatarHiveURL = scriptName + "@" + remoteName //
             logger.log("Generated avatar url:", avatarHiveURL)
             return avatarHiveURL
-        } catch (error) {
-            throw error
-        }
-    }
-
-    base64ToBlob(base64Data: string): Blob {
-        if (!base64Data && base64Data == '') {
-            logger.error('Base64 data to blob error, input is null')
-            return null
-        }
-        return utils.base64ToBlob(base64Data)
-    }
-
-    createMediaData(kind: string, originMediaPath: string, type: string, size: number, thumbnailPath: string, duration: number, index: number, additionalInfo: any, memo: any): MediaData {
-        const data = {
-            kind: kind,
-            originMediaPath: originMediaPath,
-            type: type,
-            size: size,
-            imageIndex: index,
-            thumbnailPath: thumbnailPath,
-            duration: duration,
-            additionalInfo: additionalInfo,
-            memo: memo
-        }
-        const mediaData = MediaData.parse(data)
-        return mediaData
+        //} catch (error) {
+        //    throw error
+        //}
     }
 }

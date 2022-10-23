@@ -1,4 +1,3 @@
-import { JSONObject } from "@elastosfoundation/did-js-sdk"
 import { utils } from "./utils/utils"
 import { MediaHelper } from "./mediaHelper"
 
@@ -146,8 +145,8 @@ export class MediaData {
     private setThumbnailPath(thumbnailPath: string) {
         this.thumbnailPath = thumbnailPath
     }
-    
-    // "thumbnailCid" 
+
+    // "thumbnailCid"
     // eg: 7f63752d5e50bbb244725d910b061c24@feeds/data/7f63752d5e50bbb244725d910b061c24
     public getThumbnailPath() {
         return this.thumbnailPath
