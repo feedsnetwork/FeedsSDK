@@ -33,7 +33,7 @@ export class CommentInfo {
     }
 
     // Get the creator of the post
-    public getTargetDidDid() {
+    public getTargetDid() {
         return this.targetDid
     }
 

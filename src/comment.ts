@@ -3,7 +3,6 @@ import { CommentInfo } from './commentInfo'
 import { RuntimeContext } from './runtimecontext'
 import { utils } from "./utils/utils"
 import { ScriptingNames as scripts } from './vault/constants';
-import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Comment")
 
@@ -11,7 +10,6 @@ export class Comment {
     private commentInfo: CommentInfo
     private context: RuntimeContext
     private targetDid: string
-    private scriptingService: ScriptRunner;
 
     /**
     *
@@ -22,7 +20,6 @@ export class Comment {
         this.context = appContext
         this.commentInfo = commentInfo
         this.targetDid = targetDid
-        this.scriptingService = new ScriptRunner(appContext)
     }
 
     /**
@@ -60,10 +57,11 @@ export class Comment {
                 "created_at": createdAt,
             }
 
-            let result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.getCommentInfo().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_CREATE_COMMENT,
                 params,
-                this.getCommentInfo().getTargetDidDid(),
+                this.getCommentInfo().getTargetDid(),
                 this.context.getAppDid()
             )
             logger.debug(`Call script to create comment : ${result}`)
@@ -92,10 +90,11 @@ export class Comment {
                 "updated_at": new Date().getTime()
             }
 
-            const result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.getCommentInfo().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_UPDATE_COMMENT,
                 params,
-                this.getCommentInfo().getTargetDidDid(),
+                this.getCommentInfo().getTargetDid(),
                 this.context.getAppDid()
             )
             logger.debug(`Call script to update comment: ${result}`);
@@ -115,10 +114,12 @@ export class Comment {
                 "post_id"   : this.getCommentInfo().getPostId(),
                 "comment_id": this.getCommentInfo().getCommentId()
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.getCommentInfo().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_DELETE_COMMENT,
                 params,
-                this.getCommentInfo().getTargetDidDid(),
+                this.getCommentInfo().getTargetDid(),
                 this.context.getAppDid()
             )
             logger.debug(`Call script to delete comment: ${result}`);
@@ -138,12 +139,14 @@ export class Comment {
                 "post_id"   : this.getCommentInfo().getPostId(),
                 "comment_id": this.getCommentInfo().getCommentId()
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.getCommentInfo().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID,
                 params,
-                this.getCommentInfo().getTargetDidDid(),
+                this.getCommentInfo().getTargetDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query comment: ${result}`);
 
             const items = result.find_message.items

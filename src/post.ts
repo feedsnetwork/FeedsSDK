@@ -5,19 +5,16 @@ import { Comment } from './comment'
 import { utils } from "./utils/utils"
 import { CommentInfo } from "./commentInfo"
 import { ScriptingNames as scripts } from './vault/constants';
-import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Post")
 
 export class Post {
     private body: PostBody;
     private context: RuntimeContext
-    private scriptingService: ScriptRunner;
 
     private constructor(appContext: RuntimeContext, body: PostBody) {
         this.body = body;
         this.context = appContext;
-        this.scriptingService = new ScriptRunner(appContext);
     }
 
     // Get post information
@@ -45,7 +42,9 @@ export class Post {
                 "content": content,
                 "created_at": createdAt,
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_CREATE_COMMENT,
                 params,
                 this.getBody().getTargetDid(),
@@ -78,7 +77,8 @@ export class Post {
                 "content"   : content,
                 "updated_at": new Date().getTime()
             }
-            let result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_UPDATE_COMMENT,
                 params,
                 this.getBody().getTargetDid(),
@@ -101,8 +101,10 @@ export class Post {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id"   : this.getBody().getPostId(),
                 "comment_id": commentId
-                }
-            let result = await this.scriptingService.callScript(
+            }
+
+            let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_DELETE_COMMENT,
                 params,
                 this.getBody().getTargetDid(),
@@ -129,12 +131,14 @@ export class Post {
                 "limit"     : maximum,
                 "end"       : earlierThan
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT,
                 params,
                 this.getBody().getTargetDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query comments: ${result}`);
 
             let items = result.find_message.items
@@ -164,12 +168,14 @@ export class Post {
                 "end"       : end,
                 "status"    : 0
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_SOMETIME_COMMENT,
                 params,
                 this.getBody().getTargetDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query comments by range of time : ${result}`);
 
             let items = result.find_message.items
@@ -196,12 +202,14 @@ export class Post {
                 "post_id"   : this.getBody().getPostId(),
                 "comment_id": commentId
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_QUERY_COMMENT_BY_COMMENTID,
                 params,
                 this.getBody().getTargetDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query comment : ${result}`);
 
             const items = result.find_message.items
@@ -224,12 +232,14 @@ export class Post {
                 "channel_id": this.getBody().getChannelId(),
                 "post_id"   : this.getBody().getPostId(),
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_QUERY_COMMENT_BY_POSTID,
                 params,
                 this.getBody().getTargetDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query comments by postId : ${result}`);
 
             const items = result.find_message.items
