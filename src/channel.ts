@@ -8,10 +8,10 @@ import { CommentInfo } from './commentInfo'
 import { ScriptingNames as scripts } from './vault/constants'
 
 const logger = new Logger("Channel")
-    /**
-    * This class represent the channel owned by others. Users can only read posts
-    * from this channel.
-    */
+/**
+* This class represent the channel owned by others. Users can only read posts
+* from this channel.
+*/
 class Channel implements ChannelHandler {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
@@ -37,6 +37,38 @@ class Channel implements ChannelHandler {
         return this.channelInfo.getChannelId()
     }
 
+    public getName(): string {
+        return this.channelInfo.getName();
+    }
+
+    public getDisplayName(): string {
+        return this.channelInfo.getDisplayName();
+    }
+
+    public getDescription(): string {
+        return this.channelInfo.getDescription();
+    }
+
+    public getPaymentAddress(): string {
+        return this.channelInfo.getPaymentAddress();
+    }
+
+    public getAvatar(): string {
+        return this.channelInfo.getAvatar();
+    }
+
+    public getCategory(): string {
+        return this.channelInfo.getCategory();
+    }
+
+    public getCreatedAt(): number {
+        return this.channelInfo.getCreatedAt()
+    }
+
+    public getUpdatedAt(): number {
+        return this.channelInfo.getUpdatedAt()
+    }
+
     /**
      * Query the channel infomation from remote channel on Vault.
      * @returns An promise object that contains channel information.
@@ -47,14 +79,14 @@ class Channel implements ChannelHandler {
                 "channel_id": this.getChannelId()
             }
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript(
+            let result = await runner.callScript<any>(
                 scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query channel info: ${result}`);
 
-            let channelInfo = ChannelInfo.parse(
+            let channelInfo = ChannelInfo.parseFrom(
                 this.getOwnerDid(),
                 result.find_message.items[0]
             )
@@ -86,12 +118,12 @@ class Channel implements ChannelHandler {
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript(
+            let result = await runner.callScript<any>(
                 scripts.SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT,
                 params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query posts: ${result}`);
 
             let targetDid = this.getOwnerDid()
@@ -124,12 +156,12 @@ class Channel implements ChannelHandler {
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript(
+            let result = await runner.callScript<any>(
                 scripts.QUERY_PUBLIC_SOMETIME_POST,
                 params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query posts by range of time: ${result}`);
 
             let targetDid = this.getOwnerDid()
@@ -159,12 +191,12 @@ class Channel implements ChannelHandler {
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript(
+            let result = await runner.callScript<any>(
                 scripts.QUERY_PUBLIC_SPECIFIED_POST,
                 params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query specified post: ${result}`);
 
             let items = result.find_message.items
@@ -195,12 +227,12 @@ class Channel implements ChannelHandler {
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript(
+            let result = await runner.callScript<any>(
                 scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID,
                 params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query subscriber count: ${result}`)
 
             let count = result.find_message.total;
@@ -228,12 +260,12 @@ class Channel implements ChannelHandler {
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript(
+            let result = await runner.callScript<any>(
                 scripts.SCRIPT_CHANNEL_SUBSCRIBERS,
                 params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query subscribers: ${result}`)
 
             let items = result.find_message.items
@@ -266,12 +298,12 @@ class Channel implements ChannelHandler {
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript(
+            let result = await runner.callScript<any>(
                 scripts.SCRIPT_QUERY_POST_BY_CHANNEL,
                  params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query posts by channelId: ${result}`)
 
             let items = result.find_message.items
@@ -298,17 +330,17 @@ class Channel implements ChannelHandler {
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript(
+            let result = await runner.callScript<any>(
                 scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID,
                 params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query comment by channel: ${result}`)
 
             let items = result.find_message.items
             let comments = []
-            result.forEach((item: any) => {
+            items.forEach((item: any) => {
                 comments.push(CommentInfo.parse(this.getOwnerDid(), item))
             })
             logger.debug(`Got comments by channel: ${comments}`)
@@ -319,10 +351,8 @@ class Channel implements ChannelHandler {
         }
     }
 
-    static parse(targetDid: string, item: any): Channel {
-        const channelInfo = ChannelInfo.parse(targetDid, item)
-        const channel = new Channel(RuntimeContext.getInstance(), channelInfo)
-        return channel
+    static parseFrom(context: RuntimeContext, targetDid: string, item: any): Channel {
+        return new Channel(context, ChannelInfo.parseFrom(targetDid, item))
     }
 }
 

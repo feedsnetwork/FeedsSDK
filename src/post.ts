@@ -22,6 +22,14 @@ export class Post {
         return this.body;
     }
 
+    public getPostId(): string {
+        return this.body.getPostId()
+    }
+
+    public getChannelId(): string {
+        return this.body.getChannelId()
+    }
+
     /**
     * add comment to post
     * @param content: Comment content
@@ -29,8 +37,8 @@ export class Post {
     public async addComment(content: string): Promise<Comment> {
         try {
             let userDid   = this.context.getUserDid()
-            let channelId = this.getBody().getChannelId()
-            let postId    = this.getBody().getPostId()
+            let channelId = this.getChannelId()
+            let postId    = this.getPostId()
             let refcommentId = "0"
             let commentId = utils.generateCommentId(userDid, postId, refcommentId, content)
             let createdAt = new Date().getTime()
@@ -56,7 +64,7 @@ export class Post {
             params["status"] = 0
             params["creater_did"] = this.context.getUserDid()
 
-            return Comment.parse(this.getBody().getTargetDid(), params)
+            return Comment.parseFrom(this.context, this.getBody().getTargetDid(), params)
         } catch (error) {
             logger.error("Add coment error : ", error)
             throw new Error(error)
@@ -71,8 +79,8 @@ export class Post {
     public async updateComment(commentId: string, content: string) {
         try {
             let params = {
-                "channel_id": this.getBody().getChannelId(),
-                "post_id"   : this.getBody().getPostId(),
+                "channel_id": this.getChannelId(),
+                "post_id"   : this.getPostId(),
                 "comment_id": commentId,
                 "content"   : content,
                 "updated_at": new Date().getTime()
@@ -98,8 +106,8 @@ export class Post {
     public async deleteComment(commentId: string) {
         try {
             let params = {
-                "channel_id": this.getBody().getChannelId(),
-                "post_id"   : this.getBody().getPostId(),
+                "channel_id": this.getChannelId(),
+                "post_id"   : this.getPostId(),
                 "comment_id": commentId
             }
 
@@ -126,8 +134,8 @@ export class Post {
     public async queryComments(earlierThan: number, maximum: number): Promise<CommentInfo[]> {
         try {
             let params = {
-                "channel_id": this.getBody().getChannelId(),
-                "post_id"   : this.getBody().getPostId(),
+                "channel_id": this.getChannelId(),
+                "post_id"   : this.getPostId(),
                 "limit"     : maximum,
                 "end"       : earlierThan
             }
@@ -162,8 +170,8 @@ export class Post {
     public async queryCommentsByRangeOfTime(begin: number, end: number): Promise<Comment[]> {
         try {
             let params = {
-                "channel_id": this.getBody().getChannelId(),
-                "post_id"   : this.getBody().getPostId(),
+                "channel_id": this.getChannelId(),
+                "post_id"   : this.getPostId(),
                 "start"     : begin,
                 "end"       : end,
                 "status"    : 0
@@ -181,7 +189,7 @@ export class Post {
             let items = result.find_message.items
             let comments = []
             items.forEach((item: any) => {
-                comments.push(Comment.parse(this.getBody().getTargetDid(), item))
+                comments.push(Comment.parseFrom(this.context, this.getBody().getTargetDid(), item))
             })
             logger.debug(`Got comments by range of time: ${comments}`)
             return comments
@@ -198,8 +206,8 @@ export class Post {
     public async queryCommentById(commentId: string): Promise<Comment> {
         try {
             let params = {
-                "channel_id": this.getBody().getChannelId(),
-                "post_id"   : this.getBody().getPostId(),
+                "channel_id": this.getChannelId(),
+                "post_id"   : this.getPostId(),
                 "comment_id": commentId
             }
 
@@ -215,7 +223,7 @@ export class Post {
             const items = result.find_message.items
             let comments = []
             result.forEach((item: any) => {
-                comments.push(Comment.parse(this.getBody().getTargetDid(), item))
+                comments.push(Comment.parseFrom(this.context, this.getBody().getTargetDid(), item))
             })
             logger.debug(`Got comment by Id: ${comments[0]}`)
             return comments[0]
@@ -229,8 +237,8 @@ export class Post {
     public async queryCommentsByPostId(): Promise<Comment[]> {
         try {
             let params = {
-                "channel_id": this.getBody().getChannelId(),
-                "post_id"   : this.getBody().getPostId(),
+                "channel_id": this.getChannelId(),
+                "post_id"   : this.getPostId(),
             }
 
             let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
@@ -245,7 +253,7 @@ export class Post {
             const items = result.find_message.items
             let comments = []
             result.forEach((item: any) => {
-                comments.push(Comment.parse(this.getBody().getTargetDid(), item))
+                comments.push(Comment.parseFrom(this.context, this.getBody().getTargetDid(), item))
             })
             logger.debug(`Got comments by postid: ${comments}`)
             return comments
@@ -254,25 +262,9 @@ export class Post {
             throw new Error(error);
         }
     }
-
-    /**
-    * generate like id
-    * @param postId: post id
-    * @param commentId: commnet id
-    * @param userDid: user did
-    */
+/*
     public static generateLikeId(postId: string, commentId: string, userDid: string): string {
         return utils.generateLikeId(postId, commentId, userDid)
     }
-
-    public static parse(targetDid: string, result: any): Post {
-        try {
-            const postChun = PostBody.parse(targetDid, result)
-            const post = new Post(RuntimeContext.getInstance(), postChun)
-            return post
-        } catch (error) {
-            logger.error('Parse post result error: ', error)
-            throw error
-        }
-    }
+*/
 }

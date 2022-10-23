@@ -7,9 +7,9 @@ export class ChannelInfo {
 
     private displayName: string // The display name of the channel
     private descritpion: string // Description of the channel
-    private receivingAddress: string // 
+    private receivingAddress: string //
     private avatar: string // channel's avatar
-    private category: string // 
+    private category: string //
     private createdAt: number // Timestamp of channel creation
     private updatedAt: number // Timestamp for updating channel information
 
@@ -38,13 +38,6 @@ export class ChannelInfo {
         return utils.generateChannelId(ownerDid, name)
     }
 
-    public static clone(channel: ChannelInfo): ChannelInfo {
-        return (new ChannelInfo(channel.ownerDid, channel.channelId, channel.name))
-            .setDisplayName(channel.displayName)
-            .setDescription(channel.descritpion)
-            .setReceivingAddress(channel.receivingAddress);
-    }
-
     /**
     * Set the name displayed by the channel
     * @param displayName：channel's nickname
@@ -67,7 +60,7 @@ export class ChannelInfo {
     *
     * @param receivingAddr
     */
-    public setReceivingAddress(receivingAddr: string): ChannelInfo {
+    public setPaymentAddress(receivingAddr: string): ChannelInfo {
         this.receivingAddress = receivingAddr;
         return this;
     }
@@ -167,7 +160,7 @@ export class ChannelInfo {
         return this.descritpion;
     }
 
-    public getReceivingAddress(): string {
+    public getPaymentAddress(): string {
         return this.receivingAddress;
     }
 
@@ -216,20 +209,18 @@ export class ChannelInfo {
     }
 
     // Deserialize channel information
-    static parse(targetDid: string, channel: any): ChannelInfo {
-        const channelInfo = new ChannelInfo(targetDid, channel.channel_id, channel.name)
-        channelInfo.displayName = channel.display_name
-        channelInfo.descritpion = channel.intro
-        channelInfo.receivingAddress = channel.tipping_address
-        channelInfo.avatar = channel.avatar
-        channelInfo.createdAt = channel.created_at
-        channelInfo.updatedAt = channel.updated_at
-        channelInfo.type = channel.type
-        channelInfo.nft = channel.nft
-        channelInfo.category = channel.category
-        channelInfo.proof = channel.proof
-        channelInfo.memo = channel.memo
-
-        return channelInfo
+    static parseFrom(targetDid: string, channel: any): ChannelInfo {
+        return new ChannelInfo(targetDid, channel.channel_id, channel.name)
+            .setDisplayName(channel.display_name)
+            .setDescription(channel.intro)
+            .setPaymentAddress(channel.tipping_address)
+            .setAvatar(channel.avatar)
+            .setCreatedAt(channel.created_at)
+            .setUpdatedAt(channel.updated_at)
+            .setType(channel.type)
+            .setNft(channel.nft)
+            .setCategory(channel.category)
+            .setProof(channel.proof)
+            .setMemo(channel.memo)
     }
 }
