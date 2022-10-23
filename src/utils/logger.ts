@@ -10,7 +10,7 @@ class LogLevel {
 export class Logger {
     public static TRACE = new LogLevel(0, "TRACE");
     public static DEBUG = new LogLevel(1, "DEBUG");
-    public static INFO = new LogLevel(2, "INFO");
+    public static INFO  = new LogLevel(2, "INFO");
     public static WARNING = new LogLevel(3, "WARN");
     public static ERROR = new LogLevel(4, "ERROR");
 

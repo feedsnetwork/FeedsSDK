@@ -69,7 +69,7 @@ export class Comment {
             params["updated_at"] = createdAt
             params["status"] = 0
             params["creater_did"] = this.context.getUserDid()
-            return Comment.parse(this.targetDid, params)
+            return Comment.parseFrom(this.context, this.targetDid, params)
         } catch (error) {
             logger.error("Add comment error : ", error)
             throw new Error(error)
@@ -152,7 +152,7 @@ export class Comment {
             const items = result.find_message.items
             let comments = []
             result.forEach((item: any) => {
-                comments.push(Comment.parse(this.targetDid, item))
+                comments.push(Comment.parseFrom(this.context, this.targetDid, item))
             })
             logger.debug(`Got comment by Id: ${comments}`);
             return comments[0]
@@ -162,10 +162,8 @@ export class Comment {
         }
     }
 
-    public static parse(targetDid: string, data: any): Comment {
-        const commentInfo = CommentInfo.parse(targetDid, data)
-        const comment = new Comment(RuntimeContext.getInstance(), targetDid, commentInfo)
-        return comment
+    public static parseFrom(context: RuntimeContext, targetDid: string, data: any): Comment {
+        return new Comment(context, targetDid, CommentInfo.parse(targetDid, data))
     }
 }
 

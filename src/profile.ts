@@ -72,7 +72,7 @@ export class Profile implements ProfileHandler {
             let items = result.find_message.items
             let channelInfos = []
             items.forEach((item: any) => {
-                channelInfos.push(ChannelInfo.parse(this.userDid, item))
+                channelInfos.push(ChannelInfo.parseFrom(this.userDid, item))
             })
 
             logger.debug(`Got owned channels: ${channelInfos}`);
@@ -99,7 +99,7 @@ export class Profile implements ProfileHandler {
             logger.debug(`Call script to query owned channel by id: ${result}`)
 
             const items = result.find_message.items
-            let channelInfo =  ChannelInfo.parse(this.userDid, items[0])
+            let channelInfo =  ChannelInfo.parseFrom(this.userDid, items[0])
 
             logger.debug(`Got owned channel by Id: ${channelInfo}`);
             return channelInfo;
@@ -161,7 +161,7 @@ export class Profile implements ProfileHandler {
                     channel_id,
                     this.context.getAppDid()
                 ) as any
-                subscriptions.push(ChannelInfo.parse(target_did, info.find_message.items[0]))
+                subscriptions.push(ChannelInfo.parseFrom(target_did, info.find_message.items[0]))
             }
 
             logger.debug(`Susbscriptions: ${subscriptions}`)

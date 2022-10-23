@@ -75,7 +75,7 @@ export class MyProfile implements ProfileHandler {
 
             let channelInfos = []
             result.forEach(item => {
-                channelInfos.push(ChannelInfo.parse(this.userDid, item))
+                channelInfos.push(ChannelInfo.parseFrom(this.userDid, item))
             })
             logger.debug(`Got owned channels: ${result}`)
             return channelInfos
@@ -96,7 +96,7 @@ export class MyProfile implements ProfileHandler {
                 { "channel_id": channelId }
             )
             logger.debug(`Query owned channel by channelId ${channelId}: ${result}`);
-            return ChannelInfo.parse(this.userDid, result[0])
+            return ChannelInfo.parseFrom(this.userDid, result[0])
         } catch (error) {
             logger.error("query owned channnel by id error: ", error)
             throw new Error(error)
@@ -145,7 +145,7 @@ export class MyProfile implements ProfileHandler {
                     target_did,
                     this.context.getAppDid()
                 ) as any
-                channels.push(ChannelInfo.parse(target_did, callResult.find_message.items[0]))
+                channels.push(ChannelInfo.parseFrom(target_did, callResult.find_message.items[0]))
             }
             logger.debug("query subscriptions channelInfo: ", channels)
             return channels
@@ -175,7 +175,7 @@ export class MyProfile implements ProfileHandler {
                 "created_at": channelInfo.getCreatedAt(),
                 "updated_at": channelInfo.getUpdatedAt(),
                 "type"      : channelInfo.getType(),
-                "tipping_address": channelInfo.getReceivingAddress(),
+                "tipping_address": channelInfo.getPaymentAddress(),
                 "nft"       : channelInfo.getNft(),
                 "memo"      : channelInfo.getMmemo(),
                 "category"  : channelInfo.getCategory(),
@@ -185,7 +185,7 @@ export class MyProfile implements ProfileHandler {
             await db.insertOne(CollectionNames.CHANNELS, doc, new InsertOptions(false, true))
             logger.debug(`Create channel in success with channel info: ${doc}`)
 
-            return MyChannel.parse(this.userDid, this.context, [doc])
+            return MyChannel.parseFrom(this.context, this.userDid, [doc])
         } catch (error) {
             logger.error("create channel error: ", error)
             throw new Error(error)

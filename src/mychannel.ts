@@ -50,7 +50,7 @@ export class MyChannel {
             )
             logger.debug(`Call script to query channel info: ${result}`)
 
-            let channelInfo = ChannelInfo.parse(
+            let channelInfo = ChannelInfo.parseFrom(
                 this.getOwnerDid(),
                 result[0]
             )
@@ -78,7 +78,7 @@ export class MyChannel {
                 "avatar"    : channelInfo.getAvatar(),
                 "updated_at": channelInfo.getUpdatedAt(),
                 "type"      : channelInfo.getType(),
-                "tipping_address": channelInfo.getReceivingAddress(),
+                "tipping_address": channelInfo.getPaymentAddress(),
                 "nft"       : channelInfo.getNft(),
                 "memo"      : channelInfo.getMmemo(),
             }
@@ -255,10 +255,10 @@ export class MyChannel {
                 "updated_at": body.getUpdatedAt(),
                 "content"   : body.getContent().toString(),
                 "status"    : body.getStatus(),
-                "memo"  : body.getMemo(),
-                "type"  : body.getType(),
-                "tag"   : body.getTag(),
-                "proof" : body.getProof()
+                "memo"      : body.getMemo(),
+                "type"      : body.getType(),
+                "tag"       : body.getTag(),
+                "proof"     : body.getProof()
             }
 
             let db = await this.getDatabaseService()
@@ -312,10 +312,7 @@ export class MyChannel {
         }
     }
 
-    static parse(targetDid: string, context: RuntimeContext, channel: any): MyChannel {
-        const channelInfo = ChannelInfo.parse(targetDid, channel)
-        const myChannel = new MyChannel(context, channelInfo)
-
-        return myChannel
+    static parseFrom(context: RuntimeContext, targetDid: string, channel: any): MyChannel {
+        return new MyChannel(context, ChannelInfo.parseFrom(targetDid, channel))
     }
 }
