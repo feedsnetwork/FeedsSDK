@@ -28,11 +28,8 @@ interface ProfileHandler {
 
      /**
       * Query a list of subscribed channels.
-      * @param earlierThan
-      * @param maximum
-      * @param upperLimit
       */
-  querySubscriptions(): Promise<ChannelInfo[]>;
+    querySubscriptions(): Promise<ChannelInfo[]>;
 }
 
 export type {

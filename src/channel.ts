@@ -6,7 +6,6 @@ import { Profile } from './profile'
 import { RuntimeContext } from './runtimecontext'
 import { CommentInfo } from './commentInfo'
 import { ScriptingNames as scripts } from './vault/constants'
-import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Channel")
     /**
@@ -16,12 +15,10 @@ const logger = new Logger("Channel")
 class Channel implements ChannelHandler {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
-    private scriptingService: ScriptRunner;
 
     public constructor(appContext: RuntimeContext, channelInfo: ChannelInfo) {
         this.context = appContext
         this.channelInfo = channelInfo
-        this.scriptingService = new ScriptRunner(appContext);
     }
 
     /**
@@ -38,16 +35,17 @@ class Channel implements ChannelHandler {
      */
     public async queryChannelInfo(): Promise<ChannelInfo> {
         try {
-            let result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.channelInfo.getOwnerDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_QUERY_CHANNEL_INFO,
                 { "channel_id": this.getChannelInfo().getChannelId() },
-                this.getChannelInfo().getOwnerDid(),
+                this.channelInfo.getOwnerDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query channel info: ${result}`);
 
             let channelInfo = ChannelInfo.parse(
-                this.getChannelInfo().getOwnerDid(),
+                this.channelInfo.getOwnerDid(),
                 result.find_message.items[0]
             )
             logger.debug(`Got this channel information: ${channelInfo}`);
@@ -76,12 +74,14 @@ class Channel implements ChannelHandler {
                 "limit": upperLimit,
                 "end": earilerThan,
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.channelInfo.getOwnerDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT,
                 params,
-                this.getChannelInfo().getOwnerDid(),
+                this.channelInfo.getOwnerDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query posts: ${result}`);
 
             let targetDid = this.getChannelInfo().getOwnerDid()
@@ -112,12 +112,14 @@ class Channel implements ChannelHandler {
                 "start": start,
                 "end": end
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.channelInfo.getOwnerDid())
+            let result = await runner.callScript(
                 scripts.QUERY_PUBLIC_SOMETIME_POST,
                 params,
                 this.channelInfo.getOwnerDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query posts by range of time: ${result}`);
 
             let targetDid = this.channelInfo.getOwnerDid()
@@ -146,12 +148,13 @@ class Channel implements ChannelHandler {
                 "post_id": postId
             }
 
-            let result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.getChannelInfo().getOwnerDid())
+            let result = await runner.callScript(
                 scripts.QUERY_PUBLIC_SPECIFIED_POST,
                 params,
                 this.channelInfo.getOwnerDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query specified post: ${result}`);
 
             let items = result.find_message.items
@@ -180,12 +183,14 @@ class Channel implements ChannelHandler {
                 "channel_id": this.getChannelInfo().getChannelId(),
                 "status": 0
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.channelInfo.getOwnerDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_CHANNELID,
                 params,
                 this.channelInfo.getOwnerDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query subscriber count: ${result}`)
 
             let count = result.find_message.total;
@@ -211,12 +216,14 @@ class Channel implements ChannelHandler {
                 "limit": upperLimit,
                 "end": earilerThan,
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.channelInfo.getOwnerDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_CHANNEL_SUBSCRIBERS,
                 params,
                 this.channelInfo.getOwnerDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query subscribers: ${result}`)
 
             let items = result.find_message.items
@@ -224,7 +231,7 @@ class Channel implements ChannelHandler {
             for (let index = 0; index < items.length; index++) {
                 let profile = Profile.parse(
                     this.context,
-                    this.getChannelInfo().getOwnerDid(),
+                    this.channelInfo.getOwnerDid(),
                     items[index]
                 )
                 profiles.push(profile)
@@ -247,12 +254,14 @@ class Channel implements ChannelHandler {
             let params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.channelInfo.getOwnerDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_QUERY_POST_BY_CHANNEL,
                  params,
-                this.getChannelInfo().getOwnerDid(),
+                this.channelInfo.getOwnerDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query posts by channelId: ${result}`)
 
             let items = result.find_message.items
@@ -277,12 +286,14 @@ class Channel implements ChannelHandler {
             let params = {
                 "channel_id": this.getChannelInfo().getChannelId(),
             }
-            let result = await this.scriptingService.callScript(
+
+            let runner = await this.context.getScriptRunner(this.channelInfo.getOwnerDid())
+            let result = await runner.callScript(
                 scripts.SCRIPT_QUERY_COMMENT_BY_CHANNELID,
                 params,
-                this.getChannelInfo().getOwnerDid(),
+                this.channelInfo.getOwnerDid(),
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query comment by channel: ${result}`)
 
             let items = result.find_message.items

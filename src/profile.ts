@@ -3,43 +3,28 @@ import { ChannelInfo } from "./channelinfo";
 import { ProfileHandler } from "./profilehandler";
 import { ScriptingNames as scripts } from "./vault/constants"
 import { Logger } from './utils/logger'
-import { ScriptingService as ScriptRunner } from "./vault/scriptingservice";
 
 const logger = new Logger("Profile")
 
 export class Profile implements ProfileHandler {
     private context: RuntimeContext;
-    private readonly targetDid: string;
-    private readonly userDid: string;
-    private readonly displayName: string
-    private scriptingService: ScriptRunner;
+    private userDid: string;
+    private displayName: string
 
     /**
     * @param context: RuntimeContext instance
-    * @param userDid: user did
     * @param targetDid: owner of this profile
     * @param displayName: Display name for this profile
     */
-    public constructor(context: RuntimeContext,
-        userDid: string,
-        targetDid: string,
-        displayName: string) {
-
+    public constructor(context: RuntimeContext, userDid: string, displayName: string) {
         this.context = context;
-        this.userDid = userDid;
-        this.targetDid = targetDid
+        this.userDid = userDid
         this.displayName = displayName
-        this.scriptingService = new ScriptRunner(this.context);
     }
 
     // Get user did
     public getUserDid(): string {
         return this.userDid
-    }
-
-    // Get owner of this profile
-    public getTargetDid(): string {
-        return this.targetDid
     }
 
     // Get display name for this profile
@@ -52,12 +37,13 @@ export class Profile implements ProfileHandler {
     */
     public async queryOwnedChannelCount(): Promise<number> {
         try {
-            const result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.userDid)
+            let result = await runner.callScript(
                 scripts.SCRIPT_PRIFILE_CHANNELS,
                 {},
-                this.targetDid,
+                this.userDid,
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query owned channel acount: ${result}`)
 
             let count = result.find_message.total
@@ -74,18 +60,19 @@ export class Profile implements ProfileHandler {
     */
     public async queryOwnedChannels(): Promise<ChannelInfo[]> {
         try {
-            let result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.userDid)
+            let result = await runner.callScript(
                 scripts.SCRIPT_PRIFILE_CHANNELS,
                 {},
-                this.targetDid,
+                this.userDid,
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query owned channels: ${result}`);
 
             let items = result.find_message.items
             let channelInfos = []
             items.forEach((item: any) => {
-                channelInfos.push(ChannelInfo.parse(this.targetDid, item))
+                channelInfos.push(ChannelInfo.parse(this.userDid, item))
             })
 
             logger.debug(`Got owned channels: ${channelInfos}`);
@@ -102,16 +89,17 @@ export class Profile implements ProfileHandler {
     */
     public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         try {
-            const result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.userDid)
+            let result = await runner.callScript(
                 scripts.SCRIPT_QUERY_CHANNEL_INFO,
                 {"channel_id": channelId,},
-                this.targetDid,
+                this.userDid,
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query owned channel by id: ${result}`)
 
             const items = result.find_message.items
-            let channelInfo =  ChannelInfo.parse(this.targetDid, items[0])
+            let channelInfo =  ChannelInfo.parse(this.userDid, items[0])
 
             logger.debug(`Got owned channel by Id: ${channelInfo}`);
             return channelInfo;
@@ -126,12 +114,13 @@ export class Profile implements ProfileHandler {
     */
     public async querySubscriptionCount(): Promise<number> {
         try {
-            let result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.userDid)
+            let result = await runner.callScript(
                 scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS,
                 {},
-                this.targetDid,
+                this.userDid,
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to subscription count: ${result}`)
 
             let count = result.find_message.total;
@@ -148,28 +137,30 @@ export class Profile implements ProfileHandler {
     */
     public async querySubscriptions(): Promise<ChannelInfo[]> {
         try {
-            const result = await this.scriptingService.callScript(
+            let runner = await this.context.getScriptRunner(this.userDid)
+            let result = await runner.callScript(
                 scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS,
                 {},
-                this.targetDid,
+                this.userDid,
                 this.context.getAppDid()
-            )
+            ) as any
             logger.debug(`Call script to query subscriptions: ${result}`)
 
-            const items = result.find_message.items
+            let items = result.find_message.items
             let subscriptions = []
 
             for (let index = 0; index < items.length; index++) {
-                const item = items[index]
-                const channel_id = item.channel_id
-                const target_did = item.target_did.toString()
+                let item = items[index]
+                let channel_id = item.channel_id
+                let target_did = item.target_did.toString()
 
-                const info = await this.scriptingService.callScript(
+                runner = await this.context.getScriptRunner(channel_id)
+                let info = await runner.callScript(
                     scripts.SCRIPT_QUERY_CHANNEL_INFO,
                     { "channel_id": channel_id },
                     channel_id,
                     this.context.getAppDid()
-                )
+                ) as any
                 subscriptions.push(ChannelInfo.parse(target_did, info.find_message.items[0]))
             }
 
@@ -184,7 +175,7 @@ export class Profile implements ProfileHandler {
     public static parse(context: RuntimeContext, userDid: string, result: any): Profile {
         const targetDid = result.user_did
         const displayName = result.display_name
-        const profile = new Profile(context, userDid, targetDid, displayName)
+        const profile = new Profile(context, targetDid, displayName)
 
         return profile
     }
