@@ -9,17 +9,17 @@ import {
 function SigninEE() {
   const navigate = useNavigate();
   const applicationDid = 'did:elastos:iqtWRVjz7gsYhyuQEb1hYNNmWQt1Z9geXg'
-  const currentNet = "mainnet".toLowerCase()
   const localDataDir = "/data/store/develop1"
   const hiveProvider = createHiveContextProvider(localDataDir)
   let userDid = ""
-
   const [login, setLogin] = useState(userDid !== "");
 
   const handleSigninEE = async () => {
     userDid = await signin(applicationDid)
     console.log("开始初始化 RuntimeContext = ", RuntimeContext.isInitialized())
+    const currentNet = "mainnet".toLowerCase()
     if (!RuntimeContext.isInitialized()) {
+    // hiveProvider: AppContextProvider（@elastosfoundation/hive-js-sdk） 需要自己实现，
       RuntimeContext.createInstance(hiveProvider, currentNet, userDid)
     }
     const appCtx = RuntimeContext.getInstance()
@@ -35,7 +35,7 @@ function SigninEE() {
       const channel = new Channel(appCtx, item)
       // 看下哪个是feeds channel的信息，取出哪个channel， 
       // 这里循环获取所有订阅的channel
-      const postBodys = await channel.queryPosts(currentTime, 10)
+      const postBodys = await channel.queryPostsByRangeOfTime(0, currentTime)
       
       for (let index = 0; index < postBodys.length; index++) {
         const item = postBodys[index]

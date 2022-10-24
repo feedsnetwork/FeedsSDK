@@ -16,7 +16,7 @@ export class Comment {
     * @param targetDid：the creator of the post
     * @param commentInfo：Comment details
     */
-    constructor(appContext: RuntimeContext, targetDid: string, commentInfo: CommentInfo) {
+    public constructor(appContext: RuntimeContext, targetDid: string, commentInfo: CommentInfo) {
         this.context = appContext
         this.commentInfo = commentInfo
         this.targetDid = targetDid
