@@ -10,6 +10,7 @@ import { Logger } from "./utils/logger"
 import { ChannelInfo } from "./channelinfo"
 import { Channel } from "./channel"
 import { Post } from "./post"
+import { signin } from "./signin"
 
 export {
     Logger,
@@ -24,7 +25,8 @@ export {
     PostBody,
     PostContent,
     MediaData,
-    MediaType
+    MediaType,
+    signin
 }
 /*
 interface ConfigOptions {

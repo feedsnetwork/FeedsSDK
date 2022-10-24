@@ -26,6 +26,10 @@ export class RuntimeContext {
         return this.applicationDid
     }
 
+    public setUserDid(userDid: string) {
+        this.userDid = userDid
+    }
+
     public getUserDid(): string {
         return this.userDid
     }
@@ -70,6 +74,10 @@ export class RuntimeContext {
         return this.sInstance
     }
 
+    // Whether the RuntimeContext is initialized
+    public static isInitialized(): boolean {
+        return this.sInstance !== null
+    }
 
     public async prepareFeedsVault() {
         return await prepreFeedsVault(await this.getVault(), this.getUserDid(), true)

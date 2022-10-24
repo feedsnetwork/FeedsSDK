@@ -111,7 +111,7 @@ const signInWithEssentials = async (appDid: string): Promise<string> => {
     })
 }
 
-const signin = async (appDid: string): Promise<string> => {
+ const signin = async (appDid: string): Promise<string> => {
     if (isUsingEssentialsConnector()) {
         await signOutWithEssentials();
     }
@@ -119,7 +119,6 @@ const signin = async (appDid: string): Promise<string> => {
     if (essentialsConnector.hasWalletConnectSession()) {
         await essentialsConnector.disconnectWalletConnect();
     }
-
     return signInWithEssentials(appDid);
 }
 

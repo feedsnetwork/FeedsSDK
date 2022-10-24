@@ -1,6 +1,6 @@
 import React, {useState} from 'react'
 import {signin, RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody, PostContent } from '@feedsnetwork/feeds-sdk-development';
-// import { Provider } from Provider
+import { createHiveContextProvider } from './Provider'
 
 import {
   useNavigate
@@ -11,22 +11,39 @@ function SigninEE() {
   const applicationDid = 'did:elastos:iqtWRVjz7gsYhyuQEb1hYNNmWQt1Z9geXg'
   const currentNet = "mainnet".toLowerCase()
   const localDataDir = "/data/store/develop1"
-  const resolveCache = '/data/store/catch1'
-  const provider = new Provider(localDataDir)
-  const hiveProvider = provider.createHiveContextProvider()
-  const userDid = await signin(applicationDid)
-  RuntimeContext.createInstance(hiveProvider, currentNet, userDid)
+  const hiveProvider = createHiveContextProvider(localDataDir)
+  const userDid = ""
+  console.log("开始初始化 RuntimeContext = ", RuntimeContext.isInitialized())
+  if (!RuntimeContext.isInitialized()) {
+    RuntimeContext.createInstance(hiveProvider, currentNet, userDid)
+  }
   const appCtx = RuntimeContext.getInstance()
-  const [login, setLogin] = useState(appCtx.checkSignin());
+
+  const [login, setLogin] = useState(userDid !== "");
 
   const handleSigninEE = async () => {
-    // const myprofile = await appCtx.signin()
+    const userDid = await signin(applicationDid)
+    appCtx.setUserDid(userDid)
+    console.log("userDid ========== ", userDid)
     const myprofile = new MyProfile(appCtx, userDid, null, null) 
+    console.log("myprofile ========== ", myprofile)
     const currentTime = new Date().getTime()
    
-    const ownedChannels = await myprofile.queryOwnedChannels()
-    console.log("ownedChannels result ==================================== ", ownedChannels)
-
+    const subscriptions = await myprofile.querySubscriptions()
+    for (let index = 0; index < subscriptions.length; index++) {
+      const item = subscriptions[index]
+      const channel = new Channel(appCtx, item)
+      // 看下哪个是feeds channel的信息，取出哪个channel， 
+      // 这里循环获取所有订阅的channel
+      const postBodys = await channel.queryPosts(currentTime, 10)
+      
+      for (let index = 0; index < postBodys.length; index++) {
+        const item = postBodys[index]
+        const post = new Post(appCtx, item)
+        const comments = await post.queryComments(currentTime, 100)
+        console.log(index + ": 多个 queryComments 0 ========================================", comments)
+      }
+    }
     /* //发送文字
     const ownedChannels = await myprofile.queryOwnedChannels()
     for (let index = 0; index < ownedChannels.length; index++) {
@@ -658,7 +675,7 @@ function SigninEE() {
     const subscriptions2 = await myprofile.querySubscriptions((new Date()).getTime(), 100)
     console.log("subscriptions2 ======================================== ", subscriptions2)
   */
-    setLogin(appCtx.checkSignin());
+    setLogin(userDid != "");
   }
 
   const creatChannel = async (myProfile) => {

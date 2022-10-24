@@ -7,7 +7,7 @@ import { CollectionNames, ScriptingNames } from "./vault/constants"
 import { MyChannel } from "./mychannel";
 import { ChannelEntry } from "./channelentry";
 import { ProfileHandler } from "./profilehandler";
-import { DatabaseService, InsertOptions} from "@elastosfoundation/hive-js-sdk/typings";
+import { DatabaseService, InsertOptions } from "@elastosfoundation/hive-js-sdk";
 
 const logger = new Logger("MyProfile")
 
@@ -29,13 +29,15 @@ export class MyProfile implements ProfileHandler {
         description: VerifiableCredential) {
 
         logger.info(`User Did: ${userDid}`);
-        logger.info(`Name credential: ${JSON.stringify(name.toJSON())}`)
+        this.context = context;
+        this.userDid = userDid;
         if (description != null) {
             logger.info(`Description credential: ${JSON.stringify(description.toJSON())}`)
         }
 
-        this.context = context;
-        this.userDid = userDid;
+        if (name != null) {
+            logger.info(`Name credential: ${JSON.stringify(name.toJSON())}`)
+        }
         this.nameCredential = name;
     }
 
