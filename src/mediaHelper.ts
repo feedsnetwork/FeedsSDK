@@ -3,7 +3,7 @@ import { Logger } from './utils/logger'
 import { MediaType, VideoData, MediaData, PostContent, OriginMediaData } from './postbody'
 import { utils } from "./utils/utils"
 import SparkMD5 from 'spark-md5'
-import { FileDownloadExecutable, Vault } from '@elastosfoundation/hive-js-sdk/typings'
+import { FileDownloadExecutable, Vault } from '@elastosfoundation/hive-js-sdk'
 
 const logger = new Logger("MediaHelper")
 
