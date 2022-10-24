@@ -66,7 +66,7 @@ const signOutWithEssentials = async () => {
     }
 };
 
-const signInWithEssentials = async (appDid: string, appContext: RuntimeContext): Promise<MyProfile> => {
+const signInWithEssentials = async (appDid: string): Promise<string> => {
     await initConnectivitySDK(appDid).catch(error => {
         throw new Error(error);
     })
@@ -98,7 +98,8 @@ const signInWithEssentials = async (appDid: string, appContext: RuntimeContext):
         }
 
         isSignin = true;
-        return new MyProfile(appContext, userDid, nameCredential, bioCredential)
+        // return new MyProfile(appContext, userDid, nameCredential, bioCredential)
+        return userDid
 
     }).catch(async error => {
         await essentialsConnector.getWalletConnectProvider().disconnect();
@@ -110,7 +111,7 @@ const signInWithEssentials = async (appDid: string, appContext: RuntimeContext):
     })
 }
 
-const signin = async (appDid: string, context: RuntimeContext): Promise<MyProfile> => {
+const signin = async (appDid: string): Promise<string> => {
     if (isUsingEssentialsConnector()) {
         await signOutWithEssentials();
     }
@@ -119,7 +120,7 @@ const signin = async (appDid: string, context: RuntimeContext): Promise<MyProfil
         await essentialsConnector.disconnectWalletConnect();
     }
 
-    return signInWithEssentials(appDid, context);
+    return signInWithEssentials(appDid);
 }
 
 const signout = async () => {
