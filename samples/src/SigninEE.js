@@ -12,18 +12,18 @@ function SigninEE() {
   const currentNet = "mainnet".toLowerCase()
   const localDataDir = "/data/store/develop1"
   const hiveProvider = createHiveContextProvider(localDataDir)
-  const userDid = ""
-  console.log("开始初始化 RuntimeContext = ", RuntimeContext.isInitialized())
-  if (!RuntimeContext.isInitialized()) {
-    RuntimeContext.createInstance(hiveProvider, currentNet, userDid)
-  }
-  const appCtx = RuntimeContext.getInstance()
+  let userDid = ""
 
   const [login, setLogin] = useState(userDid !== "");
 
   const handleSigninEE = async () => {
-    const userDid = await signin(applicationDid)
-    appCtx.setUserDid(userDid)
+    userDid = await signin(applicationDid)
+    console.log("开始初始化 RuntimeContext = ", RuntimeContext.isInitialized())
+    if (!RuntimeContext.isInitialized()) {
+      RuntimeContext.createInstance(hiveProvider, currentNet, userDid)
+    }
+    const appCtx = RuntimeContext.getInstance()
+  
     console.log("userDid ========== ", userDid)
     const myprofile = new MyProfile(appCtx, userDid, null, null) 
     console.log("myprofile ========== ", myprofile)
@@ -683,8 +683,8 @@ function SigninEE() {
   }
 
   const handleSignout = async () => {
-    await appCtx.signout();
-    setLogin(appCtx.checkSignin());
+    // await appCtx.signout();
+    // setLogin(appCtx.checkSignin());
   }
 
   const handleClickButton = (path) => {
