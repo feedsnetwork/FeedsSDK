@@ -12,7 +12,7 @@ export class Post {
     private body: PostBody;
     private context: RuntimeContext
 
-    private constructor(appContext: RuntimeContext, body: PostBody) {
+    public constructor(appContext: RuntimeContext, body: PostBody) {
         this.body = body;
         this.context = appContext;
     }

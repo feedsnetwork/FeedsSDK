@@ -17,7 +17,7 @@ export class RuntimeContext {
     private hiveContextProvider: HiveContextProvider
 
     private constructor(hiveContextProvider: HiveContextProvider, userDid: string) {
-        this.applicationDid = "" // Should be Feeds application DID.
+        this.applicationDid = "did:elastos:iqtWRVjz7gsYhyuQEb1hYNNmWQt1Z9geXg" // Should be Feeds application DID.
         this.hiveContextProvider = hiveContextProvider;
         this.userDid = userDid;
     }
@@ -56,7 +56,7 @@ export class RuntimeContext {
                 hiveContextProvider.getLocalDataDir() + ".didCache"
             )
 
-            logger.info("RuntimeContxt singleton has been initalized.")
+            logger.info("Ignore: RuntimeContxt singleton has been initalized.")
         } catch (error) {
             logger.info(`RuntimeContext singleton initalized error: ${error}`)
         }

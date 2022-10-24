@@ -1,5 +1,7 @@
 import React, {useState} from 'react'
-import {RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody, PostContent } from '@feedsnetwork/feeds-sdk-development';
+import {signin, RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody, PostContent } from '@feedsnetwork/feeds-sdk-development';
+// import { Provider } from Provider
+
 import {
   useNavigate
 } from "react-router-dom";
@@ -10,14 +12,21 @@ function SigninEE() {
   const currentNet = "mainnet".toLowerCase()
   const localDataDir = "/data/store/develop1"
   const resolveCache = '/data/store/catch1'
-  RuntimeContext.initialize(applicationDid, currentNet, localDataDir, resolveCache)
+  const provider = new Provider(localDataDir)
+  const hiveProvider = provider.createHiveContextProvider()
+  const userDid = await signin(applicationDid)
+  RuntimeContext.createInstance(hiveProvider, currentNet, userDid)
   const appCtx = RuntimeContext.getInstance()
   const [login, setLogin] = useState(appCtx.checkSignin());
 
   const handleSigninEE = async () => {
-    const myprofile = await appCtx.signin()
+    // const myprofile = await appCtx.signin()
+    const myprofile = new MyProfile(appCtx, userDid, null, null) 
     const currentTime = new Date().getTime()
    
+    const ownedChannels = await myprofile.queryOwnedChannels()
+    console.log("ownedChannels result ==================================== ", ownedChannels)
+
     /* //发送文字
     const ownedChannels = await myprofile.queryOwnedChannels()
     for (let index = 0; index < ownedChannels.length; index++) {
