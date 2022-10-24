@@ -26,10 +26,6 @@ export class RuntimeContext {
         return this.applicationDid
     }
 
-    public setUserDid(userDid: string) {
-        this.userDid = userDid
-    }
-
     public getUserDid(): string {
         return this.userDid
     }
