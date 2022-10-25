@@ -7,8 +7,8 @@ import { ScriptingNames as scripts } from './vault/constants';
 const logger = new Logger("Comment")
 
 export class Comment {
-    private commentInfo: CommentInfo
     private context: RuntimeContext
+    private commentInfo: CommentInfo
     private targetDid: string
 
     /**
