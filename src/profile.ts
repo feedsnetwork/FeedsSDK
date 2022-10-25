@@ -1,8 +1,9 @@
 import { RuntimeContext } from "./runtimecontext";
-import { ChannelInfo } from "./channelinfo";
+import { ChannelInfo, deserializeToChannelInfo } from "./channelinfo";
 import { ProfileHandler } from "./profilehandler";
 import { ScriptingNames as scripts } from "./vault/constants"
 import { Logger } from './utils/logger'
+import { UserInfo } from "./userinfo";
 
 const logger = new Logger("Profile")
 
@@ -13,13 +14,11 @@ export class Profile implements ProfileHandler {
 
     /**
     * @param context: RuntimeContext instance
-    * @param userDid: owner of this profile
-    * @param displayName: Display name for this profile
     */
-    public constructor(context: RuntimeContext, userDid: string, displayName: string) {
+    public constructor(context: RuntimeContext, userInfo: UserInfo) {
         this.context = context;
-        this.userDid = userDid
-        this.displayName = displayName
+        this.userDid = userInfo.getUserDid()
+        this.displayName = userInfo.getDisplayName()
     }
 
     // Get user did
@@ -72,7 +71,7 @@ export class Profile implements ProfileHandler {
             let items = result.find_message.items
             let channelInfos = []
             items.forEach((item: any) => {
-                channelInfos.push(ChannelInfo.parseFrom(this.userDid, item))
+                channelInfos.push(deserializeToChannelInfo(this.userDid, item))
             })
 
             logger.debug(`Got owned channels: ${channelInfos}`);
@@ -99,10 +98,7 @@ export class Profile implements ProfileHandler {
             logger.debug(`Call script to query owned channel by id: ${result}`)
 
             const items = result.find_message.items
-            let channelInfo =  ChannelInfo.parseFrom(this.userDid, items[0])
-
-            logger.debug(`Got owned channel by Id: ${channelInfo}`);
-            return channelInfo;
+            return deserializeToChannelInfo(this.userDid, items[0])
         } catch (error) {
             logger.error("query owned channel by id error: ", error)
             throw new Error(error)
@@ -132,10 +128,14 @@ export class Profile implements ProfileHandler {
         }
     }
 
+    public async querySubscribedChannels(): Promise<ChannelInfo[]> {
+        return await this._querySubscribedChannels(0, Date.now(), 30)
+    }
+
     /**
     * Query the channels subscribed to by this profile
     */
-    public async querySubscribedChannels(start: number, end: number, capacity: number): Promise<ChannelInfo[]> {
+    public async _querySubscribedChannels(_start: number, _end: number, _capacity: number): Promise<ChannelInfo[]> {
         try {
             let runner = await this.context.getScriptRunner(this.userDid)
             let result = await runner.callScript(
@@ -161,7 +161,7 @@ export class Profile implements ProfileHandler {
                     channel_id,
                     this.context.getAppDid()
                 )
-                subscriptions.push(ChannelInfo.parseFrom(target_did, info.find_message.items[0]))
+                subscriptions.push(deserializeToChannelInfo(target_did, info.find_message.items[0]))
             }
 
             logger.debug(`Susbscriptions: ${subscriptions}`)
@@ -174,13 +174,5 @@ export class Profile implements ProfileHandler {
 
     public querySubscribedChannelById(_channelId: string): Promise<ChannelInfo> {
         throw new Error("Method not implemented.");
-    }
-
-    public static parseFrom(context: RuntimeContext, userDid: string, result: any): Profile {
-        const targetDid = result.user_did
-        const displayName = result.display_name
-        const profile = new Profile(context, targetDid, displayName)
-
-        return profile
     }
 }

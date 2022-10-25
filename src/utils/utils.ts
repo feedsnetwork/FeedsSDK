@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 
-const TAG: string = 'utils';
+const TAG = 'utils';
 
 export class utils {
   /**
@@ -44,7 +44,7 @@ export class utils {
       return S(x, 17) ^ S(x, 19) ^ R(x, 10);
     }
     function core_sha256(m, l) {
-      var K = new Array(
+      var K = [
         0x428a2f98,
         0x71374491,
         0xb5c0fbcf,
@@ -109,8 +109,8 @@ export class utils {
         0xa4506ceb,
         0xbef9a3f7,
         0xc67178f2,
-      );
-      var HASH = new Array(
+      ];
+      var HASH = [
         0x6a09e667,
         0xbb67ae85,
         0x3c6ef372,
@@ -119,7 +119,7 @@ export class utils {
         0x9b05688c,
         0x1f83d9ab,
         0x5be0cd19,
-      );
+      ];
       var W = new Array(64);
       var a, b, c, d, e, f, g, h, i, j;
       var T1, T2;
@@ -170,7 +170,7 @@ export class utils {
       return HASH;
     }
     function str2binb(str) {
-      var bin = Array();
+      var bin = [];
       var mask = (1 << chrsz) - 1;
       for (var i = 0; i < str.length * chrsz; i += chrsz) {
         bin[i >> 5] |= (str.charCodeAt(i / chrsz) & mask) << (24 - (i % 32));
@@ -302,7 +302,7 @@ export class utils {
       .drawImage(img, 0, 0, canvas.width,
         canvas.height);
     return canvas.toDataURL('image/*', quality);
-  };
+  }
 
   /**
   * 计算缩放宽高
@@ -331,6 +331,5 @@ export class utils {
       return this.zoomImgSize(newWidth, newHeight, maxWidth, maxHeight);
     }
     return [newWidth, newHeight];
-  };
-
+  }
 }

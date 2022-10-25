@@ -9,14 +9,12 @@ import { Logger } from "./utils/logger"
 import { ChannelInfo } from "./channelinfo"
 import { Channel } from "./channel"
 import { Post } from "./post"
-import { signin } from "./signin"
+import { UserInfo } from "./userinfo"
+import { CommentInfo } from "./commentInfo"
 
 export {
     Logger,
     RuntimeContext,
-    MyProfile,
-    Profile,
-    MyChannel,
     Channel,
     ChannelInfo,
     Post,
@@ -24,7 +22,12 @@ export {
     PostContent,
     MediaData,
     MediaType,
-    signin
+    //Comment,
+    CommentInfo,
+    Profile,
+    UserInfo,
+    MyProfile,
+    MyChannel,
 }
 /*
 interface ConfigOptions {

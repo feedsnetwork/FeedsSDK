@@ -1,6 +1,6 @@
 import { ChannelInfo } from "./channelinfo"
 import { PostBody } from "./postbody"
-import { Profile } from "./profile";
+import { UserInfo } from "./userinfo";
 
 export interface ChannelHandler {
     /**
@@ -40,7 +40,7 @@ export interface ChannelHandler {
     * @param earilerThan The timestamp
     * @param upperlimit The maximum number of subscribers for this query.
     */
-    querySubscribers(start: number, end: number, upperLimit: number): Promise<Profile[]>;
+    querySubscribers(start: number, end: number, upperLimit: number): Promise<UserInfo[]>;
 
-    querySubscriber(userDid: string ): Promise<Profile[]>;
+    querySubscriber(userDid: string ): Promise<UserInfo[]>;
 }

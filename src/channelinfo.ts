@@ -1,32 +1,32 @@
 import { utils } from "./utils/utils"
 
-export class ChannelInfo {
-    private ownerDid: string // to create channel
-    private channelId: string // the unique id of the channel
-    private name: string // The name of the channel, which cannot be changed
+class ChannelInfo {
+    private readonly ownerDid: string // creator of this channel
+    private readonly channelId: string // the unique id of the channel
+    private readonly name: string // The name of the channel, which cannot be changed
 
     private displayName: string // The display name of the channel
     private descritpion: string // Description of the channel
-    private receivingAddress: string //
-    private avatar: string // channel's avatar
-    private category: string //
+    private receivingAddress: string
+    private avatar: string
+    private category: string
     private createdAt: number // Timestamp of channel creation
     private updatedAt: number // Timestamp for updating channel information
 
-    private type: string;   // TODO:
-    private nft: string;    // TODO:
-    private memo: string;   // TODO:
-    private proof: string;  // TODO:
+    private type = "public";
+    private nft = "";   // used for nft image as avatar.
+    private memo = "";  // reserved field
+    private proof = ""; // signature of the channel information
     /**
     *
     * @param _ownerDid： to create channel
     * @param _channelId：the unique id of the channel
     * @param _name：The name of the channel, which cannot be changed
     */
-    private constructor(_ownerDid: string, _channelId: string, _name: string) {
-        this.ownerDid = _ownerDid;
-        this.channelId = _channelId;
-        this.name = _name;
+    constructor(ownerDid: string, channelId: string, name: string) {
+        this.ownerDid = ownerDid;
+        this.channelId = channelId;
+        this.name = name;
     }
 
     /**
@@ -102,30 +102,6 @@ export class ChannelInfo {
     }
 
     /**
-    * Set the state of the channel
-    * @param type:（public and private）
-    */
-    public setType(type: string): ChannelInfo {
-        this.type = type;
-        return this;
-    }
-
-    public setNft(nft: string): ChannelInfo {
-        this.nft = nft;
-        return this;
-    }
-
-    public setProof(proof: string): ChannelInfo {
-        this.proof = proof;
-        return this;
-    }
-
-    public setMemo(memo: string): ChannelInfo {
-        this.memo = memo;
-        return this;
-    }
-
-    /**
     * Get the creator of the channel
     */
     public getOwnerDid(): string {
@@ -195,32 +171,21 @@ export class ChannelInfo {
     public getType(): string {
         return this.type;
     }
+}
 
-    public getNft(): string {
-        return this.nft;
-    }
+// Deserialize into channel information object
+const deserializeToChannelInfo = (targetDid: string, channel: any): ChannelInfo => {
+    return new ChannelInfo(targetDid, channel.channel_id, channel.name)
+        .setDisplayName(channel.display_name)
+        .setDescription(channel.intro)
+        .setPaymentAddress(channel.tipping_address)
+        .setAvatar(channel.avatar)
+        .setCreatedAt(channel.created_at)
+        .setUpdatedAt(channel.updated_at)
+        .setCategory(channel.category)
+}
 
-    public getProof(): string {
-        return this.proof;
-    }
-
-    public getMmemo(): string {
-        return this.memo;
-    }
-
-    // Deserialize channel information
-    static parseFrom(targetDid: string, channel: any): ChannelInfo {
-        return new ChannelInfo(targetDid, channel.channel_id, channel.name)
-            .setDisplayName(channel.display_name)
-            .setDescription(channel.intro)
-            .setPaymentAddress(channel.tipping_address)
-            .setAvatar(channel.avatar)
-            .setCreatedAt(channel.created_at)
-            .setUpdatedAt(channel.updated_at)
-            .setType(channel.type)
-            .setNft(channel.nft)
-            .setCategory(channel.category)
-            .setProof(channel.proof)
-            .setMemo(channel.memo)
-    }
+export {
+    deserializeToChannelInfo,
+    ChannelInfo
 }

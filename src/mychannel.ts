@@ -1,11 +1,12 @@
 import { Logger } from './utils/logger'
-import { ChannelInfo } from './channelinfo'
+import { ChannelInfo, deserializeToChannelInfo } from './channelinfo'
 import { Post } from './post';
 import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { RuntimeContext } from './runtimecontext';
 import { CollectionNames as collections } from './vault/constants';
-import { UpdateOptions, FindOptions, DatabaseService, FilesService } from "@elastosfoundation/hive-js-sdk"
+import { UpdateOptions, FindOptions, DatabaseService, FilesService} from "@elastosfoundation/hive-js-sdk"
+import { deserializeToUserInfo, UserInfo } from './userinfo';
 
 const logger = new Logger("MyChannel")
 
@@ -69,8 +70,8 @@ export class MyChannel {
 
     private async getDatabaseService(): Promise<DatabaseService> {
         return (await this.context.getVault()).getDatabaseService()
-    }    
-    
+    }
+
     private async getFilesService(): Promise<FilesService> {
         return (await this.context.getVault()).getFilesService()
     }
@@ -87,7 +88,7 @@ export class MyChannel {
             )
             logger.debug(`Call script to query channel info: ${result}`)
 
-            return ChannelInfo.parseFrom(
+            return deserializeToChannelInfo(
                 this.getOwnerDid(),
                 result[0]
             )
@@ -234,12 +235,12 @@ export class MyChannel {
             let result = await db.findMany(collections.SUBSCRIPTION, filter, findOptions)
             logger.debug(`Call script to query subscribers: ${result}`)
 
-            let profiles = []
+            let subscribers = []
             result.forEach(item => {
-                profiles.push(Profile.parseFrom(this.context, this.getOwnerDid(), item))
+                subscribers.push(deserializeToUserInfo(item))
             })
-            logger.debug(`Got subscribers: ${profiles}`)
-            return profiles
+            logger.debug(`Got subscribers: ${subscribers}`)
+            return subscribers
         } catch (error) {
             logger.error("Query subscribers error: ", error)
             throw error
@@ -334,8 +335,4 @@ export class MyChannel {
             throw error
         }
     }*/
-
-    static parseFrom(context: RuntimeContext, targetDid: string, channel: any): MyChannel {
-        return new MyChannel(context, ChannelInfo.parseFrom(targetDid, channel))
-    }
 }

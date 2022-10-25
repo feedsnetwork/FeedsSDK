@@ -1,7 +1,7 @@
 
 import { VerifiableCredential } from "@elastosfoundation/did-js-sdk";
 import { RuntimeContext } from "./runtimecontext";
-import { ChannelInfo } from "./channelinfo";
+import { ChannelInfo, deserializeToChannelInfo } from "./channelinfo";
 import { Logger } from "./utils/logger";
 import { CollectionNames, ScriptingNames } from "./vault/constants"
 import { ProfileHandler } from "./profilehandler";
@@ -86,7 +86,7 @@ export class MyProfile implements ProfileHandler {
 
             let channelInfos = []
             result.forEach(item => {
-                channelInfos.push(ChannelInfo.parseFrom(this.userDid, item))
+                channelInfos.push(deserializeToChannelInfo(this.userDid, item))
             })
             logger.debug(`Got owned channels: ${result}`)
             return channelInfos
@@ -103,11 +103,11 @@ export class MyProfile implements ProfileHandler {
     public async queryOwnedChannnelById(channelId: string): Promise<ChannelInfo> {
         try {
             let db = await this.getDatabaseService()
-            let result = await db.findMany( CollectionNames.CHANNELS,
+            let result = await db.findOne( CollectionNames.CHANNELS,
                 { "channel_id": channelId }
             )
             logger.debug(`Query owned channel by channelId ${channelId}: ${result}`);
-            return ChannelInfo.parseFrom(this.userDid, result[0])
+            return deserializeToChannelInfo(this.userDid, result)
         } catch (error) {
             logger.error("query owned channnel by id error: ", error)
             throw new Error(error)
@@ -156,7 +156,7 @@ export class MyProfile implements ProfileHandler {
                     target_did,
                     this.context.getAppDid()
                 ) as any
-                channels.push(ChannelInfo.parseFrom(target_did, callResult.find_message.items[0]))
+                channels.push(deserializeToChannelInfo(target_did, callResult.find_message.items[0]))
             }
             logger.debug("query subscriptions channelInfo: ", channels)
             return channels
@@ -188,12 +188,12 @@ export class MyProfile implements ProfileHandler {
                 "avatar"    : channelInfo.getAvatar(),
                 "created_at": channelInfo.getCreatedAt(),
                 "updated_at": channelInfo.getUpdatedAt(),
-                "type"      : channelInfo.getType(),
                 "tipping_address": channelInfo.getPaymentAddress(),
-                "nft"       : channelInfo.getNft(),
-                "memo"      : channelInfo.getMmemo(),
                 "category"  : channelInfo.getCategory(),
-                "proof"     : channelInfo.getProof()
+                "type"      : channelInfo.getType(),
+                "nft"       : "",
+                "memo"      : "",
+                "proof"     : ""
             }
             let db = await this.getDatabaseService()
             await db.insertOne(CollectionNames.CHANNELS, doc, new InsertOptions(false, true))

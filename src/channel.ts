@@ -1,11 +1,11 @@
 import { Logger } from './utils/logger'
-import { ChannelInfo } from './channelinfo'
+import { ChannelInfo, deserializeToChannelInfo } from './channelinfo'
 import { ChannelHandler } from './channelhandler'
 import { PostBody } from './postbody'
-import { Profile } from './profile'
 import { RuntimeContext } from './runtimecontext'
 import { CommentInfo } from './commentInfo'
 import { ScriptingNames as scripts } from './vault/constants'
+import { deserializeToUserInfo, UserInfo } from './userinfo'
 
 const logger = new Logger("Channel")
 /**
@@ -87,13 +87,10 @@ class Channel implements ChannelHandler {
             )
             logger.debug(`Call script to query channel info: ${result}`);
 
-            let channelInfo = ChannelInfo.parseFrom(
+            return deserializeToChannelInfo(
                 this.getOwnerDid(),
                 result.find_message.items[0]
             )
-            logger.debug(`Got this channel information: ${channelInfo}`);
-            return channelInfo;
-
         } catch (error) {
             logger.error('Query channel information error: ', error)
             throw new Error(error)
@@ -209,7 +206,7 @@ class Channel implements ChannelHandler {
      * Query the list of subscribers to this channel.
      *
      */
-    public async querySubscribers(start: number, end: number, upperLimit: number): Promise<Profile[]> {
+    public async querySubscribers(start: number, end: number, upperLimit: number): Promise<UserInfo[]> {
         try {
             let params = {
                 "channel_id": this.getChannelId(),
@@ -227,24 +224,19 @@ class Channel implements ChannelHandler {
             logger.debug(`Call script to query subscribers: ${result}`)
 
             let items = result.find_message.items
-            let profiles = []
+            let subscribers: UserInfo[] = []
             for (let index = 0; index < items.length; index++) {
-                let profile = Profile.parseFrom(
-                    this.context,
-                    this.getOwnerDid(),
-                    items[index]
-                )
-                profiles.push(profile)
+                subscribers.push(deserializeToUserInfo(items[index]))
             }
-            logger.debug(`Got subscribers: ${profiles}`)
-            return profiles
+            logger.debug(`Got subscribers: ${subscribers}`)
+            return subscribers
         } catch (error) {
             logger.error("Query ubscribers error : ", error)
             throw new Error(error)
         }
     }
 
-    public querySubscriber(userDid: string ): Promise<Profile[]> {
+    public querySubscriber(userDid: string ): Promise<UserInfo[]> {
         throw new Error("TODO: not implemneted")
     }
 
@@ -296,10 +288,6 @@ class Channel implements ChannelHandler {
             logger.error('Download media by hive Url error:', error)
             throw error
         }
-    }
-
-    static parseFrom(context: RuntimeContext, targetDid: string, item: any): Channel {
-        return new Channel(context, ChannelInfo.parseFrom(targetDid, item))
     }
 }
 
