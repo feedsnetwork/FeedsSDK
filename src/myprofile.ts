@@ -13,42 +13,49 @@ const logger = new Logger("MyProfile")
 
 export class MyProfile implements ProfileHandler {
     private context: RuntimeContext;
-
     private userDid: string;
+    private walletAddress: string;
+
     private nameCredential: VerifiableCredential;
-    /**
-    *
-    * @param context： RuntimeContext
-    * @param userDid：user did
-    * @param name：user name
-    * @param description：VerifiableCredential
-    */
-    public constructor(context: RuntimeContext,
-        userDid: string,
-        name: VerifiableCredential,
-        description: VerifiableCredential) {
+    private name: string;
+
+    private descrCredetnial: VerifiableCredential;
+    private descr: string;
+
+    public constructor(context: RuntimeContext, userDid: string, walletAddress: string) {
 
         logger.info(`User Did: ${userDid}`);
         this.context = context;
         this.userDid = userDid;
-        if (description != null) {
-            logger.info(`Description credential: ${JSON.stringify(description.toJSON())}`)
-        }
-
-        if (name != null) {
-            logger.info(`Name credential: ${JSON.stringify(name.toJSON())}`)
-        }
-        this.nameCredential = name;
+        this.walletAddress = walletAddress;
     }
 
-    // Get user did
+    public setNameCredential(credential: VerifiableCredential): MyProfile{
+        this.nameCredential = credential;
+        this.name = credential ? credential.getSubject().getProperty('name'): this.userDid;
+        return this;
+    }
+
+    public setDescriptionCredential(credential: VerifiableCredential): MyProfile {
+        this.descrCredetnial = credential
+        this.descr = credential ? this.descrCredetnial.getSubject().getProperty('description'): ""
+        return this;
+    }
+
     public getUserDid(): string {
         return this.userDid;
     }
 
-    // get user name
+    public getWalletAddress(): string {
+        return this.walletAddress;
+    }
+
     public getName(): string {
-        return this.nameCredential ? this.nameCredential.getSubject().getProperty('name'): this.userDid;
+        return this.name;
+    }
+
+    public getDescription(): string {
+        return this.descr
     }
 
     private async getDatabaseService(): Promise<DatabaseService> {
@@ -63,7 +70,7 @@ export class MyProfile implements ProfileHandler {
     public async queryOwnedChannelCount(): Promise<number> {
         try {
             let db = await this.getDatabaseService()
-            let result = await db.findMany(CollectionNames.CHANNELS, {})
+            let result = await db.findMany(CollectionNames.CHANNELS, {}) // TODO: replace with countDocuments
             logger.debug(`Got the count of owned channels: ${result.length}`)
             return result.length
         } catch (error) {
@@ -114,10 +121,10 @@ export class MyProfile implements ProfileHandler {
      *
      * @returns A promise object that contains the number of subscribed channels.
      */
-    public async querySubscriptionCount(): Promise<number> {
+    public async querySubscribedChannelCount(): Promise<number> {
         try {
             let db = await this.getDatabaseService()
-            let result = await db.findMany(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {})
+            let result = await db.findMany(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {}) // TODO: replace with countDocuments
             logger.debug(`Query subscription count: ${result.length}`)
             return result.length
         } catch (error) {
@@ -129,7 +136,7 @@ export class MyProfile implements ProfileHandler {
     /**
       * Query a list of channels subscribed by this profile.
       */
-    public async querySubscriptions(): Promise<ChannelInfo[]> {
+    public async querySubscribedChannels(_start: number, _end: number, _capcity = 30): Promise<ChannelInfo[]> {
         try {
             let db = await this.getDatabaseService()
             let result = await db.findMany(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {})
@@ -162,15 +169,18 @@ export class MyProfile implements ProfileHandler {
     }
 
     /**
+     * Query a specific subscribed channel.
+     * @param channelId The channelId
+     */
+    public querySubscribedChannelById(channelId: string): Promise<ChannelInfo> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
      * Create a channel on remote vault
      *
-     * @param name channel name
-     * @param intro brief introduction to the channel
-     * @param receivingAddr the ESC address to receive tipping payment
-     * @param category channel category
-     * @param proof [option] sigature to the channel metadata
      */
-    public async createChannel(channelInfo: ChannelInfo): Promise<MyChannel> {
+    public async createChannel(channelInfo: ChannelInfo) {
         try {
             let doc = {
                 "channel_id": channelInfo.getChannelId(),
@@ -190,8 +200,6 @@ export class MyProfile implements ProfileHandler {
             let db = await this.getDatabaseService()
             await db.insertOne(CollectionNames.CHANNELS, doc, new InsertOptions(false, true))
             logger.debug(`Create channel in success with channel info: ${doc}`)
-
-            return MyChannel.parseFrom(this.context, this.userDid, [doc])
         } catch (error) {
             logger.error("create channel error: ", error)
             throw new Error(error)
