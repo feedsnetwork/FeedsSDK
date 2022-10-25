@@ -10,14 +10,13 @@ export class RuntimeContext {
     private scriptRunners: { [key: string]: ScriptRunner } = {}
     private vault: Vault = null
 
-    private applicationDid = ""
+    private applicationDid = "did:elastos:iqtWRVjz7gsYhyuQEb1hYNNmWQt1Z9geXg" // Should be Feeds application DID.
 
     private userDid: string
     private hiveContext: HiveContext
     private hiveContextProvider: HiveContextProvider
 
     private constructor(hiveContextProvider: HiveContextProvider, userDid: string) {
-        this.applicationDid = "did:elastos:iqtWRVjz7gsYhyuQEb1hYNNmWQt1Z9geXg" // Should be Feeds application DID.
         this.hiveContextProvider = hiveContextProvider;
         this.userDid = userDid;
     }
@@ -49,6 +48,9 @@ export class RuntimeContext {
         }
 
         try {
+            if (didResolver === null) {
+                didResolver = "mainnet".toLowerCase()
+            }
             this.sInstance = new RuntimeContext(hiveContextProvider, userDid)
             //HiveLogger.setLevel(HiveLogger.TRACE)
             HiveContext.setupResolver(
@@ -79,73 +81,6 @@ export class RuntimeContext {
         return await prepreFeedsVault(await this.getVault(), this.getUserDid(), true)
     }
 
-/*
-    private async getAppInstanceDIDDocument() {
-        if (this.appInstanceDIDDocument === null || this.appInstanceDIDDocument === undefined) {
-            const didAccess = new ConDID.DIDAccess()
-            const info = await didAccess.getOrCreateAppInstanceDID()
-            const instanceDIDDocument = await info.didStore.loadDid(info.did.toString())
-            this.appInstanceDIDDocument = instanceDIDDocument
-        }
-
-        return this.appInstanceDIDDocument
-    }
-
-    private async generateHiveAuthPresentationJWT(challenge: string) {
-
-        try {
-            // Parse this challenge code to be claims.
-            let parsed = await new JWTParserBuilder().build().parse(challenge)
-            let claims = parsed.getBody()
-            if (claims == null) {
-                throw new Error(`Invalid challenge code. ${challenge}`)
-            }
-
-            // abstract issuer/nonce from claims that will be used next.
-            let payload = claims.getJWTPayload()
-            let nonce   = payload['nonce'] as string
-            let issuer  = claims.getIssuer()
-
-            //x Issue VC to appInstanceDid to access Hive/Vault
-            connectivity.setApplicationDID(this.getAppDid())
-            let didAccess = new ConDID.DIDAccess()
-            let vc = await didAccess.getExistingAppIdentityCredential()
-            if (vc != null) {
-                vc = await didAccess.generateAppIdCredential()
-            }
-
-            // Create VP from VC with appInstanceDid as subject
-
-            let info = await didAccess.getOrCreateAppInstanceDID()
-            let info2 = await didAccess.getExistingAppInstanceDIDInfo()
-            let builder = await VerifiablePresentation.createFor(info.did, null, info.didStore)
-            let vp = await builder.credentials(vc)
-                .realm(issuer)
-                .nonce(nonce)
-                .seal(info2.storePassword)
-
-            // Wrapper vp to be jwtcode
-            const exp = new Date()
-            const iat = new Date().getTime()
-            exp.setFullYear(exp.getFullYear() + 2)
-            const expTime = exp.getTime()
-
-            // Create JWT token with presentation.
-            let doc = await this.getAppInstanceDIDDocument()
-            return await doc.jwtBuilder()
-                .addHeader(JWTHeader.TYPE, JWTHeader.JWT_TYPE)
-                .addHeader("version", "1.0")
-                .setSubject("DIDAuthResponse")
-                .setAudience(issuer)
-                .setIssuedAt(iat)
-                .setExpiration(expTime)
-                .claimsWithJson("presentation", vp.toString(true))
-                .sign(info2.storePassword)
-        } catch (error) {
-            throw new Error(`Generating response jwtcode error: ${error}`)
-        }
-    }
-*/
     private async getHiveContext(): Promise<HiveContext> {
         try {
             if (this.hiveContext == null) {
