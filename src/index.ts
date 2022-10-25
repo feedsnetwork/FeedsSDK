@@ -1,7 +1,6 @@
 'use strict'
 
 import { RuntimeContext } from "./runtimecontext"
-import { ChannelEntry } from "./channelentry"
 import { MyChannel } from "./mychannel"
 import { MyProfile } from "./myprofile"
 import { PostBody, PostContent, MediaData, MediaType } from "./postbody"
@@ -19,7 +18,6 @@ export {
     Profile,
     MyChannel,
     Channel,
-    ChannelEntry,
     ChannelInfo,
     Post,
     PostBody,
