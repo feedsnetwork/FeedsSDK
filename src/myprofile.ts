@@ -7,7 +7,7 @@ import { CollectionNames, ScriptingNames } from "./vault/constants"
 import { MyChannel } from "./mychannel";
 import { ChannelEntry } from "./channelentry";
 import { ProfileHandler } from "./profilehandler";
-import { DatabaseService, InsertOptions } from "@elastosfoundation/hive-js-sdk";
+import { DatabaseService, FilesService, InsertOptions } from "@elastosfoundation/hive-js-sdk";
 
 const logger = new Logger("MyProfile")
 
@@ -53,6 +53,10 @@ export class MyProfile implements ProfileHandler {
 
     private async getDatabaseService(): Promise<DatabaseService> {
         return (await this.context.getVault()).getDatabaseService()
+    }
+
+    private async getFilesService(): Promise<FilesService> {
+        return (await this.context.getVault()).getFilesService()
     }
 
     // Get the number of channels created by yourself
@@ -257,6 +261,25 @@ export class MyProfile implements ProfileHandler {
         } catch (error) {
             logger.error("Unsbuscribe channel error:", error)
             throw error
+        }
+    }
+
+    public async downloadEssentilaAvatar(remoteHiveUrlPath: string): Promise<Buffer> {
+        try {
+            let runner = await this.context.getScriptRunner(this.userDid)
+            return await runner.downloadFileByHiveUrl(remoteHiveUrlPath)
+        } catch (error) {
+            logger.error("Download Essentila avatar error:", error)
+        }
+    }
+
+    public async downloadFeedsCusotmeAvatar(): Promise<Buffer> {
+        try {
+            const custome = 'custome'
+            const fileService = await this.getFilesService()
+            return await fileService.download(custome)
+        } catch (error) {
+            logger.error("Download feeds avatar error:", error)
         }
     }
 }

@@ -222,7 +222,7 @@ export class Post {
 
             const items = result.find_message.items
             let comments = []
-            result.forEach((item: any) => {
+            items.forEach((item: any) => {
                 comments.push(Comment.parseFrom(this.context, this.getBody().getTargetDid(), item))
             })
             logger.debug(`Got comment by Id: ${comments[0]}`)
@@ -252,7 +252,7 @@ export class Post {
 
             const items = result.find_message.items
             let comments = []
-            result.forEach((item: any) => {
+            items.forEach((item: any) => {
                 comments.push(Comment.parseFrom(this.context, this.getBody().getTargetDid(), item))
             })
             logger.debug(`Got comments by postid: ${comments}`)
@@ -260,6 +260,24 @@ export class Post {
         } catch (error) {
             logger.error('query comment by post id error:', error)
             throw new Error(error);
+        }
+    }
+
+    public async downloadMediaByHiveUrl(url: string) {
+        try {
+            logger.debug("download media url: ", url)
+            const params = url.split("@")
+            const scriptName = params[0]
+            const remoteName = params[1]
+            let runner = await this.context.getScriptRunner(this.getBody().getTargetDid())
+            let result = await runner.callScript<any>(scriptName, { "path": remoteName }, this.getBody().getTargetDid(), this.context.getAppDid())
+            const transaction_id = result[scriptName]["transaction_id"]
+            logger.debug("download media transaction_id: ", transaction_id)
+            return await runner.downloadFile(transaction_id)
+            // let jsonString = dataBuffer.toString()
+        } catch (error) {
+            logger.error('Download media by hive Url error:', error)
+            throw error
         }
     }
 /*

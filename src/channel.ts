@@ -351,6 +351,24 @@ class Channel implements ChannelHandler {
         }
     }
 
+    public async downloadChannelAvatarByUrl(url: string) {
+        try {
+            logger.debug("download media url: ", url)
+            const params = url.split("@")
+            const scriptName = params[0]
+            const remoteName = params[1]
+            let runner = await this.context.getScriptRunner(this.getOwnerDid())
+            let result = await runner.callScript<any>(scriptName, { "path": remoteName }, this.getOwnerDid(), this.context.getAppDid())
+            const transaction_id = result[scriptName]["transaction_id"]
+            logger.debug("download media transaction_id: ", transaction_id)
+            return await runner.downloadFile(transaction_id)
+            // let jsonString = dataBuffer.toString()
+        } catch (error) {
+            logger.error('Download media by hive Url error:', error)
+            throw error
+        }
+    }
+
     static parseFrom(context: RuntimeContext, targetDid: string, item: any): Channel {
         return new Channel(context, ChannelInfo.parseFrom(targetDid, item))
     }

@@ -5,7 +5,7 @@ import { PostBody } from './postbody';
 import { Profile } from './profile';
 import { RuntimeContext } from './runtimecontext';
 import { CollectionNames as collections } from './vault/constants';
-import { UpdateOptions, FindOptions, DatabaseService } from "@elastosfoundation/hive-js-sdk"
+import { UpdateOptions, FindOptions, DatabaseService, FilesService } from "@elastosfoundation/hive-js-sdk"
 
 const logger = new Logger("MyChannel")
 
@@ -36,6 +36,10 @@ export class MyChannel {
 
     private async getDatabaseService(): Promise<DatabaseService> {
         return (await this.context.getVault()).getDatabaseService()
+    }    
+    
+    private async getFilesService(): Promise<FilesService> {
+        return (await this.context.getVault()).getFilesService()
     }
 
     /**
@@ -291,6 +295,19 @@ export class MyChannel {
             )
         } catch (error) {
             logger.error("delete post error: ", error)
+            throw error
+        }
+    }
+
+    public async downloadChannelAvatarByUrl(url: string) {
+        try {
+            logger.debug("download channel avatar url: ", url)
+            const params = url.split("@")
+            const remoteName = params[1]
+            const fileService = await this.getFilesService()
+            return await fileService.download(remoteName)
+        } catch (error) {
+            logger.error('Download channel avatar by hive Url error:', error)
             throw error
         }
     }
