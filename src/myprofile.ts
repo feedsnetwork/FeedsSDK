@@ -4,8 +4,6 @@ import { RuntimeContext } from "./runtimecontext";
 import { ChannelInfo } from "./channelinfo";
 import { Logger } from "./utils/logger";
 import { CollectionNames, ScriptingNames } from "./vault/constants"
-import { MyChannel } from "./mychannel";
-import { ChannelEntry } from "./channelentry";
 import { ProfileHandler } from "./profilehandler";
 import { DatabaseService, FilesService, InsertOptions } from "@elastosfoundation/hive-js-sdk";
 
@@ -209,30 +207,29 @@ export class MyProfile implements ProfileHandler {
     /**
      * Subscribe to channel
      *
-     * @param channel：Information about the subscribed channel
      * @returns
      */
-    public async subscribeChannel(channelEntry: ChannelEntry) {
+    public async subscribeChannel(targetDid: string, channelId: string) {
         try {
             let channelDoc = {
-                "channel_id": channelEntry.getChannelId(),
-                "created_at": channelEntry.getCreatedAt(),
-                "display_name": channelEntry.getDisplayName(),
-                "updated_at": channelEntry.getUpdatedAt(),
-                "status"    : channelEntry.getStatus()
+                "channel_id": channelId,
+                "created_at": Date.now,
+                "display_name": this.name,
+                "updated_at": Date.now,
+                "status"    : false,
             }
-            let scriptRunner = await this.context.getScriptRunner(channelEntry.getTargetDid())
+            let scriptRunner = await this.context.getScriptRunner(targetDid)
             await scriptRunner.callScript(
                 ScriptingNames.SCRIPT_SUBSCRIBE_CHANNEL,
                 channelDoc,
-                channelEntry.getTargetDid(),
+                targetDid,
                 this.context.getAppDid()
             )
             logger.debug(`Subscribed channel in success with doc: ${channelDoc}`)
 
             let doc = {
-                "target_did": channelEntry.getTargetDid(),
-                "channel_id": channelEntry.getChannelId()
+                "target_did": targetDid,
+                "channel_id": channelId
             }
             let db = await this.getDatabaseService()
             await db.insertOne(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc, new InsertOptions(false, true))
@@ -245,23 +242,22 @@ export class MyProfile implements ProfileHandler {
     /**
      * unsubscribe channel
      *
-     * @param channel：Unsubscribed channel information
      * @returns
      */
-    public async unsubscribeChannel(channelEntry: ChannelEntry) {
+    public async unsubscribeChannel(targetDid: string, channelId: string) {
         try {
-            let scriptRunner = await this.context.getScriptRunner(channelEntry.getTargetDid())
+            let scriptRunner = await this.context.getScriptRunner(targetDid)
             await scriptRunner.callScript(
                 ScriptingNames.SCRIPT_UNSUBSCRIBE_CHANNEL,
-                { "channel_id": channelEntry.getChannelId() },
-                channelEntry.getTargetDid(),
+                { "channel_id": channelId },
+                targetDid,
                 this.context.getAppDid()
             )
-            logger.debug(`Unsubscribed channel in scucess with entry ${channelEntry.getChannelId()}`)
+            logger.debug(`Unsubscribed channel in scucess with channelId ${channelId}`)
 
             const doc = {
-                "target_did": channelEntry.getTargetDid(),
-                "channel_id": channelEntry.getChannelId()
+                "target_did": targetDid,
+                "channel_id": channelId
             }
 
             let db = await this.getDatabaseService()
