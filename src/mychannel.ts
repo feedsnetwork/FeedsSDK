@@ -12,6 +12,7 @@ const logger = new Logger("MyChannel")
 export class MyChannel {
     private context: RuntimeContext;
     private channelInfo: ChannelInfo;
+
     /**
     *
     * @param context: RuntimeContext instance
@@ -22,16 +23,48 @@ export class MyChannel {
         this.channelInfo = channelInfo
     }
 
-    public getChannelInfo() {
+    public getChannelInfo(): ChannelInfo {
         return this.channelInfo
     }
 
-    public getChannelId(): string {
-        return this.channelInfo.getChannelId();
+    public getOwnerDid(): string {
+        return this.channelInfo.getOwnerDid()
     }
 
-    public getOwnerDid(): string {
-        return this.channelInfo.getOwnerDid();
+    public getChannelId(): string {
+        return this.channelInfo.getChannelId()
+    }
+
+    public getName(): string {
+        return this.channelInfo.getName();
+    }
+
+    public getDisplayName(): string {
+        return this.channelInfo.getDisplayName();
+    }
+
+    public getDescription(): string {
+        return this.channelInfo.getDescription();
+    }
+
+    public getPaymentAddress(): string {
+        return this.channelInfo.getPaymentAddress();
+    }
+
+    public getAvatar(): string {
+        return this.channelInfo.getAvatar();
+    }
+
+    public getCategory(): string {
+        return this.channelInfo.getCategory();
+    }
+
+    public getCreatedAt(): number {
+        return this.channelInfo.getCreatedAt()
+    }
+
+    public getUpdatedAt(): number {
+        return this.channelInfo.getUpdatedAt()
     }
 
     private async getDatabaseService(): Promise<DatabaseService> {
@@ -49,17 +82,15 @@ export class MyChannel {
     public async queryChannelInfo(): Promise<ChannelInfo> {
         try {
             let db = await this.getDatabaseService()
-            let result = await db.findMany( collections.CHANNELS,
+            let result = await db.findMany( collections.CHANNELS,  // TODO: replace with countDocuments
                 { "channel_id": this.getChannelId() }
             )
             logger.debug(`Call script to query channel info: ${result}`)
 
-            let channelInfo = ChannelInfo.parseFrom(
+            return ChannelInfo.parseFrom(
                 this.getOwnerDid(),
                 result[0]
             )
-            logger.debug(`Got channel info: ${this.channelInfo}`)
-            return channelInfo
         } catch (error) {
             logger.error('Query channel information error: ', error)
             throw error
@@ -71,66 +102,37 @@ export class MyChannel {
      * @param channelInfo new channel information to be updated.
      * @returns The promise of whether updated in success or failure
      */
-    public async updateChannelInfo(channelInfo: ChannelInfo) {
+    public async updateChannelInfo(newChannelInfo: ChannelInfo) {
+        if (newChannelInfo.getChannelId() != this.getChannelId() ||
+            newChannelInfo.getOwnerDid() != this.getOwnerDid()) {
+            throw new Error("Try to update different channel, aborted!!!");
+        }
+
         try {
             let filter = {
-                "channel_id": channelInfo.getChannelId()
+                "channel_id": this.getChannelId(),
             }
             let doc = {
-                "display_name"  : channelInfo.getDisplayName(),
-                "intro"     : channelInfo.getDescription(),
-                "avatar"    : channelInfo.getAvatar(),
-                "updated_at": channelInfo.getUpdatedAt(),
-                "type"      : channelInfo.getType(),
-                "tipping_address": channelInfo.getPaymentAddress(),
-                "nft"       : channelInfo.getNft(),
-                "memo"      : channelInfo.getMmemo(),
+                "display_name"  : newChannelInfo.getDisplayName(),
+                "tipping_address": newChannelInfo.getPaymentAddress(),
+                "intro"     : newChannelInfo.getDescription(),
+                "avatar"    : newChannelInfo.getAvatar(),
+                "updated_at": newChannelInfo.getUpdatedAt(),
+                "type"      : "",
+                "nft"       : "",
+                "memo"      : "",
             }
             let update = { "$set": doc }
 
             let db = await this.getDatabaseService()
-            await db.updateOne(collections.CHANNELS,
-                filter,
-                update,
+            await db.updateOne(collections.CHANNELS, filter, update,
                 new UpdateOptions(false, true)
             )
             logger.debug("Updating channel collection succeeded")
+            this.channelInfo = newChannelInfo
         } catch (error) {
             logger.error('update channel information error', error)
             throw new Error(error)
-        }
-    }
-
-    /**
-     * fetch a list of Posts with timestamps that are earlier than specific timestamp
-     * and limited number of this list too.
-     *
-     * @returns
-     */
-    public async queryPosts(startTime: number, endTime: number, capcity: number): Promise<PostBody[]> {
-        try {
-            let filter = {
-                "channel_id": this.getChannelId(),
-                "updated_at": {
-                    "$lt": endTime
-                }
-            }
-            let queryOptions = new FindOptions()
-            queryOptions.limit = capcity
-
-            let db = await this.getDatabaseService()
-            let result = await db.findMany(collections.POSTS, filter,queryOptions)
-            logger.debug(`Call script to query posts from this channel: ${result}`)
-
-            let posts = []
-            result.forEach(item => {
-                posts.push(PostBody.parseFrom(this.getOwnerDid(), item))
-            })
-            logger.debug(`Got posts from this channel: ${posts}`)
-            return posts
-        } catch (error) {
-            logger.error('Query posts error:', error)
-            throw error
         }
     }
 
@@ -141,15 +143,17 @@ export class MyChannel {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
+    public async queryPosts(start: number, end: number, capcity: number): Promise<PostBody[]> {
         try {
             let filter = {
                 "channel_id": this.getChannelId(),
                 "updated_at": { $gt: start, $lt: end }
             }
+            let queryOptions = new FindOptions()
+            queryOptions.limit = capcity
 
             let db = await this.getDatabaseService()
-            let result = await db.findMany(collections.POSTS, filter)
+            let result = await db.findMany(collections.POSTS, filter, queryOptions)
             logger.debug(`Call script to query posts by range of Time: ${result}`)
 
             let posts = []
@@ -168,7 +172,7 @@ export class MyChannel {
      * Query post information by specifying postid
      * @param postId：specify postid
      */
-    public async queryPost(postId: string): Promise<PostBody> {
+    public async queryPostById(postId: string): Promise<PostBody> {  // TODO: should not receive an arry of data.
         try {
             let filter = {
                 "channel_id": this.getChannelId(),
@@ -201,7 +205,7 @@ export class MyChannel {
             }
 
             let db = await this.getDatabaseService()
-            let result = await db.findMany(collections.SUBSCRIPTION, filter)
+            let result = await db.findMany(collections.SUBSCRIPTION, filter) // TODO: replace with countDocuments
             logger.debug(`Got subscriber count: ${result.length}`)
             return result.length
         } catch (error) {
@@ -215,16 +219,16 @@ export class MyChannel {
      * @param earilerThan： end time
      * @param upperlimit：Maximum number of returns
      */
-    public async querySubscribers(earilerThan: number, upperlimit: number): Promise<Profile[]> {
+    public async querySubscribers(_startTime: number, endTime: number, capacity: number): Promise<Profile[]> {
         try {
             let filter = {
                 "channel_id": this.getChannelId(),
                 "updated_at": {
-                    "$lt": earilerThan
+                    "$lt": endTime
                 }
             }
             let findOptions = new FindOptions()
-            findOptions.limit = upperlimit
+            findOptions.limit = capacity
 
             let db = await this.getDatabaseService()
             let result = await db.findMany(collections.SUBSCRIPTION, filter, findOptions)
@@ -270,19 +274,23 @@ export class MyChannel {
         }
     }
 
+    public updatePost(postId: string, post: Post) {
+        throw new Error("TODO: Not impelmented yet")
+    }
+
     /**
      * delete post
-     * @param postId： post id
+     * @param postId： post id  // TODO: the implementation is weird, need to check it.
      */
     public async deletePost(postId: string) {
         try {
-            let doc = {
-                "updated_at": new Date().getTime(),
-                "status": 1,
-            }
             let filter = {
                 "channel_id": this.getChannelId(),
                 "post_id": postId
+            }
+            let doc = {
+                "updated_at": new Date().getTime(),
+                "status": 1,
             }
             let update = { "$set": doc }
 
@@ -310,6 +318,7 @@ export class MyChannel {
     }
 
     // 为了测试提供： 硬删除
+    /*
     public async removePost(postId: string) {
         try {
             let filter = {
@@ -324,7 +333,7 @@ export class MyChannel {
             logger.error("remove post error: ", error)
             throw error
         }
-    }
+    }*/
 
     static parseFrom(context: RuntimeContext, targetDid: string, channel: any): MyChannel {
         return new MyChannel(context, ChannelInfo.parseFrom(targetDid, channel))
