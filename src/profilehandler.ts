@@ -24,12 +24,21 @@ interface ProfileHandler {
      * Query the total acount of subscribed channels.
      * @returns A promise object that contain the total number of subscribed channels.
      */
-     querySubscriptionCount(): Promise<number>;
+     querySubscribedChannelCount(): Promise<number>;
 
-     /**
-      * Query a list of subscribed channels.
-      */
-    querySubscriptions(): Promise<ChannelInfo[]>;
+    /**
+     *  Query a list of subscribed channels.
+     * @param start
+     * @param end
+     * @param capacity
+     */
+    querySubscribedChannels(start: number, end: number, capacity: number): Promise<ChannelInfo[]>;
+
+    /**
+     *
+     * @param channelId
+     */
+    querySubscribedChannelById(channelId: string): Promise<ChannelInfo>;
 }
 
 export type {

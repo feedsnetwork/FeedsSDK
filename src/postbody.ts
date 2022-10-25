@@ -400,7 +400,7 @@ export class PostBody {
         return postContent
     }
 
-    public static parse(targetDid: string, post: any): PostBody {
+    public static parseFrom(targetDid: string, post: any): PostBody {
         const contents = JSON.parse(post.content)
         const _mediaDatas = contents.mediaData
 

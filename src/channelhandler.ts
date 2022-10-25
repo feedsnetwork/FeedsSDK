@@ -18,23 +18,7 @@ export interface ChannelHandler {
     * @param upperLimit The max limit of the posts in this transaction.
     * @returns An promise object that contains a list of posts.
     */
-    queryPosts(
-        earlierThan: number,
-        maximum: number
-    ): Promise<PostBody[]>
-
-    /**
-    * Query the list of Posts from this channel by a speific range of time.
-    *
-    * @param start The beginning timestamp
-    * @param end The end timestamp
-    * @returns An promise object that contains a list of posts.
-    */
-    queryPostsByRangeOfTime(
-        start: number,
-        end: number,
-        upperLimit: number
-    ): Promise<PostBody[]>
+    queryPosts(start: number, end: number, _capcity: number): Promise<PostBody[]>
 
     /**
     * Query a post by post identifier.
@@ -42,9 +26,7 @@ export interface ChannelHandler {
     * @param postId The post id
     * @returns An promise object that contains the post.
     */
-    queryPost(
-        postId: string
-    ): Promise<PostBody>
+     queryPostById(postId: string): Promise<PostBody>
 
     /**
     * Query the subscriber count of this channel.
@@ -58,8 +40,7 @@ export interface ChannelHandler {
     * @param earilerThan The timestamp
     * @param upperlimit The maximum number of subscribers for this query.
     */
-    querySubscribers(
-        earilerThan: number,
-        upperlimit: number)
-        : Promise<Profile[]>
+    querySubscribers(start: number, end: number, upperLimit: number): Promise<Profile[]>;
+
+    querySubscriber(userDid: string ): Promise<Profile[]>;
 }

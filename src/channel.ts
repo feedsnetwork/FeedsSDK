@@ -74,6 +74,7 @@ class Channel implements ChannelHandler {
      * @returns An promise object that contains channel information.
      */
     public async queryChannelInfo(): Promise<ChannelInfo> {
+
         try {
             let params = {
                 "channel_id": this.getChannelId()
@@ -100,46 +101,6 @@ class Channel implements ChannelHandler {
     }
 
     /**
-     * // 新增
-     * fetch a list of Posts with timestamps that are earlier than specific timestamp
-     * and limited number of this list too.
-     *
-     * @param earilerThan The timestamp than which the posts to be fetched should be
-     *                    earlier
-     * @param upperLimit The max limit of the posts in this transaction.
-     * @returns An promise object that contains a list of posts.
-     */
-    public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
-        try {
-            let params = {
-                "channel_id": this.getChannelId(),
-                "limit": upperLimit,
-                "end": earilerThan,
-            }
-
-            let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript<any>(
-                scripts.SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT,
-                params,
-                this.getOwnerDid(),
-                this.context.getAppDid()
-            )
-            logger.debug(`Call script to query posts: ${result}`);
-
-            let targetDid = this.getOwnerDid()
-            let posts = []
-            result.find_message.items.forEach((item: any) => {
-                posts.push(PostBody.parse(targetDid, item))
-            })
-            logger.debug(`Got posts: ${posts}`);
-            return posts
-        } catch (error) {
-            logger.error('Query posts error:', error)
-            throw new Error(error)
-        }
-    }
-
-    /**
      * Query the list of Posts from this channel by a speific range of time.
      *
      * Return up to 30
@@ -147,18 +108,18 @@ class Channel implements ChannelHandler {
      * @param end The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public async queryPostsByRangeOfTime(start: number, end: number): Promise<PostBody[]> {
+
+    public async queryPosts(start: number, end: number, _capcity: number): Promise<PostBody[]> {
         try {
             let params = {
                 "channel_id": this.getChannelId(),
                 "start": start,
-                "end": end
+                "end": end,
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
             let result = await runner.callScript<any>(
-                scripts.QUERY_PUBLIC_SOMETIME_POST,
-                params,
+                scripts.QUERY_PUBLIC_SOMETIME_POST, params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
             )
@@ -167,7 +128,7 @@ class Channel implements ChannelHandler {
             let targetDid = this.getOwnerDid()
             let posts = []
             result.find_message.items.forEach((item: any) => {
-                posts.push(PostBody.parse(targetDid, item))
+                posts.push(PostBody.parseFrom(targetDid, item))
             })
             logger.debug(`Got posts by range of time: ${posts}`)
             return posts
@@ -178,12 +139,12 @@ class Channel implements ChannelHandler {
     }
 
     /**
-     * Query a post by post identifier.
+     * Query a post by post by post identifier.
      *
      * @param postId The post id
      * @returns An promise object that contains the post.
      */
-    public async queryPost(postId: string): Promise<PostBody> {
+    public async queryPostById(postId: string): Promise<PostBody> {
         try {
             let params = {
                 "channel_id": this.getChannelId(),
@@ -192,8 +153,7 @@ class Channel implements ChannelHandler {
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
             let result = await runner.callScript<any>(
-                scripts.QUERY_PUBLIC_SPECIFIED_POST,
-                params,
+                scripts.QUERY_PUBLIC_SPECIFIED_POST, params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
             )
@@ -203,7 +163,7 @@ class Channel implements ChannelHandler {
             let posts = []
             for (let index = 0; index < items.length; index++) {
                 const item = items[index]
-                const post = PostBody.parse(this.getOwnerDid(), item)
+                const post = PostBody.parseFrom(this.getOwnerDid(), item)
                 posts.push(post)
             }
             logger.log(`Got post with postId ${postId}: ${posts[0]}`)
@@ -248,15 +208,13 @@ class Channel implements ChannelHandler {
      * 新增：
      * Query the list of subscribers to this channel.
      *
-     * @param earilerThan The timestamp
-     * @param upperlimit The maximum number of subscribers for this query.
      */
-    public async querySubscribers(earilerThan: number, upperLimit: number): Promise<Profile[]> {
+    public async querySubscribers(start: number, end: number, upperLimit: number): Promise<Profile[]> {
         try {
             let params = {
                 "channel_id": this.getChannelId(),
                 "limit": upperLimit,
-                "end": earilerThan,
+                "end": end,
             }
 
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
@@ -271,7 +229,7 @@ class Channel implements ChannelHandler {
             let items = result.find_message.items
             let profiles = []
             for (let index = 0; index < items.length; index++) {
-                let profile = Profile.parse(
+                let profile = Profile.parseFrom(
                     this.context,
                     this.getOwnerDid(),
                     items[index]
@@ -286,44 +244,15 @@ class Channel implements ChannelHandler {
         }
     }
 
-    /**
-    * Subscription required to call， 同步feeds api
-    *
-    * @returns Query all post information under the specified channelId
-    */
-    public async queryPostsByChannel(): Promise<PostBody[]> {
-        try {
-            let params = {
-                "channel_id": this.getChannelId(),
-            }
-
-            let runner = await this.context.getScriptRunner(this.getOwnerDid())
-            let result = await runner.callScript<any>(
-                scripts.SCRIPT_QUERY_POST_BY_CHANNEL,
-                 params,
-                this.getOwnerDid(),
-                this.context.getAppDid()
-            )
-            logger.debug(`Call script to query posts by channelId: ${result}`)
-
-            let items = result.find_message.items
-            let posts = []
-            items.forEach((item: any) => {
-                posts.push(PostBody.parse(this.getOwnerDid(), item))
-            })
-            logger.debug(`Got posts by channelId: ${posts}`)
-            return posts
-        } catch (error) {
-            logger.error('Query post by channelId error:', error)
-            throw new Error(error)
-        }
+    public querySubscriber(userDid: string ): Promise<Profile[]> {
+        throw new Error("TODO: not implemneted")
     }
 
     /** Subscription required to call
     * 需订阅才能调用 同步feeds api
     * @returns Query all comment information under the specified channelId
     */
-    public async queryCommentByChannel(): Promise<CommentInfo[]> {
+    public async queryComments(_start: number, _end: number, _capacity: number): Promise<CommentInfo[]> {
         try {
             let params = {
                 "channel_id": this.getChannelId(),

@@ -105,21 +105,18 @@ export class MyChannel {
      * fetch a list of Posts with timestamps that are earlier than specific timestamp
      * and limited number of this list too.
      *
-     * @param earilerThan The timestamp than which the posts to be fetched should be
-     *                    earlier
-     * @param upperLimit The max limit of the posts in this transaction.
      * @returns
      */
-    public async queryPosts(earilerThan: number, upperLimit: number): Promise<PostBody[]> {
+    public async queryPosts(startTime: number, endTime: number, capcity: number): Promise<PostBody[]> {
         try {
             let filter = {
                 "channel_id": this.getChannelId(),
                 "updated_at": {
-                    "$lt": earilerThan
+                    "$lt": endTime
                 }
             }
             let queryOptions = new FindOptions()
-            queryOptions.limit = upperLimit
+            queryOptions.limit = capcity
 
             let db = await this.getDatabaseService()
             let result = await db.findMany(collections.POSTS, filter,queryOptions)
@@ -127,7 +124,7 @@ export class MyChannel {
 
             let posts = []
             result.forEach(item => {
-                posts.push(PostBody.parse(this.getOwnerDid(), item))
+                posts.push(PostBody.parseFrom(this.getOwnerDid(), item))
             })
             logger.debug(`Got posts from this channel: ${posts}`)
             return posts
@@ -157,7 +154,7 @@ export class MyChannel {
 
             let posts = []
             result.forEach(item => {
-                posts.push(PostBody.parse(this.getOwnerDid(), item))
+                posts.push(PostBody.parseFrom(this.getOwnerDid(), item))
             })
             logger.debug(`Got posts by range of time: ${posts}`)
             return posts
@@ -183,7 +180,7 @@ export class MyChannel {
             logger.debug(`Call script to query post by postId ${postId}: ${result}`)
             let posts = []
             result.forEach(item => {
-                posts.push(PostBody.parse(this.getOwnerDid(), item))
+                posts.push(PostBody.parseFrom(this.getOwnerDid(), item))
             })
             logger.debug(`Got post with postId ${postId}: ${posts[0]}`)
             return posts[0]
@@ -235,7 +232,7 @@ export class MyChannel {
 
             let profiles = []
             result.forEach(item => {
-                profiles.push(Profile.parse(this.context, this.getOwnerDid(), item))
+                profiles.push(Profile.parseFrom(this.context, this.getOwnerDid(), item))
             })
             logger.debug(`Got subscribers: ${profiles}`)
             return profiles
