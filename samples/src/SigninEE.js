@@ -1,6 +1,7 @@
 import React, {useState} from 'react'
-import {signin, RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody, PostContent } from '@feedsnetwork/feeds-sdk-development';
+import {Logger as FeedsLogger, signin, RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody, PostContent } from '@feedsnetwork/feeds-sdk-development';
 import { createHiveContextProvider } from './Provider'
+import { Logger as HiveLogger } from '@elastosfoundation/hive-js-sdk'
 
 import {
   useNavigate
@@ -16,6 +17,9 @@ function SigninEE() {
 
   const handleSigninEE = async () => {
     userDid = await signin(applicationDid)
+    // HiveLogger.setDefaultLevel(HiveLogger.ERROR)
+    FeedsLogger.setDefaultLevel(FeedsLogger.DEBUG)
+
     console.log("开始初始化 RuntimeContext = ", RuntimeContext.isInitialized())
     const currentNet = "mainnet".toLowerCase()
     if (!RuntimeContext.isInitialized()) {
@@ -29,18 +33,18 @@ function SigninEE() {
     console.log("myprofile ========== ", myprofile)
     const currentTime = new Date().getTime()
    
-    const subscriptions = await myprofile.querySubscriptions()
+    const subscriptions = await myprofile.querySubscribedChannels()
     for (let index = 0; index < subscriptions.length; index++) {
       const item = subscriptions[index]
       const channel = new Channel(appCtx, item)
       // 看下哪个是feeds channel的信息，取出哪个channel， 
       // 这里循环获取所有订阅的channel
-      const postBodys = await channel.queryPostsByRangeOfTime(0, currentTime)
+      const postBodys = await channel.queryPosts(0, currentTime)
       
       for (let index = 0; index < postBodys.length; index++) {
         const item = postBodys[index]
         const post = new Post(appCtx, item)
-        const comments = await post.queryComments(currentTime, 100)
+        const comments = await post.queryCommentsByRangeOfTime(0, currentTime)
         console.log(index + ": 多个 queryComments 0 ========================================", comments)
       }
     }

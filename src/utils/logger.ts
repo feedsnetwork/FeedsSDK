@@ -1,3 +1,5 @@
+import { Logger as HiveLogger } from '@elastosfoundation/hive-js-sdk'
+
 class LogLevel {
     public id: number;
     public name: string;
@@ -21,6 +23,7 @@ export class Logger {
 
     public static setDefaultLevel(level: LogLevel) {
         Logger.DEFAULT_LOG_LEVEL = level;
+        HiveLogger.setDefaultLevel(level)
     }
 
     public static getDefaultLevel(): LogLevel {
