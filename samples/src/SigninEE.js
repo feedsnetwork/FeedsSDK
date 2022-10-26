@@ -18,13 +18,13 @@ function SigninEE() {
   const handleSigninEE = async () => {
     userDid = await signin(applicationDid)
     // HiveLogger.setDefaultLevel(HiveLogger.ERROR)
-    FeedsLogger.setDefaultLevel(FeedsLogger.DEBUG)
+    FeedsLogger.setDefaultLevel(FeedsLogger.WARNING)
 
     console.log("开始初始化 RuntimeContext = ", RuntimeContext.isInitialized())
     const currentNet = "mainnet".toLowerCase()
     if (!RuntimeContext.isInitialized()) {
     // hiveProvider: AppContextProvider（@elastosfoundation/hive-js-sdk） 需要自己实现，
-      RuntimeContext.createInstance(hiveProvider, currentNet, userDid)
+      RuntimeContext.createInstance(hiveProvider, userDid)
     }
     const appCtx = RuntimeContext.getInstance()
   
