@@ -32,7 +32,32 @@ function SigninEE() {
     const myprofile = new MyProfile(appCtx, userDid, null, null) 
     console.log("myprofile ========== ", myprofile)
     const currentTime = new Date().getTime()
-   
+    const count = await myprofile.queryOwnedChannelCount()
+    console.log( "queryOwnedChannelCount ========================================", count)
+    const channels = await myprofile.queryOwnedChannels()
+    console.log( "queryOwnedChannels ========================================", channels)
+    const channelId1 = "ee74ab5fdbc62b42f45c2af1803ba95b684adbab740c88cf30f9b11c61bc1318"
+    const channelId2 = "50f0854a02059abb941849c5a66d7513091d1bbabec8b9fa582b17bbe3689b1d"
+  
+    const channels1 = await myprofile.queryOwnedChannnelById(channelId1)
+    const channels2 = await myprofile.queryOwnedChannnelById(channelId2)
+    console.log( "queryOwnedChannnelById channelId1: ========================================", channels1)
+    console.log( "queryOwnedChannnelById channelId2: ========================================", channels2)
+    
+    const channelCount = await myprofile.querySubscribedChannelCount()
+    console.log( "querySubscribedChannelCount: ========================================", channelCount)
+    
+    const subscribedChannels = await myprofile.querySubscribedChannels()
+    console.log( "querySubscribedChannels: ========================================", subscribedChannels)
+
+    for (let index = 0; index < subscribedChannels.length; index++) {
+      const item = subscribedChannels[index]
+      const channelId = item.getChannelId()
+      const subscribedChannelInfo = await myprofile.querySubscribedChannelById(channelId)
+      console.log(index + "querySubscribedChannelById: ========================================", subscribedChannelInfo)
+    }
+    // 
+    /*
     const subscriptions = await myprofile.querySubscribedChannels()
     for (let index = 0; index < subscriptions.length; index++) {
       const item = subscriptions[index]
@@ -48,6 +73,7 @@ function SigninEE() {
         console.log(index + ": 多个 queryComments 0 ========================================", comments)
       }
     }
+    */
     /* //发送文字
     const ownedChannels = await myprofile.queryOwnedChannels()
     for (let index = 0; index < ownedChannels.length; index++) {
