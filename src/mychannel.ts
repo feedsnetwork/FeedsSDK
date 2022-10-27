@@ -83,14 +83,14 @@ export class MyChannel {
     public async queryChannelInfo(): Promise<ChannelInfo> {
         try {
             let db = await this.getDatabaseService()
-            let result = await db.findMany( collections.CHANNELS,  // TODO: replace with countDocuments
+            let result = await db.findOne(collections.CHANNELS,  // TODO: replace with countDocuments
                 { "channel_id": this.getChannelId() }
             )
             logger.debug(`Call script to query channel info: ${result}`)
 
             return deserializeToChannelInfo(
                 this.getOwnerDid(),
-                result[0]
+                result
             )
         } catch (error) {
             logger.error('Query channel information error: ', error)
@@ -181,14 +181,11 @@ export class MyChannel {
             }
 
             let db = await this.getDatabaseService()
-            let result = await db.findMany(collections.POSTS,filter)
+            let result = await db.findOne(collections.POSTS, filter)
             logger.debug(`Call script to query post by postId ${postId}: ${result}`)
-            let posts = []
-            result.forEach(item => {
-                posts.push(PostBody.parseFrom(this.getOwnerDid(), item))
-            })
-            logger.debug(`Got post with postId ${postId}: ${posts[0]}`)
-            return posts[0]
+            const post = PostBody.parseFrom(this.getOwnerDid(), result)
+            logger.debug(`Got post with postId ${postId}: ${post}`)
+            return post
         } catch (error) {
             logger.error("Query post error:", error)
             throw error
@@ -206,9 +203,9 @@ export class MyChannel {
             }
 
             let db = await this.getDatabaseService()
-            let result = await db.findMany(collections.SUBSCRIPTION, filter) // TODO: replace with countDocuments
-            logger.debug(`Got subscriber count: ${result.length}`)
-            return result.length
+            let result = await db.countDocuments(collections.SUBSCRIPTION, filter) // TODO: replace with countDocuments
+            logger.debug(`Got subscriber count: ${result}`)
+            return result
         } catch (error) {
             logger.error("Query subscriber count error: ", error)
             throw error

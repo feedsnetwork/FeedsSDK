@@ -36,14 +36,37 @@ function SigninEE() {
     console.log( "queryOwnedChannelCount ========================================", count)
     const channels = await myprofile.queryOwnedChannels()
     console.log( "queryOwnedChannels ========================================", channels)
-    const channelId1 = "ee74ab5fdbc62b42f45c2af1803ba95b684adbab740c88cf30f9b11c61bc1318"
-    const channelId2 = "50f0854a02059abb941849c5a66d7513091d1bbabec8b9fa582b17bbe3689b1d"
-  
-    const channels1 = await myprofile.queryOwnedChannnelById(channelId1)
-    const channels2 = await myprofile.queryOwnedChannnelById(channelId2)
-    console.log( "queryOwnedChannnelById channelId1: ========================================", channels1)
-    console.log( "queryOwnedChannnelById channelId2: ========================================", channels2)
     
+    for (let index = 0; index < channels.length; index++) {
+      const item = channels[index]
+      const channelId = item.getChannelId()
+      const channelInfo = await myprofile.queryOwnedChannnelById(channelId)
+      console.log(index + "queryOwnedChannnelById: ========================================", channelInfo)
+    
+      const myChannel = new MyChannel(appCtx, item)
+      const channelInfo0 = await myChannel.queryChannelInfo()
+      console.log(index + "queryChannelInfo: ========================================", channelInfo0)
+      // queryPostById querySubscriberCount
+
+      const posts = await myChannel.queryPosts(0, currentTime, 100)
+      console.log(index + " queryPosts: ========================================", posts)
+      for (let index = 0; index < posts.length; index++) {
+        const item = posts[index]
+        const postId = item.getPostId()
+        console.log(index + " 开始新的测试: ========================================")
+
+        const post = await myChannel.queryPostById(postId)
+        console.log(index + " queryPostById: ========================================", post)
+  
+        const subscriberCount = await myChannel.querySubscriberCount()
+        console.log(index + " querySubscriberCount: ========================================", subscriberCount)
+        console.log(index + " 结束新的测试: ========================================")
+      }
+    }
+
+    // const channelId1 = "ee74ab5fdbc62b42f45c2af1803ba95b684adbab740c88cf30f9b11c61bc1318"
+    // const channelId2 = "50f0854a02059abb941849c5a66d7513091d1bbabec8b9fa582b17bbe3689b1d"
+
     const channelCount = await myprofile.querySubscribedChannelCount()
     console.log( "querySubscribedChannelCount: ========================================", channelCount)
     
