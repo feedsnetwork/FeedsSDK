@@ -22,8 +22,6 @@ export class MyProfile implements ProfileHandler {
     private descr: string;
 
     public constructor(context: RuntimeContext, userDid: string, walletAddress: string) {
-
-        logger.info(`User Did: ${userDid}`);
         this.context = context;
         this.userDid = userDid;
         this.walletAddress = walletAddress;
@@ -37,7 +35,7 @@ export class MyProfile implements ProfileHandler {
 
     public setDescriptionCredential(credential: VerifiableCredential): MyProfile {
         this.descrCredetnial = credential
-        this.descr = credential ? this.descrCredetnial.getSubject().getProperty('description'): ""
+        this.descr = credential ? credential.getSubject().getProperty('description'): ""
         return this;
     }
 
@@ -53,8 +51,16 @@ export class MyProfile implements ProfileHandler {
         return this.name;
     }
 
+    public getNameCredential(): VerifiableCredential {
+        return this.nameCredential
+    }
+
     public getDescription(): string {
         return this.descr
+    }
+
+    public getDescriptionCredential(): VerifiableCredential {
+        return this.descrCredetnial
     }
 
     private async getDatabaseService(): Promise<DatabaseService> {
@@ -69,12 +75,11 @@ export class MyProfile implements ProfileHandler {
     public async queryOwnedChannelCount(): Promise<number> {
         try {
             let db = await this.getDatabaseService()
-            let result = await db.countDocuments(CollectionNames.CHANNELS, {}) // TODO: replace with countDocuments
+            let result = await db.countDocuments(CollectionNames.CHANNELS, {})
             logger.debug(`Got the count of owned channels: ${result}`)
             return result
         } catch (error) {
-            logger.error(`query owned channel count error: `, error);
-            throw new Error(error)
+            throw new Error(`Query owned channel count error: ${error}`)
         }
     }
 
@@ -85,15 +90,14 @@ export class MyProfile implements ProfileHandler {
             let result = await db.findMany(CollectionNames.CHANNELS, {})
             logger.debug(`Query owned channels: ${result}`)
 
-            let channelInfos = []
+            let channels = []
             result.forEach(item => {
-                channelInfos.push(deserializeToChannelInfo(this.userDid, item))
+                channels.push(deserializeToChannelInfo(this.userDid, item))
             })
             logger.debug(`Got owned channels: ${result}`)
-            return channelInfos
+            return channels
         } catch (error) {
-            logger.error(`query owned channels error: `, error);
-            throw new Error(error)
+            throw new Error(`Query owned channels error ${error}`)
         }
     }
 
@@ -110,8 +114,7 @@ export class MyProfile implements ProfileHandler {
             logger.debug(`Query owned channel by channelId ${channelId}: ${result}`);
             return deserializeToChannelInfo(this.userDid, result)
         } catch (error) {
-            logger.error("query owned channnel by id error: ", error)
-            throw new Error(error)
+            throw new Error(`Query owned channel by channelid ${channelId} error ${error}`)
         }
     }
 
@@ -123,19 +126,18 @@ export class MyProfile implements ProfileHandler {
     public async querySubscribedChannelCount(): Promise<number> {
         try {
             let db = await this.getDatabaseService()
-            let result = await db.countDocuments(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {}) // TODO: replace with countDocuments
+            let result = await db.countDocuments(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {})
             logger.debug(`Query subscription count: ${result}`)
             return result
         } catch (error) {
-            logger.error("query subscription count error: ", error)
-            throw new Error(error)
+            throw new Error(`Query subscribed channel count error: ${error}`)
         }
     }
 
     /**
       * Query a list of channels subscribed by this profile.
       */
-    public async querySubscribedChannels(_start: number, _end: number, _capcity = 30): Promise<ChannelInfo[]> {
+    public async querySubscribedChannels(_startTime: number, _endTime: number, _capcity = 30): Promise<ChannelInfo[]> {
         try {
             let db = await this.getDatabaseService()
             let result = await db.findMany(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, {})
@@ -143,27 +145,26 @@ export class MyProfile implements ProfileHandler {
 
             let channels = []
             for (let index = 0; index < result.length; index++) {
-                const item = result[index]
-                const channel_id = item.channel_id
-                const target_did = item.target_did.toString()
-                const params = {
+                let item = result[index]
+                let channel_id = item.channel_id
+                let target_did = item.target_did.toString()
+                let params = {
                     "channel_id": channel_id,
                 }
 
-                let scriptRunner = await this.context.getScriptRunner(target_did)
-                const callResult = await scriptRunner.callScript(
+                let callRunner = await this.context.getScriptRunner(target_did)
+                let callResult = await callRunner.callScript<any>(
                     ScriptingNames.SCRIPTV1_QUERY_CHANNELINFO,
                     params,
                     target_did,
                     this.context.getAppDid()
-                ) as any
+                )
                 channels.push(deserializeToChannelInfo(target_did, callResult.find_message.items[0]))
             }
             logger.debug("query subscriptions channelInfo: ", channels)
             return channels
         } catch (error) {
-            logger.error("query subscriptions error: ", error)
-            throw new Error(error)
+            throw new Error(`Query subscribed channels error ${error}`)
         }
     }
 
@@ -180,20 +181,19 @@ export class MyProfile implements ProfileHandler {
             let result = await db.findOne(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, params)
             logger.debug(`Query subscribed channel by id result: ${result}`)
 
-            const target_did = result.target_did.toString()
+            let target_did = result.target_did.toString()
             let scriptRunner = await this.context.getScriptRunner(target_did)
-            const callResult = await scriptRunner.callScript(
+            let callResult = await scriptRunner.callScript(
                 ScriptingNames.SCRIPTV1_QUERY_CHANNELINFO,
                 params,
                 target_did,
                 this.context.getAppDid()
             ) as any
-            const channelInfo = deserializeToChannelInfo(target_did, callResult.find_message.items[0])
-            logger.debug("Query subscribed channel by id channelInfo: ", channelInfo)
-            return channelInfo
+            let channel = deserializeToChannelInfo(target_did, callResult.find_message.items[0])
+            logger.debug("Query subscribed channel by id channelInfo: ", channel)
+            return channel
         } catch (error) {
-            logger.error("Query subscribed channel by id error: ", error)
-            throw new Error(error)
+            throw new Error(`Query subscribed channel by channelId: ${channelId} error ${error}`)
         }
     }
 
@@ -232,8 +232,7 @@ export class MyProfile implements ProfileHandler {
             await db.insertOne(CollectionNames.CHANNELS, doc, new InsertOptions(false, true))
             logger.debug(`Create channel in success with channel info: ${doc}`)
         } catch (error) {
-            logger.error("create channel error: ", error)
-            throw new Error(error)
+            throw new Error(`Create a new channel error: ${error}`)
         }
     }
 
@@ -267,8 +266,7 @@ export class MyProfile implements ProfileHandler {
             let db = await this.getDatabaseService()
             await db.insertOne(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc, new InsertOptions(false, true))
         } catch (error) {
-            logger.error("Sbuscribe channel error:", error)
-            throw error
+            throw new Error(`Subscribe to a channel ${channelId} running by ${targetDid} error: ${error}`)
         }
     }
 
@@ -297,14 +295,14 @@ export class MyProfile implements ProfileHandler {
             await db.deleteOne(CollectionNames.BACKUP_SUBSCRIBEDCHANNELS, doc)
         } catch (error) {
             logger.error("Unsbuscribe channel error:", error)
-            throw error
+            throw new Error(`Unsbuscribe channel ${channelId} running by ${targetDid} error: ${error}`)
         }
     }
 
-    public async downloadEssentilaAvatar(remoteHiveUrlPath: string): Promise<Buffer> {
+    public async downloadEssentilaAvatar(avatarPath: string): Promise<Buffer> {
         try {
             let runner = await this.context.getScriptRunner(this.userDid)
-            return await runner.downloadFileByHiveUrl(remoteHiveUrlPath)
+            return await runner.downloadFileByHiveUrl(avatarPath)
         } catch (error) {
             logger.error("Download Essentila avatar error:", error)
         }
@@ -319,5 +317,4 @@ export class MyProfile implements ProfileHandler {
             logger.error("Download feeds avatar error:", error)
         }
     }
-
 }
