@@ -42,5 +42,5 @@ export interface ChannelHandler {
     */
     querySubscribers(start: number, end: number, upperLimit: number): Promise<UserInfo[]>;
 
-    querySubscriber(userDid: string ): Promise<UserInfo[]>;
+    querySubscriber(userDid: string): Promise<UserInfo>;
 }
