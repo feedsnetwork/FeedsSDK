@@ -236,8 +236,33 @@ class Channel implements ChannelHandler {
         }
     }
 
-    public querySubscriber(userDid: string ): Promise<UserInfo[]> {
-        throw new Error("TODO: not implemneted")
+    public async querySubscriber(userDid: string): Promise<UserInfo> {
+        try {
+            const params = {
+                "channel_id": this.getChannelId(),
+                "user_did": userDid
+            }
+
+            let runner = await this.context.getScriptRunner(this.getOwnerDid())
+            let result = await runner.callScript<any>(
+                scripts.SCRIPT_QUERY_SUBSCRIPTION_BY_USERDID_CHANNELID,
+                params,
+                this.getOwnerDid(),
+                this.context.getAppDid()
+            )
+            logger.debug(`Call script to query subscriber by user did : ${result}`)
+
+            let items = result.find_message.items
+            let subscribers: UserInfo[] = []
+            for (let index = 0; index < items.length; index++) {
+                subscribers.push(deserializeToUserInfo(items[index]))
+            }
+            logger.debug(`Got subscriber by user did: ${subscribers}`)
+            return subscribers
+        } catch (error) {
+            logger.error("Query subscriber by user did error : ", error)
+            throw new Error(error)
+        }
     }
 
     /** Subscription required to call
