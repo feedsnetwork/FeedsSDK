@@ -41,7 +41,7 @@ export class RuntimeContext {
     public static createInstance(
         hiveContextProvider: HiveContextProvider,
         userDid: string,
-        didResolver = "testnet") {
+        didResolver = "mainnet") {
 
         if (this.sInstance != null) {
             throw new Error("RuntimeContext singleton has been initalized already, please call AppConctxt.getInstance() to use it");
