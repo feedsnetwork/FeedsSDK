@@ -4,6 +4,7 @@ import { ProfileHandler } from "./profilehandler";
 import { ScriptingNames as scripts } from "./vault/constants"
 import { Logger } from './utils/logger'
 import { UserInfo } from "./userinfo";
+import { PostBody } from "./postbody";
 
 const logger = new Logger("Profile")
 
@@ -38,19 +39,16 @@ export class Profile implements ProfileHandler {
         try {
             let runner = await this.context.getScriptRunner(this.userDid)
             let result = await runner.callScript<any>(
-                scripts.SCRIPT_PRIFILE_CHANNELS,
-                {},
+                scripts.SCRIPTV1_QUERY_OWNEDCHANNELS, {},
                 this.userDid,
                 this.context.getAppDid()
             )
             logger.debug(`Call script to query owned channel acount: ${result}`)
+            logger.debug(`Got owned channel count: ${result.find_message.total}`)
 
-            let count = result.find_message.total
-            logger.debug(`Got owned channel count: ${count}`)
-            return count
+            return result.find_message.total
         } catch (error) {
-            logger.error('query owned channels count error: ', error)
-            throw new Error(error)
+            throw new Error(`Query owned channel count error: ${error}`)
         }
     }
 
@@ -61,24 +59,22 @@ export class Profile implements ProfileHandler {
         try {
             let runner = await this.context.getScriptRunner(this.userDid)
             let result = await runner.callScript<any> (
-                scripts.SCRIPT_PRIFILE_CHANNELS,
-                {},
+                scripts.SCRIPTV1_QUERY_OWNEDCHANNELS, {},
                 this.userDid,
                 this.context.getAppDid()
             )
             logger.debug(`Call script to query owned channels: ${result}`);
 
             let items = result.find_message.items
-            let channelInfos = []
+            let channels = []
             items.forEach((item: any) => {
-                channelInfos.push(deserializeToChannelInfo(this.userDid, item))
+                channels.push(deserializeToChannelInfo(this.userDid, item))
             })
 
-            logger.debug(`Got owned channels: ${channelInfos}`);
-            return channelInfos
+            logger.debug(`Got owned channels: ${channels}`);
+            return channels
         } catch (error) {
-            logger.error('query owned channels error: ', error)
-            throw new Error(error)
+            throw new Error(`Query owned all channels error ${error}`)
         }
     }
 
@@ -90,18 +86,17 @@ export class Profile implements ProfileHandler {
         try {
             let runner = await this.context.getScriptRunner(this.userDid)
             let result = await runner.callScript<any>(
-                scripts.SCRIPT_QUERY_CHANNEL_INFO,
-                {"channel_id": channelId,},
+                scripts.SCRIPTV1_QUERY_CHANNELINFO,
+                { "channel_id": channelId },
                 this.userDid,
                 this.context.getAppDid()
             )
             logger.debug(`Call script to query owned channel by id: ${result}`)
 
-            const items = result.find_message.items
+            let items = result.find_message.items
             return deserializeToChannelInfo(this.userDid, items[0])
         } catch (error) {
-            logger.error("query owned channel by id error: ", error)
-            throw new Error(error)
+            throw new Error(`Query owned channel by channelid ${channelId} error: ${error}`)
         }
     }
 
@@ -112,19 +107,16 @@ export class Profile implements ProfileHandler {
         try {
             let runner = await this.context.getScriptRunner(this.userDid)
             let result = await runner.callScript<any>(
-                scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS,
-                {},
+                scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, {},
                 this.userDid,
                 this.context.getAppDid()
             )
             logger.debug(`Call script to subscription count: ${result}`)
+            logger.debug(`Got subscription count: ${result.find_message.total}`)
 
-            let count = result.find_message.total;
-            logger.debug(`Got subscription count: ${count}`)
-            return count
+            return result.find_message.total
         } catch (error) {
-            logger.error("query subscription Count error: ", error)
-            throw new Error(error)
+            throw new Error(`Query subscribed channel count error: ${error}`)
         }
     }
 
@@ -138,41 +130,49 @@ export class Profile implements ProfileHandler {
     public async _querySubscribedChannels(_start: number, _end: number, _capacity: number): Promise<ChannelInfo[]> {
         try {
             let runner = await this.context.getScriptRunner(this.userDid)
-            let result = await runner.callScript(
-                scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS,
-                {},
+            let result = await runner.callScript<any> (
+                scripts.SCRIPT_PRIFILE_SUBSCRIPTIONS, {},
                 this.userDid,
                 this.context.getAppDid()
-            ) as any
+            )
             logger.debug(`Call script to query subscriptions: ${result}`)
 
             let items = result.find_message.items
-            let subscriptions = []
+            let channels = []
 
             for (let index = 0; index < items.length; index++) {
                 let item = items[index]
                 let channel_id = item.channel_id
-                let target_did = item.target_did.toString()
+                let target_did = item.target_did
 
                 runner = await this.context.getScriptRunner(channel_id)
                 let info = await runner.callScript<any>(
-                    scripts.SCRIPT_QUERY_CHANNEL_INFO,
+                    scripts.SCRIPTV1_QUERY_CHANNELINFO,
                     { "channel_id": channel_id },
                     channel_id,
                     this.context.getAppDid()
                 )
-                subscriptions.push(deserializeToChannelInfo(target_did, info.find_message.items[0]))
+                channels.push(deserializeToChannelInfo(target_did, info.find_message.items[0]))
             }
 
-            logger.debug(`Susbscriptions: ${subscriptions}`)
-            return subscriptions
+            logger.debug(`Got subscribed channels: ${channels}`)
+            return channels
         } catch (error) {
-            logger.error('query subscription channels error: ', error)
-            throw new Error(error)
+            throw new Error(`Query subscribed channels error ${error}`)
         }
     }
 
     public querySubscribedChannelById(_channelId: string): Promise<ChannelInfo> {
+        throw new Error("Method not implemented.");
+    }
+
+    queryLikedPostsNumber(): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
+    queryLikedPosts(startTime: number, endTime: number, capacity: number): Promise<PostBody[]> {
+        throw new Error("Method not implemented.");
+    }
+    queryLikedPostById(likeId: string): Promise<PostBody> {
         throw new Error("Method not implemented.");
     }
 }

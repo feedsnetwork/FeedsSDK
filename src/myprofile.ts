@@ -6,6 +6,7 @@ import { Logger } from "./utils/logger";
 import { CollectionNames, ScriptingNames } from "./vault/constants"
 import { ProfileHandler } from "./profilehandler";
 import { DatabaseService, FilesService, InsertOptions } from "@elastosfoundation/hive-js-sdk";
+import { PostBody } from "./postbody";
 
 const logger = new Logger("MyProfile")
 
@@ -151,7 +152,7 @@ export class MyProfile implements ProfileHandler {
 
                 let scriptRunner = await this.context.getScriptRunner(target_did)
                 const callResult = await scriptRunner.callScript(
-                    ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO,
+                    ScriptingNames.SCRIPTV1_QUERY_CHANNELINFO,
                     params,
                     target_did,
                     this.context.getAppDid()
@@ -182,7 +183,7 @@ export class MyProfile implements ProfileHandler {
             const target_did = result.target_did.toString()
             let scriptRunner = await this.context.getScriptRunner(target_did)
             const callResult = await scriptRunner.callScript(
-                ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO,
+                ScriptingNames.SCRIPTV1_QUERY_CHANNELINFO,
                 params,
                 target_did,
                 this.context.getAppDid()
@@ -194,6 +195,16 @@ export class MyProfile implements ProfileHandler {
             logger.error("Query subscribed channel by id error: ", error)
             throw new Error(error)
         }
+    }
+
+    queryLikedPostsNumber(): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
+    queryLikedPosts(startTime: number, endTime: number, capacity: number): Promise<PostBody[]> {
+        throw new Error("Method not implemented.");
+    }
+    queryLikedPostById(likeId: string): Promise<PostBody> {
+        throw new Error("Method not implemented.");
     }
 
     /**
@@ -308,4 +319,5 @@ export class MyProfile implements ProfileHandler {
             logger.error("Download feeds avatar error:", error)
         }
     }
+
 }

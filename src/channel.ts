@@ -81,7 +81,7 @@ class Channel implements ChannelHandler {
             }
             let runner = await this.context.getScriptRunner(this.getOwnerDid())
             let result = await runner.callScript<any>(
-                scripts.SCRIPT_QUERY_CHANNEL_INFO, params,
+                scripts.SCRIPTV1_QUERY_CHANNELINFO, params,
                 this.getOwnerDid(),
                 this.context.getAppDid()
             )
