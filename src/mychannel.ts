@@ -83,7 +83,7 @@ export class MyChannel {
     public async queryChannelInfo(): Promise<ChannelInfo> {
         try {
             let db = await this.getDatabaseService()
-            let result = await db.findOne(collections.CHANNELS,  // TODO: replace with countDocuments
+            let result = await db.findOne(collections.CHANNELS,
                 { "channel_id": this.getChannelId() }
             )
             logger.debug(`Call script to query channel info: ${result}`)
@@ -93,8 +93,17 @@ export class MyChannel {
                 result
             )
         } catch (error) {
-            logger.error('Query channel information error: ', error)
-            throw error
+            throw new Error(`Query channnel info with channelId: ${this.getChannelId()} error: ${error}`)
+        }
+    }
+
+    public async downloadChannelAvatar(hiveUrl: string) {
+        try {
+            logger.debug(`Try to download channel avatar by hive url: ${hiveUrl}`)
+            let fileService = await this.getFilesService()
+            return await fileService.download(hiveUrl.split("@")[1])
+        } catch (error) {
+            throw new Error(`Download channel avatar by url ${hiveUrl} error: ${error}`)
         }
     }
 
@@ -132,23 +141,22 @@ export class MyChannel {
             logger.debug("Updating channel collection succeeded")
             this.channelInfo = newChannelInfo
         } catch (error) {
-            logger.error('update channel information error', error)
-            throw new Error(error)
+            throw new Error(`Update channel error ${error}`)
         }
     }
 
      /**
      * Query the list of Posts from this channel by a speific range of time.
      *
-     * @param start The beginning timestamp
-     * @param end The end timestamp
+     * @param startTime The beginning timestamp
+     * @param endTime The end timestamp
      * @returns An promise object that contains a list of posts.
      */
-    public async queryPosts(start: number, end: number, capcity: number): Promise<PostBody[]> {
+    public async queryPosts(startTime: number, endTime: number, capcity: number): Promise<PostBody[]> {
         try {
             let filter = {
                 "channel_id": this.getChannelId(),
-                "updated_at": { $gt: start, $lt: end }
+                "updated_at": { $gt: startTime, $lt: endTime }
             }
             let queryOptions = new FindOptions()
             queryOptions.limit = capcity
@@ -164,8 +172,7 @@ export class MyChannel {
             logger.debug(`Got posts by range of time: ${posts}`)
             return posts
         } catch (error) {
-            logger.error("Query posts by range of time error:", error)
-            throw error
+            throw new Error(`Query posts error: ${error}`)
         }
     }
 
@@ -173,7 +180,7 @@ export class MyChannel {
      * Query post information by specifying postid
      * @param postId：specify postid
      */
-    public async queryPostById(postId: string): Promise<PostBody> {  // TODO: should not receive an arry of data.
+    public async queryPostById(postId: string): Promise<PostBody> {
         try {
             let filter = {
                 "channel_id": this.getChannelId(),
@@ -187,8 +194,7 @@ export class MyChannel {
             logger.debug(`Got post with postId ${postId}: ${post}`)
             return post
         } catch (error) {
-            logger.error("Query post error:", error)
-            throw error
+            throw new Error(`Query specific post by postId ${postId} error: ${error}`)
         }
     }
 
@@ -203,19 +209,19 @@ export class MyChannel {
             }
 
             let db = await this.getDatabaseService()
-            let result = await db.countDocuments(collections.SUBSCRIPTION, filter) // TODO: replace with countDocuments
+            let result = await db.countDocuments(collections.SUBSCRIPTION, filter)
             logger.debug(`Got subscriber count: ${result}`)
             return result
         } catch (error) {
-            logger.error("Query subscriber count error: ", error)
-            throw error
+            throw new Error(`Query subscriber count error: ${error}`)
         }
     }
 
     /**
      * Query subscribed channels
-     * @param earilerThan： end time
-     * @param upperlimit：Maximum number of returns
+     * @param _startTime end time
+     * @param endTime
+     * @param capacity number of returns
      */
     public async querySubscribers(_startTime: number, endTime: number, capacity: number): Promise<Profile[]> {
         try {
@@ -239,8 +245,7 @@ export class MyChannel {
             logger.debug(`Got subscribers: ${subscribers}`)
             return subscribers
         } catch (error) {
-            logger.error("Query subscribers error: ", error)
-            throw error
+            throw new Error(`Query subscribers error: ${error}`)
         }
     }
 
@@ -248,31 +253,29 @@ export class MyChannel {
      * send post
      * @param postBody： post information
      */
-    public async post(post: Post) {
+    public async post(postBody: PostBody) {
         try {
-            let body = post.getBody()
             let doc = {
-                "channel_id": body.getChannelId(),
-                "post_id"   : body.getPostId(),
-                "created_at": body.getCreatedAt(),
-                "updated_at": body.getUpdatedAt(),
-                "content"   : body.getContent().toString(),
-                "status"    : body.getStatus(),
-                "memo"      : body.getMemo(),
-                "type"      : body.getType(),
-                "tag"       : body.getTag(),
-                "proof"     : body.getProof()
+                "channel_id": postBody.getChannelId(),
+                "post_id"   : postBody.getPostId(),
+                "created_at": postBody.getCreatedAt(),
+                "updated_at": postBody.getUpdatedAt(),
+                "content"   : postBody.getContent().toString(),
+                "status"    : postBody.getStatus(),
+                "memo"      : postBody.getMemo(),
+                "type"      : postBody.getType(),
+                "tag"       : postBody.getTag(),
+                "proof"     : postBody.getProof()
             }
 
             let db = await this.getDatabaseService()
             await db.insertOne(collections.POSTS, doc)
         } catch (error) {
-            logger.error('Post error: ', error)
-            throw error
+            throw new Error(`Making post error: ${error}`)
         }
     }
 
-    public updatePost(postId: string, post: Post) {
+    public updatePost(postId: string, post: PostBody) {
         throw new Error("TODO: Not impelmented yet")
     }
 
@@ -297,21 +300,7 @@ export class MyChannel {
                 new UpdateOptions(false, true)
             )
         } catch (error) {
-            logger.error("delete post error: ", error)
-            throw error
-        }
-    }
-
-    public async downloadChannelAvatarByUrl(url: string) {
-        try {
-            logger.debug("download channel avatar url: ", url)
-            const params = url.split("@")
-            const remoteName = params[1]
-            const fileService = await this.getFilesService()
-            return await fileService.download(remoteName)
-        } catch (error) {
-            logger.error('Download channel avatar by hive Url error:', error)
-            throw error
+            throw new Error(`Delete specific post error: ${error}`)
         }
     }
 
