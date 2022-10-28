@@ -258,7 +258,7 @@ class Channel implements ChannelHandler {
                 subscribers.push(deserializeToUserInfo(items[index]))
             }
             logger.debug(`Got subscriber by user did: ${subscribers}`)
-            return subscribers
+            return subscribers[0]
         } catch (error) {
             logger.error("Query subscriber by user did error : ", error)
             throw new Error(error)
