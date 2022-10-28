@@ -151,7 +151,7 @@ export class Comment {
 
             const items = result.find_message.items
             let comments = []
-            result.forEach((item: any) => {
+            items.forEach((item: any) => {
                 comments.push(Comment.parseFrom(this.context, this.targetDid, item))
             })
             logger.debug(`Got comment by Id: ${comments}`);
