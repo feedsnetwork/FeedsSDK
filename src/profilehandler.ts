@@ -1,4 +1,5 @@
 import { ChannelInfo } from "./channelinfo";
+import { PostBody } from "./postbody";
 
 interface ProfileHandler {
     /**
@@ -32,13 +33,18 @@ interface ProfileHandler {
      * @param end
      * @param capacity
      */
-    querySubscribedChannels(start: number, end: number, capacity: number): Promise<ChannelInfo[]>;
+    querySubscribedChannels(startTime: number, endTime: number, capacity: number): Promise<ChannelInfo[]>;
 
     /**
      *
      * @param channelId
      */
     querySubscribedChannelById(channelId: string): Promise<ChannelInfo>;
+
+
+    queryLikedPostsNumber(): Promise<number>;
+    queryLikedPosts(startTime: number, endTime: number, capacity: number): Promise<PostBody[]>
+    queryLikedPostById(likeId: string): Promise<PostBody>;
 }
 
 export type {

@@ -14,7 +14,8 @@ class ScriptingNames {
     static readonly SCRIPT_COMMENT_BY_END_TIME_AND_LIMIT = "script_comment_by_end_time_and_limit"
     static readonly SCRIPT_CHANNEL_SUBSCRIBERS = "script_query_channel_subscribers"
     static readonly SCRIPT_PRIFILE_SUBSCRIPTIONS = "script_query_profile_subscriptions"
-    static readonly SCRIPT_PRIFILE_CHANNELS = "script_query_profile_channels_by_targetdid"
+    static readonly SCRIPTV1_QUERY_OWNEDCHANNELS    = "script_query_profile_channels_by_targetdid"
+    static readonly SCRIPTV1_QUERY_CHANNELINFO = "script_query_channel_info"
     static readonly SCRIPT_CHANNEL_POST_BY_END_TIME_AND_LIMIT = "script_channel_post_by_start_time_and_limit"
 
     static readonly QUERY_SELF_LIKE_BY_ID = "script_query_self_like_by_id"
@@ -34,7 +35,6 @@ class ScriptingNames {
     static readonly SCRIPT_SUBSCRIPTION = "script_subscriptions_name"
 
     static readonly SCRIPT_QUERY_POST_BY_CHANNEL = "script_query_post_by_channel"//all
-    static readonly SCRIPT_QUERY_CHANNEL_INFO = "script_query_channel_info"
 
     static readonly SCRIPT_SUBSCRIBE_CHANNEL = "script_subscribe_channel"
     static readonly SCRIPT_UNSUBSCRIBE_CHANNEL = "script_unsubscribe_channel"

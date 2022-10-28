@@ -161,7 +161,7 @@ const installScriptToQueryChannelInfo = async (vault: Vault) => {
     ).setOutput(true);
 
     await vault.getScriptingService().registerScript(
-        ScriptingNames.SCRIPT_QUERY_CHANNEL_INFO,
+        ScriptingNames.SCRIPTV1_QUERY_CHANNELINFO,
         executable,
         null,
         false
@@ -189,7 +189,7 @@ const installScriptToQueryOwnedChannels = async (vault: Vault) => {
     ).setOutput(true)
 
     await vault.getScriptingService().registerScript(
-        ScriptingNames.SCRIPT_PRIFILE_CHANNELS,
+        ScriptingNames.SCRIPTV1_QUERY_OWNEDCHANNELS,
         executable,
         null,
         false,
@@ -1307,7 +1307,7 @@ const installScriptToQueryPublishedPostsByRangeOfTime = async (vault: Vault) => 
 }
 
 const installScriptToQuerySubscriptionToChannelByDID = async (vault: Vault) => {
-    const efilter = {
+    let efilter = {
         "channel_id": "$params.channel_id",
         "user_did": "$params.user_did"
     }
