@@ -1,5 +1,5 @@
 import { Logger } from './utils/logger'
-import { Logger as HiveLogger } from '@elastosfoundation/hive-js-sdk'
+import { DIDResolverAlreadySetupException, Logger as HiveLogger } from '@elastosfoundation/hive-js-sdk'
 import { Vault, ScriptRunner, AppContext as HiveContext, AppContextProvider as HiveContextProvider } from '@elastosfoundation/hive-js-sdk'
 import { prepreFeedsVault } from './provision'
 const logger = new Logger("AppContext")
@@ -41,27 +41,29 @@ export class RuntimeContext {
     public static createInstance(
         hiveContextProvider: HiveContextProvider,
         userDid: string,
-        didResolver: string = "mainnet".toLowerCase()) {
+        didResolver = "testnet") {
 
         if (this.sInstance != null) {
             throw new Error("RuntimeContext singleton has been initalized already, please call AppConctxt.getInstance() to use it");
         }
 
+        if (!hiveContextProvider || !userDid) {
+            throw new Error("Parameters hiveContextProvider and userDid should be both with value")
+        }
+
         try {
-            if (didResolver === null) {
-                didResolver = "mainnet".toLowerCase()
-            }
             this.sInstance = new RuntimeContext(hiveContextProvider, userDid)
             //HiveLogger.setLevel(HiveLogger.TRACE)
             HiveContext.setupResolver(
-                didResolver,
+                didResolver ? didResolver : "testnet",
                 hiveContextProvider.getLocalDataDir() + ".didCache"
             )
-
-            logger.info("Ignore: RuntimeContxt singleton has been initalized.")
         } catch (error) {
-            logger.info(`RuntimeContext singleton initalized error: ${error}`)
+            if(error !instanceof DIDResolverAlreadySetupException) {
+                logger.info(`RuntimeContext singleton initalized error: ${error}`)
+            }
         }
+        logger.info("Ignore: RuntimeContxt singleton has been initalized.")
     }
 
     // Get RuntimeContext instance
@@ -86,13 +88,17 @@ export class RuntimeContext {
             if (this.hiveContext == null) {
                 this.hiveContext = await HiveContext.build(this.hiveContextProvider, this.userDid,  this.applicationDid)
             }
-            return await Promise.resolve(this.hiveContext);
+            return this.hiveContext;
         } catch (error) {
             throw new Error(`Build HiveContext instance error: ${error}`)
         }
     }
 
-    public async getScriptRunner(targetDid: string): Promise<ScriptRunner> {
+    async getScriptRunner(targetDid: string): Promise<ScriptRunner> {
+        if (!targetDid || targetDid === "") {
+            throw new Error("Parmater targetDid is invalid")
+        }
+
         if (this.scriptRunners[targetDid] != null)
             return this.scriptRunners[targetDid]
 
@@ -109,7 +115,7 @@ export class RuntimeContext {
         }
     }
 
-    public async getVault(): Promise<Vault> {
+    async getVault(): Promise<Vault> {
         if (this.vault != null)
             return this.vault;
 
