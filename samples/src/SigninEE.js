@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
-import {Logger as FeedsLogger, signin, RuntimeContext, Post, Channel, ChannelInfo, ChannelEntry, MyProfile, MyChannel, PostBody, PostContent } from '@feedsnetwork/feeds-sdk-development';
+import {Logger as FeedsLogger, RuntimeContext, MyProfile, MyChannel } from '@feedsnetwork/feeds-sdk-development';
 import { createHiveContextProvider } from './Provider'
-import { Logger as HiveLogger } from '@elastosfoundation/hive-js-sdk'
+import { signin } from './signin'
 
 import {
   useNavigate
@@ -17,7 +17,6 @@ function SigninEE() {
 
   const handleSigninEE = async () => {
     userDid = await signin(applicationDid)
-    // HiveLogger.setDefaultLevel(HiveLogger.ERROR)
     FeedsLogger.setDefaultLevel(FeedsLogger.WARNING)
 
     console.log("开始初始化 RuntimeContext = ", RuntimeContext.isInitialized())
@@ -36,7 +35,9 @@ function SigninEE() {
     console.log( "queryOwnedChannelCount ========================================", count)
     const channels = await myprofile.queryOwnedChannels()
     console.log( "queryOwnedChannels ========================================", channels)
-    
+    // TODO: CHANNEL querySubscriber
+    // TODO: PROFILE querySubscribedChannelById
+    // TODO: PROFILE querySubscribedChannelByUserDid
     for (let index = 0; index < channels.length; index++) {
       const item = channels[index]
       const channelId = item.getChannelId()
@@ -46,7 +47,6 @@ function SigninEE() {
       const myChannel = new MyChannel(appCtx, item)
       const channelInfo0 = await myChannel.queryChannelInfo()
       console.log(index + "queryChannelInfo: ========================================", channelInfo0)
-      // queryPostById querySubscriberCount
 
       const posts = await myChannel.queryPosts(0, currentTime, 100)
       console.log(index + " queryPosts: ========================================", posts)
