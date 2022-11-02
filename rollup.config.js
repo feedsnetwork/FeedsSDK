@@ -9,10 +9,8 @@ import alias from "@rollup/plugin-alias";
 import globals from 'rollup-plugin-node-globals';
 import inject from "@rollup/plugin-inject";
 import { visualizer } from 'rollup-plugin-visualizer';
-
-//import { writeFileSync } from "fs";
-
-const production = !process.env.ROLLUP_WATCH;
+import { terser } from 'rollup-plugin-terser';
+import pkg from './package.json';
 
 export function emitModulePackageFile() {
 	return {
@@ -23,13 +21,13 @@ export function emitModulePackageFile() {
 	};
 }
 
-// const commitHash = (function () {
-//     try {
-//         return fs.readFileSync('.commithash', 'utf-8');
-//     } catch (err) {
-//         return 'unknown';
-//     }
-// })();
+const commitHash = (function () {
+    try {
+        return fs.readFileSync('.commithash', 'utf-8');
+    } catch (err) {
+        return 'unknown';
+    }
+})();
 
 const prodBuild = process.env.prodbuild || false;
 console.log("Prod build: ", prodBuild);
@@ -37,6 +35,14 @@ console.log("Prod build: ", prodBuild);
 const now = new Date(
     process.env.SOURCE_DATE_EPOCH ? process.env.SOURCE_DATE_EPOCH * 1000 : new Date().getTime()
 ).toUTCString();
+
+const banner = `/*
+  @license
+    FeedsSDK.js v${pkg.version}
+    ${now} - commit ${commitHash}
+
+    Released under the MIT License.
+*/`;
 
 const onwarn = warning => {
     // eslint-disable-next-line no-console
@@ -89,6 +95,9 @@ const nodePlugins = [
         sourceMap: !prodBuild,
         exclude: "*.browser.ts"
     }),
+    ...prodBuild ? [
+        terser()
+    ] : [],
     size()
 ];
 
@@ -122,6 +131,7 @@ export default command => {
             //banner,
             chunkFileNames: 'shared/[name].js',
             dir: 'dist',
+            banner,
             entryFileNames: '[name]',
             externalLiveBindings: true,
             format: 'cjs',
@@ -159,6 +169,7 @@ export default command => {
             ...commonJSBuild.output,
             dir: 'dist/es',
             format: 'es',
+            banner,
             sourcemap: !prodBuild,
             minifyInternalExports: false
         }
@@ -274,6 +285,9 @@ export default command => {
                 "BrowserFS": "browserfs"
             }),
             size(),
+            ...prodBuild ? [
+                terser()
+            ] : [],
             visualizer({
                 filename: "./browser-bundle-stats.html"
             }) // To visualize bundle dependencies sizes on a UI.
@@ -285,6 +299,7 @@ export default command => {
             {
                 file: 'dist/es/feeds-sdk.browser.js',
                 format: 'es',
+                banner,
                 sourcemap: !prodBuild,
             },
         ]
