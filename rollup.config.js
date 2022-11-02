@@ -121,7 +121,7 @@ export default command => {
         ],
         // fsevents is a dependency of chokidar that cannot be bundled as it contains binary code
         external: [
-            'ipfs-http-client',
+            'spark-md5',
             '@elastosfoundation/did-js-sdk',
             '@elastosfoundation/hive-js-sdk'
         ],
@@ -161,7 +161,7 @@ export default command => {
             //collectLicenses()
         ],
         external: [
-            'ipfs-http-client',
+            'spark-md5',
             '@elastosfoundation/did-js-sdk',
             '@elastosfoundation/hive-js-sdk'
         ],
@@ -179,13 +179,9 @@ export default command => {
         input: rollupSourceFile,
         onwarn,
         external: [
-            'ipfs-http-client',
-            'stream',
-            '@elastosfoundation/essentials-connector-client-browser',
-            '@elastosfoundation/did-js-sdk'
-            //'browserfs'
-            /* 'readable-stream',
-            'readable-stream/transform' */
+            'spark-md5',
+            '@elastosfoundation/did-js-sdk',
+            '@elastosfoundation/hive-js-sdk'
         ],
         plugins: [
             // IMPORTANT: DON'T CHANGE THE ORDER OF THINGS BELOW TOO MUCH! OTHERWISE YOU'LL GET
