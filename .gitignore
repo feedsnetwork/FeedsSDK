@@ -4,6 +4,7 @@ package-lock.json
 yarn-error.log
 typings/
 dist/
+docs/
 
 browser-bundle-stats.html
 samples/node_modules
