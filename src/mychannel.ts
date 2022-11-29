@@ -7,6 +7,7 @@ import { RuntimeContext } from './runtimecontext';
 import { CollectionNames as collections } from './vault/constants';
 import { UpdateOptions, FindOptions, DatabaseService, FilesService} from "@elastosfoundation/hive-js-sdk"
 import { deserializeToUserInfo, UserInfo } from './userinfo';
+import { utils } from './utils/utils';
 
 const logger = new Logger("MyChannel")
 
@@ -101,7 +102,16 @@ export class MyChannel {
         try {
             logger.debug(`Try to download channel avatar by hive url: ${hiveUrl}`)
             let fileService = await this.getFilesService()
-            return await fileService.download(hiveUrl.split("@")[1])
+            const dataBuffer = await fileService.download(hiveUrl.split("@")[1])
+            if (dataBuffer.length == utils.DEFAULT_AVATAR_LENGTH) {
+                const jsonString = dataBuffer.toString()
+                const defaultAvatar = utils.getDefaultAvatar(jsonString)
+                if (defaultAvatar != null && defaultAvatar != undefined) {
+                    return Buffer.from(defaultAvatar)
+                }
+            }
+
+            return dataBuffer
         } catch (error) {
             throw new Error(`Download channel avatar by url ${hiveUrl} error: ${error}`)
         }
