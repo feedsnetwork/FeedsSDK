@@ -151,7 +151,6 @@ export class MyProfile implements ProfileHandler {
                 let params = {
                     "channel_id": channel_id,
                 }
-
                 let callRunner = await this.context.getScriptRunner(target_did)
                 let callResult = await callRunner.callScript<any>(
                     ScriptingNames.SCRIPTV1_QUERY_CHANNELINFO,
@@ -159,7 +158,9 @@ export class MyProfile implements ProfileHandler {
                     target_did,
                     this.context.getAppDid()
                 )
-                channels.push(deserializeToChannelInfo(target_did, callResult.find_message.items[0]))
+                if (callResult.find_message.items.length > 0) {
+                    channels.push(deserializeToChannelInfo(target_did, callResult.find_message.items[0]))
+                }
             }
             logger.debug("query subscriptions channelInfo: ", channels)
             return channels
@@ -245,9 +246,9 @@ export class MyProfile implements ProfileHandler {
         try {
             let channelDoc = {
                 "channel_id": channelId,
-                "created_at": Date.now,
-                "display_name": this.name,
-                "updated_at": Date.now,
+                "created_at": Date.now(),
+                "display_name": this.name ? this.name : '',
+                "updated_at": Date.now(),
                 "status"    : false,
             }
             let scriptRunner = await this.context.getScriptRunner(targetDid)
