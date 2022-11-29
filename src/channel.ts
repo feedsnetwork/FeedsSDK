@@ -6,6 +6,7 @@ import { RuntimeContext } from './runtimecontext'
 import { CommentInfo } from './commentInfo'
 import { ScriptingNames as scripts } from './vault/constants'
 import { deserializeToUserInfo, UserInfo } from './userinfo'
+import { utils } from './utils/utils';
 
 const logger = new Logger("Channel")
 /**
@@ -307,8 +308,14 @@ class Channel implements ChannelHandler {
             let result = await runner.callScript<any>(scriptName, { "path": remoteName }, this.getOwnerDid(), this.context.getAppDid())
             const transaction_id = result[scriptName]["transaction_id"]
             logger.debug("download media transaction_id: ", transaction_id)
-            return await runner.downloadFile(transaction_id)
-            // let jsonString = dataBuffer.toString()
+            const dataBuffer = await runner.downloadFile(transaction_id)
+            if (dataBuffer.length == utils.DEFAULT_AVATAR_LENGTH) {
+                const jsonString = dataBuffer.toString()
+                const defaultAvatar = utils.getDefaultAvatar(jsonString)                if (defaultAvatar != null && defaultAvatar != undefined) {
+                    return Buffer.from(defaultAvatar)
+                }
+            }
+            return dataBuffer
         } catch (error) {
             logger.error('Download media by hive Url error:', error)
             throw error
