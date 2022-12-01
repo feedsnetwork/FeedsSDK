@@ -311,7 +311,8 @@ class Channel implements ChannelHandler {
             const dataBuffer = await runner.downloadFile(transaction_id)
             if (dataBuffer.length == utils.DEFAULT_AVATAR_LENGTH) {
                 const jsonString = dataBuffer.toString()
-                const defaultAvatar = utils.getDefaultAvatar(jsonString)                if (defaultAvatar != null && defaultAvatar != undefined) {
+                const defaultAvatar = utils.getDefaultAvatar(jsonString)
+                if (defaultAvatar != null && defaultAvatar != undefined) {
                     return Buffer.from(defaultAvatar)
                 }
             }
